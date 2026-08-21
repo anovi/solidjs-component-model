@@ -1,0 +1,53 @@
+{
+  "name": "solid-component-model",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run build:types && vite build",
+    "build:types": "tsc -p tsconfig.build.json",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test-file": "vitest $npm_config",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
+    "lint": "eslint --fix --no-cache -c .eslintrc.json --ext .ts,.tsx ./src",
+    "size": "size-limit",
+    "bench": "vitest bench",
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
+  },
+  "size-limit": [
+    {
+      "path": "dist/index.js"
+    }
+  ],
+  "peerDependencies": {
+    "solid-js": "1.9.13"
+  },
+  "devDependencies": {
+    "@size-limit/file": "13.0.3",
+    "@types/node": "^24.13.2",
+    "mermaid": "11.16.1",
+    "rxjs": "7.8.2",
+    "size-limit": "13.0.3",
+    "solid-js": "1.9.13",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1",
+    "vite-plugin-solid": "^2.11.12",
+    "vitepress": "1.6.4",
+    "vitepress-plugin-mermaid": "2.0.17",
+    "vitest": "4.1.10",
+    "xstate": "5.32.5"
+  }
+}
