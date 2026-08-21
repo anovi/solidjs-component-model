@@ -9,14 +9,14 @@ import { ComponentModel } from "./component-model";
 import { StateChart } from "./state-chart";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Constructor<T = object> = new (...args: any[]) => T;
+export type ModelConstructor<T = object> = new (...args: any[]) => T;
 
 export interface StateChartMethods<TConfig> {
   matches: (path: StatePaths<TConfig>) => boolean;
 }
 
 export type WithStateChartConstructor<
-  TBase extends Constructor,
+  TBase extends ModelConstructor,
   TConfig,
 > = Omit<TBase, "prototype"> & {
   new (
@@ -47,7 +47,7 @@ function installStateChartMethods(proto: object) {
 }
 
 export function WithStateChart<
-  TBase extends Constructor<ComponentModel<any, any, any, any>>,
+  TBase extends ModelConstructor<ComponentModel<any, any, any, any>>,
   E extends Event = InstanceType<TBase> extends ComponentModel<
     any,
     infer EE,
@@ -67,7 +67,7 @@ export function WithStateChart<
 ): WithStateChartConstructor<TBase, TConfig>;
 
 export function WithStateChart<
-  TBase extends Constructor<ComponentModel<any, any, any, any>>,
+  TBase extends ModelConstructor<ComponentModel<any, any, any, any>>,
   E extends Event = InstanceType<TBase> extends ComponentModel<
     any,
     infer EE,
@@ -87,7 +87,7 @@ export function WithStateChart<
 ): WithStateChartConstructor<TBase, TConfig>;
 
 export function WithStateChart<
-  TBase extends Constructor<ComponentModel<any, any, any, any>>,
+  TBase extends ModelConstructor<ComponentModel<any, any, any, any>>,
   E extends Event = InstanceType<TBase> extends ComponentModel<
     any,
     infer EE,

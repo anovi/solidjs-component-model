@@ -6,6 +6,7 @@ export { StateChart, Interpreter } from "./state-chart/state-chart";
 export {
   WithStateChart,
   type StateChartMethods,
+  type ModelConstructor,
   type WithStateChartConstructor,
 } from "./create-chart";
 export {
