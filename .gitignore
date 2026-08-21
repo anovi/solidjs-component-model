@@ -19,9 +19,14 @@ coverage
 .history/*
 !.vscode/extensions.json
 .idea
+.zed
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Vitepress
+.vitepress/cache
+.vitepress/dist
