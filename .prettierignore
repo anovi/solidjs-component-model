@@ -1,6 +1,8 @@
 .history
 .husky
 .vscode
+.vitepress/cache
+.vitepress/dist
 coverage
 dist
 node_modules

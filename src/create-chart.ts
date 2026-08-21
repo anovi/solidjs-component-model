@@ -9,16 +9,16 @@ import { ComponentModel } from "./component-model";
 import { StateChart } from "./state-chart";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Constructor<T = object> = new (...args: any[]) => T;
+export type Constructor<T = object> = new (...args: any[]) => T;
 
 export interface StateChartMethods<TConfig> {
   matches: (path: StatePaths<TConfig>) => boolean;
 }
 
-type WithStateChartConstructor<TBase extends Constructor, TConfig> = Omit<
-  TBase,
-  "prototype"
-> & {
+export type WithStateChartConstructor<
+  TBase extends Constructor,
+  TConfig,
+> = Omit<TBase, "prototype"> & {
   new (
     ...args: ConstructorParameters<TBase>
   ): InstanceType<TBase> & StateChartMethods<TConfig>;
