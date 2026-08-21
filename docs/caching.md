@@ -2,7 +2,6 @@
 
 Each model can be serialized to a plain JSON snapshot and later restored from it. This is useful for persisting state across sessions, sending state over the wire, or snapshots in tests.
 
-
 ## Basic snapshot
 
 ### Serialize
@@ -36,7 +35,6 @@ restored.start();
 
 State, data, and ID are fully restored. Children models are recreated automatically and put into the same state they had in the snapshot.
 
-
 ## Persisted snapshots with custom fields
 
 If your model holds extra data that is not part of the reactive `data` store (for example, private fields), you can extend the snapshot with custom fields.
@@ -45,18 +43,18 @@ If your model holds extra data that is not part of the reactive `data` store (fo
 
 ```typescript
 class GameSession extends ComponentModel<GameData, GameEvents> {
-    #seed: number;
-    #difficulty = 'normal';
+  #seed: number;
+  #difficulty = "normal";
 
-    getPersistedSnapshot() {
-        const json = this.toJSON();
-        // merge any extra fields into the snapshot
-        Object.assign(json, {
-            seed: this.#seed,
-            difficulty: this.#difficulty,
-        });
-        return json;
-    }
+  getPersistedSnapshot() {
+    const json = this.toJSON();
+    // merge any extra fields into the snapshot
+    Object.assign(json, {
+      seed: this.#seed,
+      difficulty: this.#difficulty,
+    });
+    return json;
+  }
 }
 ```
 
@@ -66,15 +64,15 @@ After `fromJSON()` builds the model, `fromPersistedSnapshot()` calls the protect
 
 ```typescript
 class GameSession extends ComponentModel<GameData, GameEvents> {
-    #seed: number;
-    #difficulty = 'normal';
+  #seed: number;
+  #difficulty = "normal";
 
-    // ... getPersistedSnapshot as above ...
+  // ... getPersistedSnapshot as above ...
 
-    protected applyPersistedSnapshot(snapshot: any) {
-        this.#seed = snapshot.seed;
-        this.#difficulty = snapshot.difficulty;
-    }
+  protected applyPersistedSnapshot(snapshot: any) {
+    this.#seed = snapshot.seed;
+    this.#difficulty = snapshot.difficulty;
+  }
 }
 ```
 
@@ -92,23 +90,21 @@ console.log(restored._id === game._id); // true
 
 The static `fromPersistedSnapshot()` stays fully typed — `GameSession.fromPersistedSnapshot(...)` returns a `GameSession`-typed instance, so you do not need any manual casting.
 
-
 ## Restoring child models
 
 If a model contains child models, `fromJSON()` and `fromPersistedSnapshot()` recreate them automatically **provided the parent class declares `static childTypes`**:
 
 ```typescript
 class ParentModel extends ComponentModel<ParentData, ParentEvents> {
-    static childTypes = {
-        Child: ChildModel
-    }
+  static childTypes = {
+    Child: ChildModel,
+  };
 }
 ```
 
 The snapshot stores each child under its type key (`Child` in the example above). During restoration the framework looks up the matching constructor in `childTypes`, instantiates it, and recursively restores the child's state and data.
 
-If you keep children in private fields rather than in the reactive `data` store, you may need to override `getPersistedSnapshot()` and `applyPersistedSnapshot()` to include them manually. See [Spawning Child Models](./spaw-children.md) for patterns on storing and serializing children.
-
+If you keep children in private fields rather than in the reactive `data` store, you may need to override `getPersistedSnapshot()` and `applyPersistedSnapshot()` to include them manually. See [Spawning Child Models](./spawn-children.md) for patterns on storing and serializing children.
 
 ## Important notes
 
