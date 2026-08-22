@@ -1,21 +1,19 @@
-import { ComponentModel } from '../../src';
-
+import { ComponentModel } from "../../src";
 
 type Data = {
-    count: number;
-    label: string;
+  count: number;
+  label: string;
 };
 
 export class ModelWithParams extends ComponentModel<Data> {
+  constructor(count: number, label: string) {
+    super({
+      count,
+      label,
+    });
+  }
 
-    constructor(count: number, label: string) {
-        super({
-            count,
-            label,
-        });
-    }
-
-    increment() {
-        this.setData('count', this.data.count + 1);
-    }
+  increment() {
+    this.setData("count", this.data.count + 1);
+  }
 }

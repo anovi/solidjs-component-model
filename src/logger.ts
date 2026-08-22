@@ -2,118 +2,101 @@ import { InternalEventName, type InternalEvent } from "./types";
 import type { Event } from "./state-chart";
 
 export interface Logger {
-	event: (event: Event | InternalEvent) => void;
-    transition: (from: string, to: string) =>  void;
-	warning: (message: string) => void;
-	group: (name: string, id: string) => void;
-	groupEnd: () => void;
-	error: (
-		message: string,
-		options?: { cause?: unknown }
-	) => void;
-	effectError: (
-        type: 'event' | 'entry' | 'exit',
-        state: string,
-        error: Error,
-    ) => void;
+  event: (event: Event | InternalEvent) => void;
+  transition: (from: string, to: string) => void;
+  warning: (message: string) => void;
+  group: (name: string, id: string) => void;
+  groupEnd: () => void;
+  error: (message: string, options?: { cause?: unknown }) => void;
+  effectError: (
+    type: "event" | "entry" | "exit",
+    state: string,
+    error: Error
+  ) => void;
 }
 
 export class BrowserLogger implements Logger {
-
-    event(event: Event | InternalEvent) {
-        if (event.type === InternalEventName.InvokedError) {
-            console.log(
-                `Event: %c${event.type}`,
-                'color: red',
-                event,
-            );
-            return;
-        }
-        console.log(
-            `Event: %c${event.type}`,
-            'color: green',
-            event,
-        );
+  event(event: Event | InternalEvent) {
+    if (event.type === InternalEventName.InvokedError) {
+      console.log(`Event: %c${event.type}`, "color: red", event);
+      return;
     }
+    console.log(`Event: %c${event.type}`, "color: green", event);
+  }
 
-    transition(from: string, to: string) {
-        console.log(
-            `Transition: ${from || '*'} → %c${to}`,
-            'color: blue; font-weight: bold;',
-        );
-    }
+  transition(from: string, to: string) {
+    console.log(
+      `Transition: ${from || "*"} → %c${to}`,
+      "color: blue; font-weight: bold;"
+    );
+  }
 
-    warning(message: string) {
-        console.warn(message);
-    }
+  warning(message: string) {
+    console.warn(message);
+  }
 
-    effectError(type: string, state: string, error: Error) {
-        console.error(
-            `%c${type} effect`,
-            'color:red;font-weight:bold',
-            `in "${state}" failed`,
-            error,
-        );
-	}
+  effectError(type: string, state: string, error: Error) {
+    console.error(
+      `%c${type} effect`,
+      "color:red;font-weight:bold",
+      `in "${state}" failed`,
+      error
+    );
+  }
 
-	group(name: string, id: string) {
-		console.group(name, id);
-	}
+  group(name: string, id: string) {
+    console.group(name, id);
+  }
 
-	groupEnd() {
-		console.groupEnd();
-	}
+  groupEnd() {
+    console.groupEnd();
+  }
 
-	error(message: string, options?: { cause?: unknown; }) { void message; void options; }
+  error(message: string, options?: { cause?: unknown }) {
+    void message;
+    void options;
+  }
 }
 
 export class TerminalLogger implements Logger {
-    event(event: Event | InternalEvent): void {
-
-        if (event.type === InternalEventName.InvokedError) {
-            console.log(
-                `Event: \x1b[31m${event.type}\x1b[0m`,
-                event,
-            );
-            return;
-        }
-
-        console.log(
-            `Event: \x1b[32m${event.type}\x1b[0m`,
-            event,
-        );
+  event(event: Event | InternalEvent): void {
+    if (event.type === InternalEventName.InvokedError) {
+      console.log(`Event: \x1b[31m${event.type}\x1b[0m`, event);
+      return;
     }
 
-    transition(from: string, to: string): void {
-        console.log(
-            `Transition: ${from || '*'} → \x1b[1;34m${to}\x1b[0m`,
-        );
-    }
+    console.log(`Event: \x1b[32m${event.type}\x1b[0m`, event);
+  }
 
-    warning(message: string): void {
-        console.warn(
-            `\x1b[33mWarning:\x1b[0m ${message}`,
-        );
-    }
+  transition(from: string, to: string): void {
+    console.log(`Transition: ${from || "*"} → \x1b[1;34m${to}\x1b[0m`);
+  }
 
-    effectError(
-        type: 'event' | 'entry' | 'exit',
-        state: string,
-        error: Error,
-    ): void {
-        console.error(
-            `\x1b[1;31m${type} effect\x1b[0m in "${state}" failed`,
-            error,
-        );
-	}
+  warning(message: string): void {
+    console.warn(`\x1b[33mWarning:\x1b[0m ${message}`);
+  }
 
-	group(name: string, id: string) {
-		console.group(name, id);
-	}
+  effectError(
+    type: "event" | "entry" | "exit",
+    state: string,
+    error: Error
+  ): void {
+    console.error(
+      `\x1b[1;31m${type} effect\x1b[0m in "${state}" failed`,
+      error
+    );
+  }
 
-	groupEnd() {
-		console.groupEnd();
-	}
+  group(name: string, id: string) {
+    console.group(name, id);
+  }
 
-	error(message: string, options?: { cause?: unknown; }) { void message; void options; }
+  groupEnd() {
+    console.groupEnd();
+  }
+
+  error(message: string, options?: { cause?: unknown }) {
+    void message;
+    void options;
+  }
 }

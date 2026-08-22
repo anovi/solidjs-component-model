@@ -1,41 +1,39 @@
-import type { Event, Action, HandlerForEvent, EventName } from "./state-chart-types";
-
-
+import type {
+  Event,
+  Action,
+  HandlerForEvent,
+  EventName,
+} from "./state-chart-types";
 
 export enum NodeType {
-    parallel = 1,
-    final = 2,
-    history = 3,
+  parallel = 1,
+  final = 2,
+  history = 3,
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyStateNode = StateNode<any, any>;
 
-export type StateNode<
-    TModel,
-    E extends Event,
-> = {
+export type StateNode<TModel, E extends Event> = {
+  name: string;
 
-    name: string;
+  parent: StateNode<TModel, E> | null;
 
-    parent: StateNode<TModel, E> | null;
+  initial?: StateNode<TModel, E>;
 
-    initial?: StateNode<TModel, E>;
+  children?: {
+    [state: string]: StateNode<TModel, E>;
+  };
 
-    children?: {
-        [state: string]: StateNode<TModel, E>;
-    };
+  type?: NodeType;
 
-    type?: NodeType,
+  entry?: Action<TModel, E>;
 
-    entry?: Action<TModel, E>;
+  exit?: Action<TModel, E>;
 
-    exit?: Action<TModel, E>;
+  always?: HandlerForEvent<TModel, never, never>[];
 
-    always?: HandlerForEvent<TModel, never, never>[];
-
-    on?: {
-        [K in EventName<E>]?: HandlerForEvent<TModel, E, K>[];
-    };
-
+  on?: {
+    [K in EventName<E>]?: HandlerForEvent<TModel, E, K>[];
+  };
 };

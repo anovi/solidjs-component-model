@@ -13,9 +13,9 @@ export class MyModel extends ComponentModel<{ shown: boolean }> {
   }
 
   show() {
-    this.setData('shown', true);
+    this.setData("shown", true);
     // Hide after 3 seconds
-    this.schedule(() => this.setData('shown', false), 3000);
+    this.schedule(() => this.setData("shown", false), 3000);
   }
 }
 ```
@@ -37,31 +37,34 @@ Inside state chart effects—`entry`, `exit`, or an event `action`—you can cal
 
 ```ts
 const chart = StateChart.create({
-  initial: 'idle',
+  initial: "idle",
   states: {
     idle: {
       on: {
-        START: 'running'
-      }
+        START: "running",
+      },
     },
     running: {
       entry() {
         // After 2 seconds, transition back to idle
-        this.schedule({ target: 'idle' }, 2000);
+        this.schedule({ target: "idle" }, 2000);
       },
       on: {
         STOP: {
-          target: 'idle',
+          target: "idle",
           action() {
             // Run an action after 500 ms
-            this.schedule({
-              action: () => console.log('Stopped!')
-            }, 500);
-          }
-        }
-      }
-    }
-  }
+            this.schedule(
+              {
+                action: () => console.log("Stopped!"),
+              },
+              500
+            );
+          },
+        },
+      },
+    },
+  },
 });
 ```
 

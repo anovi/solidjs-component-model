@@ -10,12 +10,10 @@ The `useModel` function creates a model instance, starts it automatically, and s
 import { useModel } from "solid-component-model/solidjs";
 
 function MyComponent() {
-  const model = useModel(CounterModel, 1, 'a');
+  const model = useModel(CounterModel, 1, "a");
 
   return (
-    <button onClick={() => model.increment()}>
-      Count: {model.data.count}
-    </button>
+    <button onClick={() => model.increment()}>Count: {model.data.count}</button>
   );
 }
 ```
@@ -31,10 +29,14 @@ function MyComponent() {
   const model = useModel(CounterModel, 0);
 
   createEffect(() => {
-    console.log('count:', model.data.count);
+    console.log("count:", model.data.count);
   });
 
-  return <div>{model.data.label}: {model.data.count}</div>;
+  return (
+    <div>
+      {model.data.label}: {model.data.count}
+    </div>
+  );
 }
 ```
 
@@ -51,8 +53,8 @@ function MyComponent() {
   const model = useModel(MyModel);
 
   useEvents(model, {
-    SAVED: (ev) => console.log('Saved!', ev),
-    ERROR: (ev) => console.error('Error', ev),
+    SAVED: ev => console.log("Saved!", ev),
+    ERROR: ev => console.error("Error", ev),
   });
 
   return <div>My Component</div>;
@@ -68,9 +70,7 @@ function MyComponent() {
   const model = useModel(MyStateMachine);
 
   return (
-    <button onClick={() => model.send.START({ from: 'menu' })}>
-      Start
-    </button>
+    <button onClick={() => model.send.START({ from: "menu" })}>Start</button>
   );
 }
 ```

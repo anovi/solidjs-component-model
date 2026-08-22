@@ -8,8 +8,7 @@ When you create a model, you can type the events it emits as the third generic p
 
 ```ts
 type EmittedEvents =
-  | { type: 'SAVED'; id: string }
-  | { type: 'ERROR'; message: string };
+  { type: "SAVED"; id: string } | { type: "ERROR"; message: string };
 
 class MyModel extends ComponentModel<MyData, MyEvents, EmittedEvents> {
   // ...
@@ -25,9 +24,9 @@ class MyModel extends ComponentModel<MyData, MyEvents, EmittedEvents> {
   async save() {
     try {
       await api.save(this.data);
-      this.emit({ type: 'SAVED', id: this.data.id });
+      this.emit({ type: "SAVED", id: this.data.id });
     } catch (err) {
-      this.emit({ type: 'ERROR', message: err.message });
+      this.emit({ type: "ERROR", message: err.message });
     }
   }
 }
@@ -42,8 +41,8 @@ From outside the model, you can subscribe either by event type or with a full ob
 ### By event type
 
 ```ts
-const unsub = model.on('SAVED', (event) => {
-  console.log('Saved!', event.id);
+const unsub = model.on("SAVED", event => {
+  console.log("Saved!", event.id);
 });
 ```
 
@@ -53,9 +52,9 @@ Call `unsub.unsubscribe()` to stop listening.
 
 ```ts
 const unsub = model.subscribe({
-  next: (event) => console.log('Event:', event),
-  error: (err) => console.error('Model failed', err),
-  complete: () => console.log('Model stopped'),
+  next: event => console.log("Event:", event),
+  error: err => console.error("Model failed", err),
+  complete: () => console.log("Model stopped"),
 });
 ```
 
@@ -72,8 +71,8 @@ function MyComponent() {
   const model = useModel(MyModel);
 
   useEvents(model, {
-    SAVED: (ev) => console.log('Saved!', ev.id),
-    ERROR: (ev) => console.error('Error', ev.message),
+    SAVED: ev => console.log("Saved!", ev.id),
+    ERROR: ev => console.error("Error", ev.message),
   });
 
   return <button onClick={() => model.save()}>Save</button>;

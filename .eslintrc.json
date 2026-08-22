@@ -4,9 +4,7 @@
     "es6": true,
     "node": true
   },
-  "plugins": [
-    "@typescript-eslint"
-  ],
+  "plugins": ["@typescript-eslint"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
@@ -19,14 +17,14 @@
     "@typescript-eslint/no-var-requires": 0,
     "@typescript-eslint/ban-ts-comment": 0,
     "@typescript-eslint/no-explicit-any": "warn",
-    "@typescript-eslint/no-unused-vars": ["warn", {
-      "args": "after-used"
-    }],
-    "@typescript-eslint/prefer-rest-params": 0,
-    "@typescript-eslint/method-signature-style": [
-      "error",
-      "property"
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "args": "after-used"
+      }
     ],
+    "@typescript-eslint/prefer-rest-params": 0,
+    "@typescript-eslint/method-signature-style": ["error", "property"],
     "complexity": [
       "warn",
       {
@@ -42,9 +40,7 @@
       }
     }
   ],
-  "ignorePatterns": [
-    "*/**/_*"
-  ],
+  "ignorePatterns": ["*/**/_*"],
   "settings": {
     "import/resolver": {
       "typescript": {

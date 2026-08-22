@@ -1,216 +1,214 @@
-import { it, describe, assert } from 'vitest';
+import { it, describe, assert } from "vitest";
 
-import { ComponentModel } from '../src';
-import { WithStateChart } from '../src/create-chart';
-import { StateChart } from '../src/state-chart';
+import { ComponentModel } from "../src";
+import { WithStateChart } from "../src/create-chart";
+import { StateChart } from "../src/state-chart";
 
-describe('WithStateChart', function() {
+describe("WithStateChart", function () {
+  it("accepts a raw config and creates a working model", async function () {
+    class Model extends ComponentModel {
+      constructor() {
+        super({});
+      }
+    }
 
-    it('accepts a raw config and creates a working model', async function() {
-        class Model extends ComponentModel {
-            constructor() {
-                super({});
-            }
-        }
-
-        const ModelWithChart = WithStateChart(Model, {
-            initial: 'idle',
-            states: {
-                idle: {
-                    on: { GO: { target: 'running' } }
-                },
-                running: {}
-            }
-        });
-
-        const inst = new ModelWithChart();
-        inst.start();
-
-        assert.equal(inst.status, 'active');
-        assert.equal(inst.state(), 'idle');
-
-        inst.dispatch({ type: 'GO' });
-        assert.equal(inst.state(), 'running');
+    const ModelWithChart = WithStateChart(Model, {
+      initial: "idle",
+      states: {
+        idle: {
+          on: { GO: { target: "running" } },
+        },
+        running: {},
+      },
     });
 
-    it('accepts a compiled StateChart and creates a working model', async function() {
-        class Model extends ComponentModel {
-            constructor() {
-                super({});
-            }
-        }
+    const inst = new ModelWithChart();
+    inst.start();
 
-        const compiledChart = StateChart.create<Model>({
-            initial: 'idle',
-            states: {
-                idle: {
-                    on: { GO: { target: 'running' } }
-                },
-                running: {}
-            }
-        });
+    assert.equal(inst.status, "active");
+    assert.equal(inst.state(), "idle");
 
-        const ModelWithChart = WithStateChart(Model, compiledChart);
+    inst.dispatch({ type: "GO" });
+    assert.equal(inst.state(), "running");
+  });
 
-        const inst = new ModelWithChart();
-        inst.start();
+  it("accepts a compiled StateChart and creates a working model", async function () {
+    class Model extends ComponentModel {
+      constructor() {
+        super({});
+      }
+    }
 
-        assert.equal(inst.status, 'active');
-        assert.equal(inst.state(), 'idle');
-
-        inst.dispatch({ type: 'GO' });
-        assert.equal(inst.state(), 'running');
+    const compiledChart = StateChart.create<Model>({
+      initial: "idle",
+      states: {
+        idle: {
+          on: { GO: { target: "running" } },
+        },
+        running: {},
+      },
     });
 
-    it('type-safe: matches() works with both raw and compiled chart', async function() {
-        class Model extends ComponentModel {
-            constructor() {
-                super({});
-            }
-        }
+    const ModelWithChart = WithStateChart(Model, compiledChart);
 
-        const config = {
-            initial: 'idle',
-            states: {
-                idle: {},
-                running: {}
-            }
-        } as const;
+    const inst = new ModelWithChart();
+    inst.start();
 
-        const ModelFromConfig = WithStateChart(Model, config);
-        const inst1 = new ModelFromConfig();
-        inst1.start();
-        assert.equal(inst1.matches('idle'), true);
-        assert.equal(inst1.matches('running'), false);
+    assert.equal(inst.status, "active");
+    assert.equal(inst.state(), "idle");
 
-        // compiled chart
-        const compiled = StateChart.create(config);
-        const ModelFromCompiled = WithStateChart(Model, compiled);
-        const inst2 = new ModelFromCompiled();
-        inst2.start();
-        assert.equal(inst2.matches('idle'), true);
-        assert.equal(inst2.matches('running'), false);
+    inst.dispatch({ type: "GO" });
+    assert.equal(inst.state(), "running");
+  });
+
+  it("type-safe: matches() works with both raw and compiled chart", async function () {
+    class Model extends ComponentModel {
+      constructor() {
+        super({});
+      }
+    }
+
+    const config = {
+      initial: "idle",
+      states: {
+        idle: {},
+        running: {},
+      },
+    } as const;
+
+    const ModelFromConfig = WithStateChart(Model, config);
+    const inst1 = new ModelFromConfig();
+    inst1.start();
+    assert.equal(inst1.matches("idle"), true);
+    assert.equal(inst1.matches("running"), false);
+
+    // compiled chart
+    const compiled = StateChart.create(config);
+    const ModelFromCompiled = WithStateChart(Model, compiled);
+    const inst2 = new ModelFromCompiled();
+    inst2.start();
+    assert.equal(inst2.matches("idle"), true);
+    assert.equal(inst2.matches("running"), false);
+  });
+
+  it("infers `this` and events when created with <typeof Model, Events>", async function () {
+    type Events = { type: "STEP"; amount: number } | { type: "RESET" };
+
+    let actionRan = false;
+    class CounterModel extends ComponentModel<any, Events> {
+      count = 0;
+      constructor() {
+        super({});
+      }
+      increment(amount: number) {
+        this.count += amount;
+        actionRan = true;
+      }
+    }
+
+    const chart = StateChart.create<CounterModel, Events>({
+      initial: "active",
+      states: {
+        active: {
+          on: {
+            STEP: {
+              action(ev) {
+                this.increment(ev.amount);
+              },
+            },
+            RESET: {
+              action() {
+                this.count = 0;
+              },
+            },
+          },
+        },
+      },
     });
 
-    it('infers `this` and events when created with <typeof Model, Events>', async function() {
-        type Events = { type: 'STEP'; amount: number } | { type: 'RESET' };
+    const ModelWithChart = WithStateChart(CounterModel, chart);
+    const inst = new ModelWithChart();
+    inst.start();
+    inst.dispatch({ type: "STEP", amount: 5 });
+    assert.equal(inst.count, 5);
+    assert.equal(actionRan, true);
+  });
 
-        let actionRan = false;
-        class CounterModel extends ComponentModel<any, Events> {
-            count = 0;
-            constructor() {
-                super({});
-            }
-            increment(amount: number) {
-                this.count += amount;
-                actionRan = true;
-            }
-        }
+  it("infers `this` and events when created with <Model, Events>", async function () {
+    type Events = { type: "STEP"; amount: number } | { type: "RESET" };
 
-        const chart = StateChart.create<CounterModel, Events>({
-            initial: 'active',
-            states: {
-                active: {
-                    on: {
-                        STEP: {
-                            action(ev) {
-                                this.increment(ev.amount);
-                            }
-                        },
-                        RESET: {
-                            action() {
-                                this.count = 0;
-                            }
-                        }
-                    }
-                }
-            }
-        });
+    let actionRan = false;
+    class CounterModel extends ComponentModel<any, Events> {
+      count = 0;
+      constructor() {
+        super({});
+      }
+      increment(amount: number) {
+        this.count += amount;
+        actionRan = true;
+      }
+    }
 
-        const ModelWithChart = WithStateChart(CounterModel, chart);
-        const inst = new ModelWithChart();
-        inst.start();
-        inst.dispatch({ type: 'STEP', amount: 5 });
-        assert.equal(inst.count, 5);
-        assert.equal(actionRan, true);
+    const chart = StateChart.create<CounterModel, Events>({
+      initial: "active",
+      states: {
+        active: {
+          on: {
+            STEP: {
+              guard(ev) {
+                return ev.amount > 0 && this.count >= 0;
+              },
+              action(ev) {
+                this.increment(ev.amount);
+              },
+            },
+            RESET: {
+              action() {
+                this.count = 0;
+              },
+            },
+          },
+        },
+      },
     });
 
-    it('infers `this` and events when created with <Model, Events>', async function() {
-        type Events = { type: 'STEP'; amount: number } | { type: 'RESET' };
+    const ModelWithChart = WithStateChart(CounterModel, chart);
+    const inst = new ModelWithChart();
+    inst.start();
+    inst.dispatch({ type: "STEP", amount: 5 });
+    assert.equal(inst.count, 5);
+    assert.equal(actionRan, true);
+  });
 
-        let actionRan = false;
-        class CounterModel extends ComponentModel<any, Events> {
-            count = 0;
-            constructor() {
-                super({});
-            }
-            increment(amount: number) {
-                this.count += amount;
-                actionRan = true;
-            }
-        }
+  it("infers `this` when created with a plain object type", async function () {
+    const plainContext = {
+      value: 0,
+      inc() {
+        this.value++;
+      },
+    };
 
-        const chart = StateChart.create<CounterModel, Events>({
-            initial: 'active',
-            states: {
-                active: {
-                    on: {
-                        STEP: {
-                            guard(ev) {
-                                return ev.amount > 0 && this.count >= 0;
-                            },
-                            action(ev) {
-                                this.increment(ev.amount);
-                            }
-                        },
-                        RESET: {
-                            action() {
-                                this.count = 0;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        const ModelWithChart = WithStateChart(CounterModel, chart);
-        const inst = new ModelWithChart();
-        inst.start();
-        inst.dispatch({ type: 'STEP', amount: 5 });
-        assert.equal(inst.count, 5);
-        assert.equal(actionRan, true);
+    const chart = StateChart.create<typeof plainContext>({
+      initial: "idle",
+      states: {
+        idle: {
+          on: {
+            TICK: {
+              action() {
+                this.inc();
+              },
+            },
+          },
+        },
+      },
     });
 
-    it('infers `this` when created with a plain object type', async function() {
-        const plainContext = {
-            value: 0,
-            inc() {
-                this.value++;
-            }
-        };
-
-        const chart = StateChart.create<typeof plainContext>({
-            initial: 'idle',
-            states: {
-                idle: {
-                    on: {
-                        TICK: {
-                            action() {
-                                this.inc();
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        const runtime = chart.createRuntime(plainContext);
-        const handler = runtime.getMostSpecificHandler('idle', { type: 'TICK' });
-        assert.ok(handler && !(handler instanceof Error));
-        if (handler && !(handler instanceof Error) && handler.action) {
-            handler.action.call(plainContext, { type: 'TICK' });
-            assert.equal(plainContext.value, 1);
-        }
-    });
-
+    const runtime = chart.createRuntime(plainContext);
+    const handler = runtime.getMostSpecificHandler("idle", { type: "TICK" });
+    assert.ok(handler && !(handler instanceof Error));
+    if (handler && !(handler instanceof Error) && handler.action) {
+      handler.action.call(plainContext, { type: "TICK" });
+      assert.equal(plainContext.value, 1);
+    }
+  });
 });

@@ -8,20 +8,20 @@ To make a model a child of another model, create the child instance and call `.s
 
 ```typescript
 class ParentModel extends ComponentModel<ParentData, ParentEvents> {
+  static childTypes = {
+    Child: ChildModel,
+  };
 
-    static childTypes = {
-        Child: ChildModel
-    }
-
-    protected addChild() {
-        const child = new ChildModel();
-        child.start(); // attaches to a ParentModel as child
-        this.data.children.push(child);
-    }
+  protected addChild() {
+    const child = new ChildModel();
+    child.start(); // attaches to a ParentModel as child
+    this.data.children.push(child);
+  }
 }
 ```
 
 Once started, the child is bound to the parent:
+
 - Stopping the parent automatically stops all attached children.
 - The child can access the parent via `this.parent` (declare it with a type if you need typed access).
 
@@ -29,18 +29,16 @@ Once started, the child is bound to the parent:
 
 ```ts
 class Child extends ComponentModel<ChildModelData, Events> {
+  declare protected parent: InstanceType<typeof ParentModel>;
 
-    declare protected parent: InstanceType<typeof ParentModel>;
+  // other methods…
 
-    // other methods…
-
-    // parent is typed and can be used in actions
-    someAction() {
-        this.parent.someEvent('from child');
-    }
+  // parent is typed and can be used in actions
+  someAction() {
+    this.parent.someEvent("from child");
+  }
 }
 ```
-
 
 ## Declaring `childTypes`
 
@@ -48,9 +46,9 @@ You **must** declare a static `childTypes` field on the parent class if you want
 
 ```typescript
 class ParentModel extends ComponentModel<ParentData, ParentEvents> {
-    static childTypes = {
-        Child: ChildModel
-    }
+  static childTypes = {
+    Child: ChildModel,
+  };
 }
 ```
 
@@ -58,20 +56,18 @@ Without this field, `fromJSON()` / `fromPersistedSnapshot()` will not know which
 
 For full details on snapshot restoration, see [Caching and Restoring Snapshots](./caching.md).
 
-
 ## Parent-child communication
 
 A child can send events to its parent through the `parent` reference:
 
 ```typescript
 class ChildModel extends ComponentModel<ChildData, ChildEvents> {
+  // Declare a parent type to have type inference
+  declare protected parent: InstanceType<typeof ParentModel>;
 
-    // Declare a parent type to have type inference
-    declare protected parent: InstanceType<typeof ParentModel>;
-
-    someAction() {
-        this.parent.someEvent('from child');
-    }
+  someAction() {
+    this.parent.someEvent("from child");
+  }
 }
 ```
 
@@ -85,7 +81,6 @@ sendToChildren() {
 }
 ```
 
-
 ## Patterns
 
 ### Children stored in reactive data
@@ -94,29 +89,27 @@ When children are part of the reactive `data` store, state changes automatically
 
 ```typescript
 type ParentData = {
-    children: InstanceType<typeof ChildModel>[];
-}
+  children: InstanceType<typeof ChildModel>[];
+};
 
 class ParentModel extends ComponentModel<ParentData, ParentEvents> {
+  constructor() {
+    super({ children: [] });
+  }
 
-    constructor() {
-        super({ children: [] })
-    }
+  // If you want restoring the model with children from snapshot:
+  // You must provide childTypes when children are stored
+  // in reactive data
+  static childTypes = {
+    Child: ChildModel,
+  };
 
-    // If you want restoring the model with children from snapshot:
-    // You must provide childTypes when children are stored
-    // in reactive data
-    static childTypes = {
-        Child: ChildModel
-    }
-
-    // Action
-    protected addChild() {
-        const child = new ChildModel();
-        this.setData('children', this.data.children.length, child);
-        child.start();
-    }
-
+  // Action
+  protected addChild() {
+    const child = new ChildModel();
+    this.setData("children", this.data.children.length, child);
+    child.start();
+  }
 }
 ```
 
@@ -128,20 +121,18 @@ You can also keep children in private fields if you do not need reactivity on th
 
 ```typescript
 class ParentModel extends ComponentModel<ParentData, ParentEvents> {
+  #children: InstanceType<typeof ChildModel>[] = [];
 
-    #children: InstanceType<typeof ChildModel>[] = [];
+  protected addChild() {
+    const child = new ChildModel();
+    this.#children.push(child);
+    child.start();
+  }
 
-    protected addChild() {
-        const child = new ChildModel();
-        this.#children.push(child);
-        child.start();
-    }
-
-    get childrenLength(): number {
-        return this.#children.length;
-    }
+  get childrenLength(): number {
+    return this.#children.length;
+  }
 }
-
 ```
 
 Children in regular fields will not be serialized unless you define a custom snapshot. See [Caching and Restoring Snapshots](./caching.md) for the full snapshot API.
@@ -150,14 +141,11 @@ Children in regular fields will not be serialized unless you define a custom sna
 
 You can create children without storing them in any field. They are still attached and can send events to the parent. When the parent stops, it stops its children.
 
-
 ```typescript
 class ParentModel extends ComponentModel<ParentData, ParentEvents> {
-
-    protected addChild() {
-        // Attaches to a ParentModel but isn't stored in any field
-        new ChildModel().start();
-    }
-
+  protected addChild() {
+    // Attaches to a ParentModel but isn't stored in any field
+    new ChildModel().start();
+  }
 }
 ```

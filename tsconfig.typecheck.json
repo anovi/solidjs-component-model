@@ -4,6 +4,6 @@
     "noEmit": true,
     "rootDir": ".",
     "declaration": false,
-    "declarationMap": false,
-  },
+    "declarationMap": false
+  }
 }

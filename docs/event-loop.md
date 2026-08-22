@@ -1,14 +1,13 @@
 # Main event loop
 
-
 ## Diagram of event loop
-Here is the main event loop of any state chart:
 
+Here is the main event loop of any state chart:
 
 ```mermaid
 flowchart TD
 
-%% ------------------------- NODES ------------------------- 
+%% ------------------------- NODES -------------------------
 
 Start([Start])
 Event(Event)
@@ -46,7 +45,7 @@ end
 
 HasAlways{"Is there<br/>an <b>Always</b> transition?"}
 
-%% ------------------------- EDGES ------------------------- 
+%% ------------------------- EDGES -------------------------
 
 Start --> Event
 Event --> Lookup
@@ -108,10 +107,9 @@ ExecuteEntry --> HasStep
    2. If the next micro-step is an entry:
       1. Enter the state.
       2. Execute the entry effect of the state.
-7. Look up an Always transition in the current state (deepest state first).
-8. If an Always transition is found (and its guard passes), go to step (4).
-9. Mark the machine as stable and finish.
-
+8. Look up an Always transition in the current state (deepest state first).
+9. If an Always transition is found (and its guard passes), go to step (4).
+10. Mark the machine as stable and finish.
 
 ## Transition lookup
 
@@ -144,6 +142,7 @@ The interpreter compares the current state path and the target state path to det
 - **Enter segment** — the remaining part of the target path below the common ancestor.
 
 For example, transitioning from `state1.child1` to `state1.child2` produces:
+
 - Common: `state1`
 - Exit: `child1`
 - Enter: `child2`

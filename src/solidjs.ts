@@ -4,32 +4,27 @@ import type { AnyModel, EventType } from "./types";
 import type { Event } from "./state-chart";
 import type { Observer, Unsubscribable } from "./observable";
 
-
 export type EventHandlers<E extends Event> = {
-    [K in EventType<E>]?: (event: Extract<E, { type: K }>) => void;
-};    
+  [K in EventType<E>]?: (event: Extract<E, { type: K }>) => void;
+};
 
 type HasEvents<E extends Event> = {
-    on: (
-        type: EventType<E>,
-        handler: (event: E) => void
-    ) => Unsubscribable;
+  on: (type: EventType<E>, handler: (event: E) => void) => Unsubscribable;
 };
 
 type EmittedOf<T> = T extends {
-    subscribe: (observer: Partial<Observer<infer E>>) => any;
+  subscribe: (observer: Partial<Observer<infer E>>) => any;
 }
-    ? E
-    : never;
-
+  ? E
+  : never;
 
 export function useModel<M extends new (...args: any[]) => AnyModel>(
-    ctor: M,
-    ...args: ConstructorParameters<M>
+  ctor: M,
+  ...args: ConstructorParameters<M>
 ): InstanceType<M>;
 export function useModel<M extends new (...args: any[]) => object>(
-    ctor: M,
-    ...args: ConstructorParameters<M>
+  ctor: M,
+  ...args: ConstructorParameters<M>
 ): InstanceType<M>;
 
 /**
@@ -70,33 +65,30 @@ export function useModel<M extends new (...args: any[]) => object>(
  * ```
  */
 export function useModel(
-    ctor: new (...args: any[]) => AnyModel,
-    ...args: any[]
+  ctor: new (...args: any[]) => AnyModel,
+  ...args: any[]
 ): AnyModel {
-    const model = new ctor(...args);
-    onCleanup(model.stop.bind(model));
-    model.start();
-    return model;
+  const model = new ctor(...args);
+  onCleanup(model.stop.bind(model));
+  model.start();
+  return model;
 }
 
 /**
  * Subscribe to events with automatic disposal of subscription.
  */
 export function useEvents<
-    TModel extends HasEvents<EmittedOf<TModel>> & {
-        subscribe: (observer: Partial<Observer<any>>) => Unsubscribable;
-    }
->(
-    model: TModel,
-    handlers: EventHandlers<EmittedOf<TModel>>,
-) {
-    const subscriptions = Object.entries(handlers).map(([type, handler]) =>
-        model.on(type as never, handler as never)
-    );
+  TModel extends HasEvents<EmittedOf<TModel>> & {
+    subscribe: (observer: Partial<Observer<any>>) => Unsubscribable;
+  },
+>(model: TModel, handlers: EventHandlers<EmittedOf<TModel>>) {
+  const subscriptions = Object.entries(handlers).map(([type, handler]) =>
+    model.on(type as never, handler as never)
+  );
 
-    onCleanup(() => {
-        for (const sub of subscriptions) {
-            sub.unsubscribe();
-        }
-    });
+  onCleanup(() => {
+    for (const sub of subscriptions) {
+      sub.unsubscribe();
+    }
+  });
 }

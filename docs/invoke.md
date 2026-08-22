@@ -9,53 +9,50 @@ Invoked effects are bound to the **state** that created them. When the machine e
 Use `this.invokePromise()` inside an action to start an async operation and react to its outcome.
 
 ```ts
-import { ComponentModel } from 'solid-component-model';
-import { WithStateChart } from 'solid-component-model/create-chart';
+import { ComponentModel } from "solid-component-model";
+import { WithStateChart } from "solid-component-model/create-chart";
 
 type UserModelData = { user: User | null; error: string };
-type UserModelEvents = { type: 'LOAD' } | { type: 'RETRY' };
+type UserModelEvents = { type: "LOAD" } | { type: "RETRY" };
 
 class UserModelBase extends ComponentModel<UserModelData, UserModelEvents> {
   constructor() {
-    super({ user: null, error: '' });
+    super({ user: null, error: "" });
   }
 }
 
 export const UserModel = WithStateChart(UserModelBase, {
-  initial: 'idle',
+  initial: "idle",
   states: {
     idle: {
-      on: { LOAD: { target: 'loading' } }
+      on: { LOAD: { target: "loading" } },
     },
     loading: {
       entry() {
-        this.invokePromise(
-          (signal) => fetchUser(signal),
-          {
-            onDone: {
-              action: (event) => {
-                this.setData('user', event.result);
-              },
-              target: 'success'
+        this.invokePromise(signal => fetchUser(signal), {
+          onDone: {
+            action: event => {
+              this.setData("user", event.result);
             },
-            onError: {
-              action: (event) => {
-                this.setData('error', String(event.error));
-              },
-              target: 'error'
-            }
-          }
-        );
+            target: "success",
+          },
+          onError: {
+            action: event => {
+              this.setData("error", String(event.error));
+            },
+            target: "error",
+          },
+        });
       },
       on: {
-        RETRY: { target: 'loading' } // re-enter triggers a new invoke
-      }
+        RETRY: { target: "loading" }, // re-enter triggers a new invoke
+      },
     },
     success: {},
     error: {
-      on: { RETRY: { target: 'loading' } }
-    }
-  }
+      on: { RETRY: { target: "loading" } },
+    },
+  },
 });
 ```
 
@@ -71,11 +68,11 @@ this.invokePromise(
 );
 ```
 
-| Parameter | Description |
-|-----------|-------------|
-| `signal` | An `AbortSignal` that fires when the state is exited. Use it to cancel the underlying fetch or operation. |
-| `onDone` | Called when the promise resolves. Supports a single handler or an array of guarded handlers. |
-| `onError` | Called when the promise rejects. If omitted, the model moves to `error` status. |
+| Parameter | Description                                                                                               |
+| --------- | --------------------------------------------------------------------------------------------------------- |
+| `signal`  | An `AbortSignal` that fires when the state is exited. Use it to cancel the underlying fetch or operation. |
+| `onDone`  | Called when the promise resolves. Supports a single handler or an array of guarded handlers.              |
+| `onError` | Called when the promise rejects. If omitted, the model moves to `error` status.                           |
 
 ### Guarded `onDone` handlers
 
@@ -107,12 +104,12 @@ entry() {
 Use `this.invokeObservable()` to subscribe to a stream of values.
 
 ```ts
-import { interval } from 'rxjs';
-import { ComponentModel } from 'solid-component-model';
-import { WithStateChart } from 'solid-component-model/create-chart';
+import { interval } from "rxjs";
+import { ComponentModel } from "solid-component-model";
+import { WithStateChart } from "solid-component-model/create-chart";
 
 type TimerModelData = { count: number };
-type TimerModelEvents = { type: 'START' } | { type: 'STOP' };
+type TimerModelEvents = { type: "START" } | { type: "STOP" };
 
 class TimerModelBase extends ComponentModel<TimerModelData, TimerModelEvents> {
   constructor() {
@@ -121,37 +118,34 @@ class TimerModelBase extends ComponentModel<TimerModelData, TimerModelEvents> {
 }
 
 export const TimerModel = WithStateChart(TimerModelBase, {
-  initial: 'idle',
+  initial: "idle",
   states: {
     idle: {
-      on: { START: { target: 'running' } }
+      on: { START: { target: "running" } },
     },
     running: {
       entry() {
-        this.invokeObservable(
-          interval(1000),
-          {
-            next: {
-              action: (event) => {
-                this.setData('count', this.data.count + 1);
-              }
+        this.invokeObservable(interval(1000), {
+          next: {
+            action: event => {
+              this.setData("count", this.data.count + 1);
             },
-            error: {
-              action: () => {
-                console.error('Timer stream failed');
-              }
+          },
+          error: {
+            action: () => {
+              console.error("Timer stream failed");
             },
-            complete: {
-              action: () => {
-                console.log('Timer finished');
-              }
-            }
-          }
-        );
+          },
+          complete: {
+            action: () => {
+              console.log("Timer finished");
+            },
+          },
+        });
       },
-      on: { STOP: { target: 'idle' } }
-    }
-  }
+      on: { STOP: { target: "idle" } },
+    },
+  },
 });
 ```
 
@@ -168,11 +162,11 @@ this.invokeObservable(
 );
 ```
 
-| Handler | When it fires |
-|---------|---------------|
-| `next` | On every emitted value. Receives `{ value }`. |
-| `error` | When the observable errors. If omitted, the model moves to `error` status. |
-| `complete` | When the observable completes. |
+| Handler    | When it fires                                                              |
+| ---------- | -------------------------------------------------------------------------- |
+| `next`     | On every emitted value. Receives `{ value }`.                              |
+| `error`    | When the observable errors. If omitted, the model moves to `error` status. |
+| `complete` | When the observable completes.                                             |
 
 ## Model without a state chart
 
@@ -187,21 +181,18 @@ class PlainModel extends ComponentModel<{ items: Item[]; loading: boolean }> {
   }
 
   load() {
-    this.setData('loading', true);
+    this.setData("loading", true);
 
-    this.#cleanup = this.invokePromise(
-      (signal) => fetchItems(signal),
-      {
-        onDone: (event) => {
-          this.setData('items', event.result);
-          this.setData('loading', false);
-        },
-        onError: (event) => {
-          console.error('Failed to load', event.error);
-          this.setData('loading', false);
-        }
-      }
-    );
+    this.#cleanup = this.invokePromise(signal => fetchItems(signal), {
+      onDone: event => {
+        this.setData("items", event.result);
+        this.setData("loading", false);
+      },
+      onError: event => {
+        console.error("Failed to load", event.error);
+        this.setData("loading", false);
+      },
+    });
   }
 
   protected onCleanup() {
@@ -217,12 +208,9 @@ class LiveUpdatesModel extends ComponentModel<{ price: number }> {
   #unsubscribe?: () => void;
 
   startListening() {
-    this.#unsubscribe = this.invokeObservable(
-      priceFeed$,
-      {
-        next: (event) => this.setData('price', event.value)
-      }
-    );
+    this.#unsubscribe = this.invokeObservable(priceFeed$, {
+      next: event => this.setData("price", event.value),
+    });
   }
 
   stopListening() {
@@ -248,4 +236,3 @@ class LiveUpdatesModel extends ComponentModel<{ price: number }> {
 - **Unhandled promise rejection** — if `onError` is omitted, the model transitions to `error` status and the error is emitted through the observable error channel.
 - **Unhandled observable error** — same behavior: model goes to `error` status.
 - **Handled errors** — when `onError` is provided, the model stays active and the handler runs.
-

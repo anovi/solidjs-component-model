@@ -9,7 +9,7 @@ The most common transition reacts to a named event. Define them inside the `on` 
 ```ts
 idle: {
   on: {
-    START: 'running'
+    START: "running";
   }
 }
 ```
@@ -37,9 +37,14 @@ You can provide an array of handlers. The first one whose guard passes is execut
 idle: {
   on: {
     SUBMIT: [
-      { target: 'sending', guard() { return this.data.ready } },
-      { target: 'invalid' }
-    ]
+      {
+        target: "sending",
+        guard() {
+          return this.data.ready;
+        },
+      },
+      { target: "invalid" },
+    ];
   }
 }
 ```
@@ -93,9 +98,9 @@ Write actions as regular `function` methods, **not arrow functions**. The interp
 
 ## Transition properties summary
 
-| Property | Description |
-|----------|-------------|
-| `target` | The state to move to. |
-| `reenter` | If `true`, exit and re-enter the same state. |
+| Property  | Description                                             |
+| --------- | ------------------------------------------------------- |
+| `target`  | The state to move to.                                   |
+| `reenter` | If `true`, exit and re-enter the same state.            |
 | `guard`   | A function that returns `true` to allow the transition. |
-| `action`  | A function run when the transition is taken. |
+| `action`  | A function run when the transition is taken.            |

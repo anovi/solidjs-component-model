@@ -8,16 +8,16 @@ An entry effect runs when the machine enters a state. It is defined on the state
 
 ```ts
 const chart = StateChart.create({
-  initial: 'idle',
+  initial: "idle",
   states: {
-    idle: { on: { START: 'running' } },
+    idle: { on: { START: "running" } },
     running: {
       entry() {
-        this.setData('startedAt', Date.now());
+        this.setData("startedAt", Date.now());
       },
-      on: { STOP: 'idle' }
-    }
-  }
+      on: { STOP: "idle" },
+    },
+  },
 });
 ```
 

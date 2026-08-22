@@ -2,14 +2,13 @@
 
 This guide maps XState concepts to their equivalents in `solid-component-model`. Where possible it shows both APIs side-by-side, then highlights the behavioural differences.
 
-
 ## Model vs. machine
 
-In XState the machine *is* the definition and the actor is the running instance. In this library the running instance is a class (`ComponentModel`) and the state chart is attached to it with `WithStateChart`.
+In XState the machine _is_ the definition and the actor is the running instance. In this library the running instance is a class (`ComponentModel`) and the state chart is attached to it with `WithStateChart`.
 
 ## Creating state machines
 
-In XState the machine *is* the definition and the actor is the running instance. In this library the running instance is a class (`ComponentModel`) and the state chart is attached to it with `WithStateChart`.
+In XState the machine _is_ the definition and the actor is the running instance. In this library the running instance is a class (`ComponentModel`) and the state chart is attached to it with `WithStateChart`.
 
 **XState**
 
@@ -17,23 +16,23 @@ In XState the machine *is* the definition and the actor is the running instance.
 const feedbackMachine = setup({
   types: {
     context: {} as {
-        count: number,
+      count: number;
     },
     input: {} as number,
   },
   actions: {
     doSomething: ({ context }) => {
-      console.log('Value is:', context.count);
+      console.log("Value is:", context.count);
     },
-  }
+  },
 }).createMachine({
   context: ({ input }) => {
-    return { count: input }
+    return { count: input };
   },
-  entry: { type: 'doSomething' },
+  entry: { type: "doSomething" },
   states: {
-    idle: { /* ... */ }
-  }
+    idle: {/* ... */},
+  },
 });
 
 const feedbackActor = createActor(feedbackMachine);
@@ -46,25 +45,27 @@ feedbackActor.start(99);
 
 ```ts
 type Data = {
-    count: number
-}
+  count: number;
+};
 
 class CounterModel extends ComponentModel<Data> {
-    constructor(input: number) {
-        super({ count: input });
-    }
+  constructor(input: number) {
+    super({ count: input });
+  }
 
-    protected doSomething() {
-        console.log('Value is:', this.data.count);
-    }
+  protected doSomething() {
+    console.log("Value is:", this.data.count);
+  }
 }
 
 const CounterWithChart = WithStateChart(CounterModel, {
-    initial: 'idle',
-    entry() { this.doSomething() },
-    states: {
-        idle: { /* ... */ }
-    }
+  initial: "idle",
+  entry() {
+    this.doSomething();
+  },
+  states: {
+    idle: {/* ... */},
+  },
 });
 
 const model = new CounterWithChart(42);
@@ -74,53 +75,48 @@ model.start();
 
 The class is the model. `WithStateChart` returns a new class that also carries a static `config` property and a `matches(statePath)` method.
 
-
 ## State chart
 
 A state chart extends a model class producing a new class.
 
 ```ts
-type Events =
-    | { type: 'SOME_EVENT' }
-    | { type: 'OTHER_EVENT' }
+type Events = { type: "SOME_EVENT" } | { type: "OTHER_EVENT" };
 
-type Emits =
-    | { type: 'SOMETHING_HAPPENED' }
+type Emits = { type: "SOMETHING_HAPPENED" };
 
 type MyModelData = {
-    data: string
-}
+  data: string;
+};
 
 class ModelBase extends ComponentModel<MyModelData, Events, Emits> {
-    // Model methods and properties go here.
-    // They are reachable from every state-chart action via `this`.
+  // Model methods and properties go here.
+  // They are reachable from every state-chart action via `this`.
 }
 
 // Produces a new class
 export const ModelWithEntryTrans = WithStateChart(ModelBase, {
-    initial: 'default',
-    default: {
-        on: {
-            SOME_EVENT: {
-                target: 'someState'
-            }
-        },
+  initial: "default",
+  default: {
+    on: {
+      SOME_EVENT: {
+        target: "someState",
+      },
     },
-    someState: {
-        entry() {
-            this.emit({ type: 'SOMETHING_HAPPENED' })
-        },
-        on: {
-            OTHER_EVENT: {
-                target: 'default'
-            }
-        },
-    }
-})
+  },
+  someState: {
+    entry() {
+      this.emit({ type: "SOMETHING_HAPPENED" });
+    },
+    on: {
+      OTHER_EVENT: {
+        target: "default",
+      },
+    },
+  },
+});
 ```
 
 The configuration object is intentionally similar to XState, but the actions live inside the model class, not in a `createMachine` call.
-
 
 ## Execution context
 
@@ -153,7 +149,7 @@ Because the library calls guards and actions with `.call(this, event)` at runtim
 **Xstate**
 
 ```ts
-import { createActor, setup } from 'xstate';
+import { createActor, setup } from "xstate";
 
 const feedbackMachine = setup({
   types: {
@@ -170,7 +166,7 @@ const feedbackMachine = setup({
 }).createMachine({
   context: ({ input }) => ({
     userId: input.userId,
-    feedback: '',
+    feedback: "",
     rating: input.defaultRating,
   }),
   // ...
@@ -178,7 +174,7 @@ const feedbackMachine = setup({
 
 const feedbackActor = createActor(feedbackMachine, {
   input: {
-    userId: '123',
+    userId: "123",
     defaultRating: 5,
   },
 });
@@ -189,7 +185,7 @@ const feedbackActor = createActor(feedbackMachine, {
 Constructor arguments serve the same role as XState input. You pass the initial values directly to `super()` and define the class constructor to accept whatever parameters you need.
 
 ```ts
-import { ComponentModel, WithStateChart } from 'solid-component-model';
+import { ComponentModel, WithStateChart } from "solid-component-model";
 
 type Data = {
   userId: string;
@@ -197,13 +193,13 @@ type Data = {
   rating: number;
 };
 
-type Events = { type: 'SUBMIT' };
+type Events = { type: "SUBMIT" };
 
 class FeedbackModelBase extends ComponentModel<Data, Events> {
   constructor(userId: string, defaultRating: number) {
     super({
       userId,
-      feedback: '',
+      feedback: "",
       rating: defaultRating,
     });
   }
@@ -213,7 +209,7 @@ const FeedbackModel = WithStateChart(FeedbackModelBase, {
   // ...
 });
 
-const model = new FeedbackModel('123', 5);
+const model = new FeedbackModel("123", 5);
 model.start();
 ```
 
@@ -223,29 +219,28 @@ Both match hierarchial state but state is represented differently:
 
 **XState**
 
-
 ```ts
 // state.value === 'question'
-someActor.getSnapshoot().matches('question'); // true
+someActor.getSnapshoot().matches("question"); // true
 
 // state.value === { form: 'invalid' }
-someActor.getSnapshoot().matches('form'); // true
-someActor.getSnapshoot().matches('question'); // false
-someActor.getSnapshoot().matches({ form: 'invalid' }); // true
-someActor.getSnapshoot().matches({ form: 'valid' }); // false
+someActor.getSnapshoot().matches("form"); // true
+someActor.getSnapshoot().matches("question"); // false
+someActor.getSnapshoot().matches({ form: "invalid" }); // true
+someActor.getSnapshoot().matches({ form: "valid" }); // false
 ```
 
 **ComponentModel**
 
 ```ts
 // state === 'question'
-someModel.matches('question'); // true
+someModel.matches("question"); // true
 
 // state === 'form.invalid'
-someModel.matches('form'); // true
-someModel.matches('question'); // false
-someModel.matches('form.invalid'); // true
-someModel.matches('form.valid'); // false
+someModel.matches("form"); // true
+someModel.matches("question"); // false
+someModel.matches("form.invalid"); // true
+someModel.matches("form.valid"); // false
 ```
 
 ## Events and transitions
@@ -255,14 +250,14 @@ Events are handled **synchronously**, in contrast to XState where an event is qu
 Dispatching an event is identical in both APIs:
 
 ```ts
-model.dispatch({ type: 'SOME_EVENT' });
+model.dispatch({ type: "SOME_EVENT" });
 ```
 
 A typed `send` proxy is also generated automatically:
 
 ```ts
-model.send.SOME_EVENT();          // dispatch { type: 'SOME_EVENT' }
-model.send.OTHER_EVENT();         // dispatch { type: 'OTHER_EVENT' }
+model.send.SOME_EVENT(); // dispatch { type: 'SOME_EVENT' }
+model.send.OTHER_EVENT(); // dispatch { type: 'OTHER_EVENT' }
 ```
 
 Events are dispatched synchronously. The action runs immediately, the transition happens immediately, and any nested dispatches (e.g. a child emitting to a parent) are also resolved before `dispatch` returns.
@@ -274,7 +269,7 @@ Eventless ("always") transitions fire automatically after entry actions and when
 **XState**
 
 ```ts
-import { setup, createActor } from 'xstate';
+import { setup, createActor } from "xstate";
 
 const machine = setup({
   types: {
@@ -282,16 +277,16 @@ const machine = setup({
   },
 }).createMachine({
   context: { count: 5 },
-  initial: 'checking',
+  initial: "checking",
   states: {
     checking: {
       always: [
         {
           guard: ({ context }) => context.count > 10,
-          target: 'high',
+          target: "high",
         },
         {
-          target: 'low',
+          target: "low",
         },
       ],
     },
@@ -304,7 +299,7 @@ const machine = setup({
 **ComponentModel**
 
 ```ts
-import { ComponentModel, WithStateChart } from 'solid-component-model';
+import { ComponentModel, WithStateChart } from "solid-component-model";
 
 type Data = { count: number };
 type Events = never;
@@ -316,7 +311,7 @@ class CounterBase extends ComponentModel<Data, Events> {
 }
 
 const Counter = WithStateChart(CounterBase, {
-  initial: 'checking',
+  initial: "checking",
   states: {
     checking: {
       always: [
@@ -324,10 +319,10 @@ const Counter = WithStateChart(CounterBase, {
           guard() {
             return this.data.count > 10;
           },
-          target: 'high',
+          target: "high",
         },
         {
-          target: 'low',
+          target: "low",
         },
       ],
     },
@@ -344,17 +339,17 @@ Models can emit events to the outside world.
 **XState**
 
 ```ts
-import { setup, createActor } from 'xstate';
+import { setup, createActor } from "xstate";
 
 const machine = setup({
   types: {
     context: {} as { result: string },
-    events: {} as { type: 'FINISH'; value: string },
+    events: {} as { type: "FINISH"; value: string },
     output: {} as { result: string },
   },
 }).createMachine({
-  context: { result: '' },
-  initial: 'working',
+  context: { result: "" },
+  initial: "working",
   states: {
     working: {
       on: {
@@ -362,12 +357,12 @@ const machine = setup({
           actions: assign({
             result: ({ event }) => event.value,
           }),
-          target: 'done',
+          target: "done",
         },
       },
     },
     done: {
-      type: 'final',
+      type: "final",
       output: ({ context }) => ({ result: context.result }),
     },
   },
@@ -376,37 +371,37 @@ const machine = setup({
 const actor = createActor(machine);
 actor.subscribe({
   complete() {
-    console.log('Finished with:', actor.getSnapshot().output);
+    console.log("Finished with:", actor.getSnapshot().output);
   },
 });
 actor.start();
-actor.send({ type: 'FINISH', value: 'hello' });
+actor.send({ type: "FINISH", value: "hello" });
 ```
 
 **ComponentModel**
 
 ```ts
-import { ComponentModel, WithStateChart } from 'solid-component-model';
+import { ComponentModel, WithStateChart } from "solid-component-model";
 
 type Data = { value: string };
-type Events = { type: 'FINISH'; value: string };
-type Emits = { type: 'DONE'; result: string };
+type Events = { type: "FINISH"; value: string };
+type Emits = { type: "DONE"; result: string };
 
 class TaskBase extends ComponentModel<Data, Events, Emits> {
   constructor() {
-    super({ value: '' });
+    super({ value: "" });
   }
 }
 
 const TaskModel = WithStateChart(TaskBase, {
-  initial: 'working',
+  initial: "working",
   states: {
     working: {
       on: {
         FINISH: {
-          target: 'done',
+          target: "done",
           action(event) {
-            this.emit({ type: 'DONE', result: event.value });
+            this.emit({ type: "DONE", result: event.value });
           },
         },
       },
@@ -417,13 +412,13 @@ const TaskModel = WithStateChart(TaskBase, {
 
 // Parent listens via subscribe
 const task = new TaskModel();
-task.subscribe((event) => {
-  if (event.type === 'DONE') {
-    console.log('Finished with:', event.result);
+task.subscribe(event => {
+  if (event.type === "DONE") {
+    console.log("Finished with:", event.result);
   }
 });
 task.start();
-task.dispatch({ type: 'FINISH', value: 'hello' });
+task.dispatch({ type: "FINISH", value: "hello" });
 ```
 
 ## Raise, sendTo, sendParent
@@ -449,7 +444,6 @@ In **ComponentModel** it all covered by `dispatch` method, accessible within act
 }
 ```
 
-
 ## Data
 
 **XState**
@@ -458,8 +452,8 @@ In Xstate data is called "context" and updated by `assign` action.
 
 ```ts
 actions: assign({
-    count: ({ event }) => event.value
-})
+  count: ({ event }) => event.value,
+});
 ```
 
 **ComponentModel**
@@ -479,9 +473,8 @@ on: {
 You can also batch-set multiple keys with an object:
 
 ```ts
-this.setData({ count: 1, name: 'x' });
+this.setData({ count: 1, name: "x" });
 ```
-
 
 ## Transitions
 
@@ -489,9 +482,9 @@ this.setData({ count: 1, name: 'x' });
 
 ```ts
 on: {
-    SOME_EVENT: {
-        target: 'someState'
-    }
+  SOME_EVENT: {
+    target: "someState";
+  }
 }
 ```
 
@@ -532,12 +525,12 @@ In XState, actions are defined in the `setup` block and referenced by name in tr
 **XState**
 
 ```ts
-import { setup, createActor, assign } from 'xstate';
+import { setup, createActor, assign } from "xstate";
 
 const machine = setup({
   types: {
     context: {} as { count: number; message: string },
-    events: {} as { type: 'INCREMENT' } | { type: 'DECREMENT' },
+    events: {} as { type: "INCREMENT" } | { type: "DECREMENT" },
   },
   actions: {
     increment: assign({
@@ -547,22 +540,22 @@ const machine = setup({
       count: ({ context }) => context.count - 1,
     }),
     log: ({ context }) => {
-      console.log('Current count:', context.count);
+      console.log("Current count:", context.count);
     },
   },
 }).createMachine({
-  context: { count: 0, message: '' },
-  initial: 'idle',
+  context: { count: 0, message: "" },
+  initial: "idle",
   states: {
     idle: {
       on: {
         INCREMENT: {
-          target: 'idle',
-          actions: ['increment', 'log'],
+          target: "idle",
+          actions: ["increment", "log"],
         },
         DECREMENT: {
-          target: 'idle',
-          actions: ['decrement', 'log'],
+          target: "idle",
+          actions: ["decrement", "log"],
         },
       },
     },
@@ -573,43 +566,43 @@ const machine = setup({
 **ComponentModel**
 
 ```ts
-import { ComponentModel, WithStateChart } from 'solid-component-model';
+import { ComponentModel, WithStateChart } from "solid-component-model";
 
 type Data = { count: number; message: string };
-type Events = { type: 'INCREMENT' } | { type: 'DECREMENT' };
+type Events = { type: "INCREMENT" } | { type: "DECREMENT" };
 
 class CounterBase extends ComponentModel<Data, Events> {
   constructor() {
-    super({ count: 0, message: '' });
+    super({ count: 0, message: "" });
   }
 
   protected increment() {
-    this.setData('count', this.data.count + 1);
+    this.setData("count", this.data.count + 1);
   }
 
   protected decrement() {
-    this.setData('count', this.data.count - 1);
+    this.setData("count", this.data.count - 1);
   }
 
   protected log() {
-    console.log('Current count:', this.data.count);
+    console.log("Current count:", this.data.count);
   }
 }
 
 const Counter = WithStateChart(CounterBase, {
-  initial: 'idle',
+  initial: "idle",
   states: {
     idle: {
       on: {
         INCREMENT: {
-          target: 'idle',
+          target: "idle",
           action() {
             this.increment();
             this.log();
           },
         },
         DECREMENT: {
-          target: 'idle',
+          target: "idle",
           action() {
             this.decrement();
             this.log();
@@ -627,18 +620,20 @@ Guards are plain method functions on the state-node handler. They receive the tr
 
 ```ts
 on: {
-    SOME: [{
-        guard(event) {
-            // Receives the triggering event
-            console.log(event.value);
-            // Has access to this as well, e.g. can read this.data
-            return event.value !== this.data.some;
-        },
-        target: 'default',
-        action(event) {
-            this.setData({ some: event.value });
-        }
-    }]
+  SOME: [
+    {
+      guard(event) {
+        // Receives the triggering event
+        console.log(event.value);
+        // Has access to this as well, e.g. can read this.data
+        return event.value !== this.data.some;
+      },
+      target: "default",
+      action(event) {
+        this.setData({ some: event.value });
+      },
+    },
+  ];
 }
 ```
 
@@ -657,7 +652,6 @@ on: {
     }]
 }
 ```
-
 
 ## Entry / exit actions
 
@@ -680,7 +674,6 @@ states: {
 ```
 
 Exit actions run just before the state is left, entry actions run when the state is entered. They follow the same method-function rule as all other handlers. If an entry or exit action throws, the error is logged but the machine **continues** running and the transition still completes.
-
 
 ## Invoke
 
@@ -766,19 +759,21 @@ Invoked objects are bound to the **state** that created them. When the machine e
 `onDone` supports an array of handlers with guards, same as regular transitions:
 
 ```ts
-onDone: [{
+onDone: [
+  {
     guard: () => true,
-    target: 'default',
-    action: (event) => {
-        this.setData('data', event.result);
-    }
-}, {
-    target: 'default'
-}]
+    target: "default",
+    action: event => {
+      this.setData("data", event.result);
+    },
+  },
+  {
+    target: "default",
+  },
+];
 ```
 
 An unhandled promise rejection or observable error moves the model to `error` status and emits the error through the observable error channel.
-
 
 ## Delayed transitions
 
@@ -786,18 +781,18 @@ An unhandled promise rejection or observable error moves the model to `error` st
 
 ```ts
 const pushTheButtonGame = createMachine({
-  initial: 'waitingForButtonPush',
+  initial: "waitingForButtonPush",
   states: {
     waitingForButtonPush: {
       after: {
         5000: {
-          target: 'timedOut',
-          actions: 'logThatYouGotTimedOut',
+          target: "timedOut",
+          actions: "logThatYouGotTimedOut",
         },
       },
       success: {},
       timedOut: {},
-    }
+    },
   },
 });
 ```
@@ -831,7 +826,6 @@ eventThatSchedules(value: string) {
 }
 ```
 
-
 ## Spawn
 
 Both libraries provide a way to create child models and attach them to the parent.
@@ -841,9 +835,9 @@ Both libraries provide a way to create child models and attach them to the paren
 ```ts
 createMachine({
   entry: [
-    spawnChild(childMachine, { id: 'child-1' }),
-    spawnChild(childMachine, { id: 'child-2' }),
-    spawnChild(childMachine, { id: 'child-3' }),
+    spawnChild(childMachine, { id: "child-1" }),
+    spawnChild(childMachine, { id: "child-2" }),
+    spawnChild(childMachine, { id: "child-3" }),
   ],
 });
 
@@ -852,7 +846,7 @@ createMachine({
 const parentMachine = createMachine({
   entry: [
     assign({
-      childMachineRef: ({ spawn }) => spawn(childMachine, { id: 'child' }),
+      childMachineRef: ({ spawn }) => spawn(childMachine, { id: "child" }),
     }),
   ],
 });
@@ -864,12 +858,11 @@ Instead of using `spawn` or `spawnChild` you just call `start` method in the con
 
 ```ts
 class ParentModel extends ComponentModel<ParentData, ParentEvents> {
-
-    protected addChild() {
-        const child = new ChildModel();
-        child.start(); // attaches to a ParentModel as child
-        this.data.children.push(child); // optional
-    }
+  protected addChild() {
+    const child = new ChildModel();
+    child.start(); // attaches to a ParentModel as child
+    this.data.children.push(child); // optional
+  }
 }
 ```
 
@@ -879,20 +872,19 @@ See [Spawning child models](./spawn-children.html#spawning-child-models) for ful
 
 You can store the state of an actor/model in persistent storage, such as localStorage or a database, and restore the state of the model from that snapshot.
 
-It's useful for maintaining state across browser reloads. 
+It's useful for maintaining state across browser reloads.
 
 ### Snapshots & serialization
 
 **Xstate**
+
 ```ts
 const persistedState = actor.getPersistedSnapshot();
 ```
 
-
 **ComponentModel**
 
 ```ts
-
 const persistedState = model.getPersistedSnapshot();
 ```
 
@@ -908,8 +900,9 @@ const persistedState = model.getPersistedSnapshot();
 ### Restoring the state
 
 **Xstate**
+
 ```ts
-const restoredState = JSON.parse(localStorage.getItem('feedback'));
+const restoredState = JSON.parse(localStorage.getItem("feedback"));
 
 const restoredActor = createActor(actorMachine, {
   snapshot: restoredState,
@@ -929,36 +922,31 @@ Child models are recursively serialized and restored. But both libraries require
 
 ```ts
 class ParentModel extends ComponentModel<ParentData, ParentEvents> {
-    static childTypes = {
-        Child: ChildModel
-    }
+  static childTypes = {
+    Child: ChildModel,
+  };
 }
 ```
-See [Caching and Restoring Snapshots](./caching) for full details.
 
+See [Caching and Restoring Snapshots](./caching) for full details.
 
 ## Error handling
 
 See [Errors handling](./errors-handling.md) for a full breakdown of how errors in guards, effects, and invoked objects behave, and which ones stop the model.
 
-
 ## Features not supported
 
 The following XState features have no equivalent in ComponentModel:
 
-* **State machines as actors / `invoke: machine`** — you cannot invoke another machine as a service; use model composition or child models instead.
-* **`onDone` on a state machine invoke** — only `invokePromise` and `invokeObservable` exist.
-* **Parallel states** — only hierarchical (nested) states are supported.
-* **History states (`history`)** — not implemented.
-* **Final states & output (`type: 'final'`, `output`)** — `status: 'done'` exists but there is no state-node-level final state concept.
-* **Interpreter options (`devtools`, `clock`, etc.)** — there is a pluggable `logger` and `tracer`, but no full interpreter options API.
-* **Routes** — for navigating deeply nested state from anywhere.
-* **Pure transition functions** — allow you to compute the next state and actions of a state machine without creating a live actor or executing any side effects.
-* **Tags**
-
-
-
-
+- **State machines as actors / `invoke: machine`** — you cannot invoke another machine as a service; use model composition or child models instead.
+- **`onDone` on a state machine invoke** — only `invokePromise` and `invokeObservable` exist.
+- **Parallel states** — only hierarchical (nested) states are supported.
+- **History states (`history`)** — not implemented.
+- **Final states & output (`type: 'final'`, `output`)** — `status: 'done'` exists but there is no state-node-level final state concept.
+- **Interpreter options (`devtools`, `clock`, etc.)** — there is a pluggable `logger` and `tracer`, but no full interpreter options API.
+- **Routes** — for navigating deeply nested state from anywhere.
+- **Pure transition functions** — allow you to compute the next state and actions of a state machine without creating a live actor or executing any side effects.
+- **Tags**
 
 <!--
 Xstate features that guide needs to cover:

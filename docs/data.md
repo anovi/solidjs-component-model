@@ -22,7 +22,7 @@ You can read from `model.data` anywhere. Inside SolidJS JSX or `createEffect`, t
 const model = useModel(CounterModel, 0);
 
 // Reactive in JSX
-<div>{model.data.count}</div>
+<div>{model.data.count}</div>;
 ```
 
 ## Updating data

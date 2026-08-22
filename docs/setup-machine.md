@@ -10,23 +10,23 @@ The `StateChart.create` function takes a configuration object describing states,
 import { StateChart } from "solid-component-model";
 
 const chart = StateChart.create({
-  initial: 'idle',
+  initial: "idle",
   states: {
     idle: {
       on: {
-        START: 'running'
-      }
+        START: "running",
+      },
     },
     running: {
       on: {
-        STOP: 'idle',
-        FINISH: 'done'
-      }
+        STOP: "idle",
+        FINISH: "done",
+      },
     },
     done: {
-      type: 'final'
-    }
-  }
+      type: "final",
+    },
+  },
 });
 ```
 
@@ -50,17 +50,17 @@ class MyModelBase extends ComponentModel<{ count: number }> {
 export const MyModel = WithStateChart(
   MyModelBase,
   {
-    initial: 'idle',
+    initial: "idle",
     states: {
       idle: {
-        on: { START: 'running' }
+        on: { START: "running" },
       },
       running: {
-        on: { STOP: 'idle' }
-      }
-    }
+        on: { STOP: "idle" },
+      },
+    },
   },
-  'MyModel'
+  "MyModel"
 );
 ```
 
@@ -68,7 +68,7 @@ The model instance now has a `matches` method for checking state:
 
 ```ts
 const model = useModel(MyModel);
-const isRunning = model.matches('running'); // true or false
+const isRunning = model.matches("running"); // true or false
 ```
 
 ## Accessing the model in guards and effects
@@ -79,32 +79,32 @@ Because the interpreter uses `.call(this, ...)` to run these functions, you must
 
 ```ts
 const chart = StateChart.create({
-  initial: 'idle',
+  initial: "idle",
   states: {
     idle: {
       on: {
         START: {
-          target: 'running',
+          target: "running",
           // ✅  Correct — method-style function, `this` is the model
           guard() {
             return this.data.ready;
           },
           action() {
-            this.setData('startedAt', Date.now());
-          }
-        }
-      }
+            this.setData("startedAt", Date.now());
+          },
+        },
+      },
     },
     running: {
       // ✅ Correct — `this` is the model
       entry() {
-        this.setData('status', 'running');
+        this.setData("status", "running");
       },
       exit() {
-        this.setData('status', 'stopped');
-      }
-    }
-  }
+        this.setData("status", "stopped");
+      },
+    },
+  },
 });
 ```
 
@@ -113,8 +113,8 @@ Arrow functions will not work as expected:
 ```ts
 // ❌ Wrong — `this` is not the model
 action: () => {
-  this.setData('startedAt', Date.now()); // Error or wrong `this`
-}
+  this.setData("startedAt", Date.now()); // Error or wrong `this`
+};
 ```
 
 If you need to reference the model's type inside a guard or effect, define the chart configuration after the model class or use a generic helper so TypeScript can infer `this` correctly.
@@ -125,16 +125,16 @@ States can contain child states. When a parent state is entered, its `initial` c
 
 ```ts
 const chart = StateChart.create({
-  initial: 'parent',
+  initial: "parent",
   states: {
     parent: {
-      initial: 'childA',
+      initial: "childA",
       states: {
-        childA: { on: { NEXT: 'childB' } },
-        childB: { on: { BACK: 'childA' } }
-      }
-    }
-  }
+        childA: { on: { NEXT: "childB" } },
+        childB: { on: { BACK: "childA" } },
+      },
+    },
+  },
 });
 ```
 

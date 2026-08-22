@@ -4,54 +4,51 @@ import { type Unsubscribable, type Observer } from "./observable";
 import type { AnyModelData, EventType, Snapshot, Status } from "./types";
 import type { Event } from "./state-chart";
 
-
-
 export interface Model<
-    Data extends AnyModelData = AnyModelData,
-    E extends Event = { type: string },
-    Emitted extends Event = { type: string },
-    DoneData = unknown
+  Data extends AnyModelData = AnyModelData,
+  E extends Event = { type: string },
+  Emitted extends Event = { type: string },
+  DoneData = unknown,
 > {
-    readonly _id: string;
+  readonly _id: string;
 
-    data: Store <Data>;
+  data: Store<Data>;
 
-    status: Status;
+  status: Status;
 
-    /** Error that caused stopping the machine with `error` status */
-    error?: Error;
+  /** Error that caused stopping the machine with `error` status */
+  error?: Error;
 
-    doneData?: DoneData;
+  doneData?: DoneData;
 
-    on: <T extends EventType<Emitted>>(
-        type: T,
-        handler: (event: Extract<Emitted, { type: T }>) => void
-    ) => Unsubscribable;
+  on: <T extends EventType<Emitted>>(
+    type: T,
+    handler: (event: Extract<Emitted, { type: T }>) => void
+  ) => Unsubscribable;
 
-    subscribe: (observerOrNext: Partial<Observer<Emitted>>) => Unsubscribable;
+  subscribe: (observerOrNext: Partial<Observer<Emitted>>) => Unsubscribable;
 
-    dispatch: (event: E) => void;
+  dispatch: (event: E) => void;
 
-    toJSON: () => Snapshot<string, AnyModelData>;
+  toJSON: () => Snapshot<string, AnyModelData>;
 
-    getPersistedSnapshot: () => unknown;
+  getPersistedSnapshot: () => unknown;
 
-    start: () => void;
+  start: () => void;
 
-    stop: () => void;
+  stop: () => void;
 }
 
-
 export interface Loggable {
-    warnNonActiveModel: (message: string) => void;
+  warnNonActiveModel: (message: string) => void;
 
-    logTransitoin: (from: string, to: string) => void
+  logTransitoin: (from: string, to: string) => void;
 
-    logEvent: (event: Event) => void
+  logEvent: (event: Event) => void;
 
-    logGroup: () => void
+  logGroup: () => void;
 
-    logGroupEnd: () => void
+  logGroupEnd: () => void;
 
-    logError: (message: string, err: Error) => void
+  logError: (message: string, err: Error) => void;
 }

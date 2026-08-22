@@ -12,21 +12,21 @@ Write guards as regular `function` methods, **not arrow functions**. The interpr
 
 ```ts
 const chart = StateChart.create({
-  initial: 'idle',
+  initial: "idle",
   states: {
     idle: {
       on: {
         SUBMIT: {
-          target: 'submitting',
+          target: "submitting",
           guard() {
             // `this` is the model instance
             return this.data.isValid;
-          }
-        }
-      }
+          },
+        },
+      },
     },
-    submitting: {}
-  }
+    submitting: {},
+  },
 });
 ```
 
@@ -41,14 +41,18 @@ idle: {
   on: {
     SUBMIT: [
       {
-        target: 'submitting',
-        guard() { return this.data.isValid; }
+        target: "submitting",
+        guard() {
+          return this.data.isValid;
+        },
       },
       {
-        target: 'invalid',
-        action() { this.setData('error', 'Form is not valid'); }
-      }
-    ]
+        target: "invalid",
+        action() {
+          this.setData("error", "Form is not valid");
+        },
+      },
+    ];
   }
 }
 ```
