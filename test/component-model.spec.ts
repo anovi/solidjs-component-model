@@ -27,7 +27,6 @@ import {
   TerminalLogger,
   MachineMalformed,
   StateChart,
-  type ModelConstructor,
 } from "../src";
 import { ModelWithEffectOrder } from "./test-models/model-with-effect-order";
 import { CustomizedParentModelMachine } from "./test-models/parent-with-custom-serialization";
@@ -782,14 +781,14 @@ describe("component-model", () => {
     it("attaches a compiled chart to different models with the same interface", async () => {
       type events = { type: "EVENT" };
 
-      interface Model {
+      interface Model extends ComponentModel<any, events> {
         someMethod: () => void;
       }
 
       let called1 = false;
       let called2 = false;
 
-      class MyModel extends ComponentModel<any, events> implements Model {
+      class MyModelA extends ComponentModel<any, events> implements Model {
         constructor() {
           super({});
         }
@@ -797,7 +796,7 @@ describe("component-model", () => {
           called1 = true;
         }
       }
-      class MyModel2 extends ComponentModel<any, events> implements Model {
+      class MyModelB extends ComponentModel<any, events> implements Model {
         constructor() {
           super({});
         }
@@ -822,24 +821,23 @@ describe("component-model", () => {
         },
       });
 
-      const ModelWithCompiledChart1 = WithStateChart<ModelConstructor<MyModel>>(
-        MyModel,
+      const ModelWithCompiledChart1 = WithStateChart<typeof MyModelA>(
+        MyModelA,
         compiledChart
       );
-      const ModelWithCompiledChart2 = WithStateChart<ModelConstructor<MyModel>>(
-        MyModel2,
-        compiledChart
-      );
+      const ModelWithCompiledChart2 = WithStateChart(MyModelB, compiledChart);
 
       const inst1 = new ModelWithCompiledChart1();
       inst1.start();
       inst1.dispatch({ type: "EVENT" });
       assert.equal(called1, true);
+      inst1.matches("");
 
       const inst2 = new ModelWithCompiledChart2();
       inst2.start();
       inst2.dispatch({ type: "EVENT" });
       assert.equal(called2, true);
+      inst2.matches("");
     });
   });
 
