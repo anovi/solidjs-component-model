@@ -31,10 +31,19 @@ type L3<T, P extends string = ""> = T extends {
 
 // ...continue up to L6...
 
-export type StatePathsOfConfig<T> = T extends { states: any } ? L3<T> : never;
+/** Generate state paths from a raw config.  */
+export type StateChartConfigPaths<T> = T extends { states: any }
+  ? L3<T>
+  : never;
 
+/** Generate state paths from a compiled StateChart.  */
 export type StateChartPaths<T> = T extends { config: infer C }
-  ? StatePathsOfConfig<C>
+  ? StateChartConfigPaths<C>
+  : never;
+
+/** Generate state paths from an Interpreter.  */
+export type InterpreterPaths<T> = T extends { chart: infer C }
+  ? StateChartPaths<C>
   : never;
 
 /**

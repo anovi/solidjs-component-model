@@ -21,8 +21,9 @@ export {
   type AnyAction,
 } from "./state-chart/state-chart-types";
 export {
-  type StatePathsOfConfig,
+  type StateChartConfigPaths,
   type StateChartPaths,
+  type InterpreterPaths,
 } from "./state-chart/state-path";
 export { type StateNode } from "./state-chart/state-node";
 

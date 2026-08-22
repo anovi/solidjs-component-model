@@ -6,7 +6,7 @@ import {
   type StateChartPaths,
 } from "../../src";
 import { ParentModel } from "../test-models/parent-model";
-import type { StatePathsOfConfig } from "../../src/state-chart/state-path";
+import type { StateChartConfigPaths } from "../../src/state-chart/state-path";
 
 /* ------------------------------------------------------------------- */
 
@@ -44,7 +44,7 @@ class CounterModel extends ComponentModel<{ some: string }, CounterEvents> {
 
 describe("WithStateChart", function () {
   it("type-safe: StatePaths helper produces valid paths from config", async function () {
-    type Paths = StatePathsOfConfig<typeof config>;
+    type Paths = StateChartConfigPaths<typeof config>;
     expectTypeOf<Paths>().toEqualTypeOf<"idle" | "running">();
   });
 
@@ -67,7 +67,7 @@ describe("WithStateChart", function () {
   });
 
   it("type-safe: matches() accepts string for a model from config", async function () {
-    type Paths = StatePathsOfConfig<typeof config>;
+    type Paths = StateChartConfigPaths<typeof config>;
     const ModelFromConfig = WithStateChart(Model, config);
     const instance = new ModelFromConfig();
 
