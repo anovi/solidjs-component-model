@@ -42,20 +42,26 @@ class CounterModel extends ComponentModel<{ some: string }, CounterEvents> {
 /* ------------------------------------------------------------------- */
 
 describe("WithStateChart", function () {
-  it("type-safe: matches() works with both raw and compiled chart", async function () {
-    const ModelFromConfig = WithStateChart(Model, config);
-    const inst1 = new ModelFromConfig();
+  it("type-safe: matches() works for a model from compiled chart", async function () {
     type Paths = StatePaths<typeof config>;
-    expectTypeOf(inst1.matches).parameter(0).toEqualTypeOf<Paths>();
-    inst1.matches("running");
-
     const ModelFromCompiled = WithStateChart(Model, compiled);
-    const inst2 = new ModelFromCompiled();
+    const instance = new ModelFromCompiled();
 
-    expectTypeOf(inst2.matches).parameter(0).toEqualTypeOf<Paths>();
+    expectTypeOf(instance.matches).parameter(0).toEqualTypeOf<Paths>();
 
     // @ts-expect-error No such state
-    inst1.matches("foobar");
+    instance.matches("foobar");
+  });
+
+  it("type-safe: matches() works for a model from config", async function () {
+    type Paths = StatePaths<typeof config>;
+    const ModelFromConfig = WithStateChart(Model, config);
+    const instance = new ModelFromConfig();
+
+    expectTypeOf(instance.matches).parameter(0).toEqualTypeOf<Paths>();
+
+    // @ts-expect-error No such state
+    instance.matches("foobar");
   });
 
   it("preserves static methods fromJSON and fromPersistedSnapshot with explicit generic", async function () {

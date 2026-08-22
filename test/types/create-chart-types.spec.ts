@@ -101,8 +101,14 @@ describe("StateChart.create", function () {
 
     const ModelCtor = WithStateChart(ConcreteCounterModel, chart);
     const model = new ModelCtor();
-    const runtime = chart.createRuntime(model);
+    const interpreter = chart.createRuntime(model);
 
-    runtime.getMostSpecificHandler("", { type: "RESET" });
+    interpreter.getMostSpecificHandler("", { type: "RESET" });
+    expectTypeOf(interpreter.getMostSpecificHandler)
+      .parameter(0)
+      .toEqualTypeOf<string>();
+    expectTypeOf(interpreter.getMostSpecificHandler)
+      .parameter(1)
+      .toEqualTypeOf<CounterEvents | undefined>();
   });
 });
