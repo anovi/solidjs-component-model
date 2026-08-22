@@ -13,5 +13,5 @@ export {
   type Action,
 } from "./state-chart-types";
 export { type StateNode } from "./state-node";
-export { type StatePaths } from "./state-path";
+export { type StatePathsOfConfig, type StateChartPaths } from "./state-path";
 export { MachineMalformed } from "./errors";

@@ -4,24 +4,23 @@ import type {
   Event,
   StateChartConfig,
 } from "./state-chart";
-import type { StatePaths } from "./state-chart/state-path";
 import { ComponentModel } from "./component-model";
 import { StateChart } from "./state-chart";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ModelConstructor<T = object> = new (...args: any[]) => T;
 
-export interface StateChartMethods<TConfig> {
-  matches: (path: StatePaths<TConfig>) => boolean;
+export interface StateChartMethods {
+  matches: <TPath extends string = string>(path: TPath) => boolean;
 }
 
 export type WithStateChartConstructor<
   TBase extends ModelConstructor,
-  TConfig,
+  TConfig = any,
 > = Omit<TBase, "prototype"> & {
   new (
     ...args: ConstructorParameters<TBase>
-  ): InstanceType<TBase> & StateChartMethods<TConfig>;
+  ): InstanceType<TBase> & StateChartMethods;
 
   config: TConfig;
 };

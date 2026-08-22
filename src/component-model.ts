@@ -63,7 +63,6 @@ import {
   Interpreter,
   type Event,
   type EventName,
-  type StateChartConfig,
   type Transition,
   type TransitionStep,
   MachineMalformed,
@@ -71,7 +70,6 @@ import {
 import { type Logger } from "./logger";
 import { Queue } from "./queue";
 import type { Span, Tracer } from "./tracer-types";
-import { type StatePaths } from "./state-chart/state-path";
 import { EffectFailed } from "./errors";
 import type { Model } from "./interfaces";
 import { Stack } from "./stack";
@@ -158,7 +156,7 @@ export abstract class ComponentModel<
 
   data: Store<Data>;
 
-  state: Accessor<StatePaths<StateChartConfig<this, E>>>;
+  state: Accessor<string>;
 
   /** Error that caused stopping the machine with `error` status */
   error?: Error;
@@ -190,7 +188,7 @@ export abstract class ComponentModel<
     ).chart;
     if (stateChartSetup) {
       const [state, setState] = createSignal("");
-      this.state = state as Accessor<StatePaths<StateChartConfig<this, E>>>;
+      this.state = state;
       this.#stateSetter = setState;
       this.stateChart = stateChartSetup.createRuntime(this);
     } else {
@@ -491,7 +489,7 @@ export abstract class ComponentModel<
 
   #queue: Queue;
 
-  #stateSetter: Setter<StatePaths<StateChartConfig<this, E>>>;
+  #stateSetter: Setter<string>;
 
   /* ---------------------- State Data ----------------------- */
 

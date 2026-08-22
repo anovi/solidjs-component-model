@@ -20,7 +20,10 @@ export {
   type Action,
   type AnyAction,
 } from "./state-chart/state-chart-types";
-export { type StatePaths } from "./state-chart/state-path";
+export {
+  type StatePathsOfConfig,
+  type StateChartPaths,
+} from "./state-chart/state-path";
 export { type StateNode } from "./state-chart/state-node";
 
 // SolidJS Integration

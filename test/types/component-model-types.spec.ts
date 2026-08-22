@@ -3,9 +3,10 @@ import {
   ComponentModel,
   WithStateChart,
   StateChart,
-  type StatePaths,
+  type StateChartPaths,
 } from "../../src";
 import { ParentModel } from "../test-models/parent-model";
+import type { StatePathsOfConfig } from "../../src/state-chart/state-path";
 
 /* ------------------------------------------------------------------- */
 
@@ -42,26 +43,40 @@ class CounterModel extends ComponentModel<{ some: string }, CounterEvents> {
 /* ------------------------------------------------------------------- */
 
 describe("WithStateChart", function () {
-  it("type-safe: matches() works for a model from compiled chart", async function () {
-    type Paths = StatePaths<typeof config>;
+  it("type-safe: StatePaths helper produces valid paths from config", async function () {
+    type Paths = StatePathsOfConfig<typeof config>;
+    expectTypeOf<Paths>().toEqualTypeOf<"idle" | "running">();
+  });
+
+  it("type-safe: StateChartPaths/ChartPaths helper produces valid paths from compiled chart", async function () {
+    type Paths = StateChartPaths<typeof compiled>;
+    expectTypeOf<Paths>().toEqualTypeOf<"idle" | "running">();
+  });
+
+  it("type-safe: matches() accepts string by default or generic paths parameter", async function () {
+    type Paths = StateChartPaths<typeof compiled>;
     const ModelFromCompiled = WithStateChart(Model, compiled);
     const instance = new ModelFromCompiled();
 
-    expectTypeOf(instance.matches).parameter(0).toEqualTypeOf<Paths>();
+    expectTypeOf(instance.matches).parameter(0).toEqualTypeOf<string>();
+    instance.matches("running");
+    instance.matches<Paths>("idle");
 
-    // @ts-expect-error No such state
-    instance.matches("foobar");
+    // @ts-expect-error No such state when typed with Paths
+    instance.matches<Paths>("foobar");
   });
 
-  it("type-safe: matches() works for a model from config", async function () {
-    type Paths = StatePaths<typeof config>;
+  it("type-safe: matches() accepts string for a model from config", async function () {
+    type Paths = StatePathsOfConfig<typeof config>;
     const ModelFromConfig = WithStateChart(Model, config);
     const instance = new ModelFromConfig();
 
-    expectTypeOf(instance.matches).parameter(0).toEqualTypeOf<Paths>();
+    expectTypeOf(instance.matches).parameter(0).toEqualTypeOf<string>();
+    instance.matches("running");
+    instance.matches<Paths>("idle");
 
-    // @ts-expect-error No such state
-    instance.matches("foobar");
+    // @ts-expect-error No such state when typed with Paths
+    instance.matches<Paths>("foobar");
   });
 
   it("preserves static methods fromJSON and fromPersistedSnapshot with explicit generic", async function () {
