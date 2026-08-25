@@ -12,14 +12,12 @@ export class ChildWithoutStateChart extends ComponentModel<{ some: string }> {
   }
 
   eventThatSchedules(value: string) {
-    this.schedule(
-      {
-        action: () => {
-          this.setSome(value);
-        },
+    this.schedule({
+      after: 10,
+      action: () => {
+        this.setSome(value);
       },
-      10
-    );
+    });
   }
 
   protected setSome(value: string) {
@@ -54,14 +52,12 @@ export class ModelWithoutStateChart extends ComponentModel<Data> {
 
   @action
   eventThatSchedules(value: string) {
-    this.schedule(
-      {
-        action: () => {
-          this.setSome(value);
-        },
+    this.schedule({
+      after: 10,
+      action: () => {
+        this.setSome(value);
       },
-      10
-    );
+    });
   }
 
   @action

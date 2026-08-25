@@ -21,14 +21,10 @@ class Model extends ComponentModel<Data, Events> {
   }
 
   eventThatSchedules(value: string) {
-    this.schedule(
-      {
-        action: () => {
-          this.setData("some", value);
-        },
-      },
-      10
-    );
+    this.schedule({
+      after: 10,
+      action: () => this.setData("some", value),
+    });
   }
 }
 
@@ -44,23 +40,15 @@ export const ModelWithDelayedTransitions = WithStateChart(Model, {
     },
     Second: {
       entry() {
-        this.schedule(
-          {
-            target: "Default",
-            action: () => {
-              this.setData("delayedFired", true);
-            },
-          },
-          50
-        );
-        this.schedule(
-          {
-            action: () => {
-              this.setData("secondScheduleFired", true);
-            },
-          },
-          60
-        );
+        this.schedule({
+          after: 50,
+          target: "Default",
+          action: () => this.setData("delayedFired", true),
+        });
+        this.schedule({
+          after: 60,
+          action: () => this.setData("secondScheduleFired", true),
+        });
       },
       on: {
         prevent: {
@@ -73,14 +61,10 @@ export const ModelWithDelayedTransitions = WithStateChart(Model, {
     },
     Third: {
       entry() {
-        this.schedule(
-          {
-            action: () => {
-              this.setData("thirdEntryScheduleFired", true);
-            },
-          },
-          10
-        );
+        this.schedule({
+          after: 10,
+          action: () => this.setData("thirdEntryScheduleFired", true),
+        });
       },
     },
   },

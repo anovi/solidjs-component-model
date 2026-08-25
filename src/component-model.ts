@@ -434,8 +434,7 @@ export abstract class ComponentModel<
   protected setData: SetStoreFunction<Data>;
 
   protected schedule(
-    handler: Transition<this, E | InternalEvent>,
-    timeout?: number
+    handler: Transition<this, E | InternalEvent> & { after?: number }
   ): void {
     if (this.status !== "active")
       return this.#warnNonActiveModel(`Can't schedule in a`);
@@ -446,7 +445,7 @@ export abstract class ComponentModel<
         { type: InternalEventName.ScheduledExecute, state: this.state() },
         handler
       ),
-      timeout || 0,
+      handler.after || 0,
       this.state()
     );
   }

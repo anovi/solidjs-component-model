@@ -23,14 +23,12 @@ const config = {
   states: {
     default: {
       entry() {
-        this.schedule(
-          {
-            action: () => {
-              this.parent.someEvent("from child");
-            },
+        this.schedule({
+          after: 10,
+          action: () => {
+            this.parent.someEvent("from child");
           },
-          10
-        );
+        });
       },
       on: {
         some: {

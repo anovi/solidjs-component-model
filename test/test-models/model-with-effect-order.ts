@@ -61,14 +61,12 @@ export const ModelWithEffectOrder = WithStateChart(ModelBase, {
         SCHEDULE_TEST: {
           target: "withSchedule",
           action() {
-            this.schedule(
-              {
-                action: () => {
-                  this.record("scheduled-action-in-event");
-                },
+            this.schedule({
+              after: 5,
+              action: () => {
+                this.record("scheduled-action-in-event");
               },
-              5
-            );
+            });
           },
         },
       },
@@ -137,14 +135,12 @@ export const ModelWithEffectOrder = WithStateChart(ModelBase, {
         deeper: {
           entry() {
             this.record("second.deeper-entry");
-            this.schedule(
-              {
-                action: () => {
-                  this.record("scheduled-action-in-deeper");
-                },
+            this.schedule({
+              after: 5,
+              action: () => {
+                this.record("scheduled-action-in-deeper");
               },
-              5
-            );
+            });
           },
           on: {
             GO: {
@@ -170,14 +166,12 @@ export const ModelWithEffectOrder = WithStateChart(ModelBase, {
     withSchedule: {
       entry() {
         this.record("withSchedule-entry");
-        this.schedule(
-          {
-            action: () => {
-              this.record("scheduled-action-in-withSchedule");
-            },
+        this.schedule({
+          after: 5,
+          action: () => {
+            this.record("scheduled-action-in-withSchedule");
           },
-          5
-        );
+        });
       },
       on: {
         GO: {
