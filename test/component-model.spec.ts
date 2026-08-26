@@ -48,6 +48,15 @@ describe("component-model", () => {
       assert.equal(model.data.some, "updated");
     });
 
+    it("breaks incapsulation", async () => {
+      const model = new ModelWithoutStateChart();
+      model.start();
+      // @ts-ignore Just to demonstrate violation
+      model.setData("some", "violation");
+      await sleep(0);
+      assert.equal(model.data.some, "violation");
+    });
+
     it("handles multiple event", async () => {
       const model = new ModelWithoutStateChart();
       model.start();
