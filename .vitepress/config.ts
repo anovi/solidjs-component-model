@@ -24,7 +24,7 @@ export default withMermaid({
         text: "Models",
         items: [
           { text: "Basics", link: "/model" },
-          { text: "Components", link: "/components" },
+          { text: "Using in components", link: "/components" },
           { text: "Data", link: "/data" },
           { text: "Emit events", link: "/emitting-events" },
           { text: "Spawning children", link: "/spawn-children" },

@@ -15,7 +15,10 @@ export class MyModel extends ComponentModel<{ shown: boolean }> {
   show() {
     this.setData("shown", true);
     // Hide after 3 seconds
-    this.schedule(() => this.setData("shown", false), 3000);
+    this.schedule({
+      after: 3000,
+      action: () => this.setData("shown", false),
+    });
   }
 }
 ```
@@ -25,15 +28,18 @@ If the model is destroyed within these 3 seconds, it automatically cleans up the
 
 ## Cancelling scheduled tasks
 
-When a state is exited, all scheduled tasks tied to that state are automatically cancelled. You do not need to manage timers manually.
+**Automatic**  
+When model stops it cancels all schedules tasks automatically.
 
-## Manual flush
+**Manual**  
+There is no way to manually cancel a scheduled task. You need to define it though state chart logic.
 
-If you need to cancel all pending timers for a state programmatically, the scheduler supports flushing by tag or state name. In normal use, this happens automatically on state exit.
+**In state machines**  
+Scheduled tasks are attached to state where they started. When this state is exited, all scheduled tasks tied to that state are automatically cancelled. You do not need to manage timers manually.
 
 ## Scheduling in state charts
 
-Inside state chart effects—`entry`, `exit`, or an event `action`—you can call `this.schedule` to delay a transition or action.
+Inside state chart `entry` effect, or an event `action` — you can call `this.schedule` to delay a transition or action.
 
 ```ts
 const chart = StateChart.create({
@@ -47,19 +53,17 @@ const chart = StateChart.create({
     running: {
       entry() {
         // After 2 seconds, transition back to idle
-        this.schedule({ target: "idle" }, 2000);
+        this.schedule({ after: 2000, target: "idle" });
       },
       on: {
         STOP: {
           target: "idle",
           action() {
             // Run an action after 500 ms
-            this.schedule(
-              {
-                action: () => console.log("Stopped!"),
-              },
-              500
-            );
+            this.schedule({
+              after: 500,
+              action: () => console.log("Stopped!"),
+            });
           },
         },
       },
@@ -74,8 +78,8 @@ Because `this.schedule` is a method on the model, you can also schedule multiple
 {
   someState: {
     entry() {
-      this.schedule({ target: 'next' }, 1000);
-      this.schedule({ action: () => this.setData('warned', true) }, 500);
+      this.schedule({ after: 1000, target: 'next' });
+      this.schedule({ after: 500, action: () => this.setData('warned', true) });
     }
   },
 }

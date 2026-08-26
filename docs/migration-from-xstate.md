@@ -196,6 +196,7 @@ type Data = {
 type Events = { type: "SUBMIT" };
 
 class FeedbackModelBase extends ComponentModel<Data, Events> {
+  // Constructor arguments is an input
   constructor(userId: string, defaultRating: number) {
     super({
       userId,
@@ -206,9 +207,10 @@ class FeedbackModelBase extends ComponentModel<Data, Events> {
 }
 
 const FeedbackModel = WithStateChart(FeedbackModelBase, {
-  // ...
+  // state chart config...
 });
 
+// The FeedbackModel keeps the FeedbackModelBase's signature
 const model = new FeedbackModel("123", 5);
 model.start();
 ```
@@ -803,14 +805,16 @@ In `ComponentModel` there is no `after` property on state nodes. Instead you use
 
 ```ts
 entry() {
-    this.schedule({
-        target: 'default',
-        action: () => this.setData('delayedFired', true)
-    }, 50);
+  this.schedule({
+    after: 50,
+    target: 'default',
+    action: () => this.setData('delayedFired', true)
+  });
 
-    this.schedule({
-        action: () => this.setData('secondScheduleFired', true)
-    }, 60);
+  this.schedule({
+    after: 60,
+    action: () => this.setData('secondScheduleFired', true)
+  });
 }
 ```
 
@@ -820,9 +824,10 @@ You can also schedule without a transition from a model's method:
 
 ```ts
 eventThatSchedules(value: string) {
-    this.schedule({
-        action: () => this.setData('some', value)
-    }, 10);
+  this.schedule({
+    after: 10,
+    action: () => this.setData('some', value)
+  });
 }
 ```
 

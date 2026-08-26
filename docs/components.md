@@ -10,6 +10,7 @@ The `useModel` function creates a model instance, starts it automatically, and s
 import { useModel } from "solid-component-model/solidjs";
 
 function MyComponent() {
+  // Create a CounterModel with arguments and start it immediately
   const model = useModel(CounterModel, 1, "a");
 
   return (
@@ -34,7 +35,12 @@ function MyComponent() {
 
   return (
     <div>
-      {model.data.label}: {model.data.count}
+      <div>
+        {model.data.label}: {model.data.count}
+      </div>
+      <div>
+        <button onClick={() => model.increment()}>Increment</button>
+      </div>
     </div>
   );
 }
