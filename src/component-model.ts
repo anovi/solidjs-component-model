@@ -46,10 +46,9 @@ import {
 import { type Logger } from "./logger";
 import { Queue } from "./queue";
 import type { Span, Tracer } from "./tracer-types";
-import { EffectFailed } from "./errors";
+import { EffectFailed, Violation } from "./errors";
 import type { Model } from "./interfaces";
 import { Stack } from "./stack";
-import { Violation } from "./state-chart/errors";
 
 type SendApi<E extends { type: string }> = {
   [K in EventName<E>]: (
