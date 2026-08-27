@@ -11,6 +11,17 @@ import { StateChart } from "./state-chart";
 export type ModelConstructor<T = object> = new (...args: any[]) => T;
 
 export interface StateChartMethods {
+  /**
+   * Reactive query that checks if the model's current state matches a given state path.
+   * Tracks `model.state()` signal when called inside a reactive context (e.g. JSX `<Show>` or memos).
+   *
+   * @example
+   * ```jsx
+   * <Show when={model.matches('loading')}>
+   *   "Loading…"
+   * </Show>
+   * ```
+   */
   matches: <TPath extends string = string>(path: TPath) => boolean;
 }
 

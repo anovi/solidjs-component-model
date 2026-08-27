@@ -296,11 +296,15 @@ export abstract class ComponentModel<
     event = unwrap(event);
     if (this.status !== "active")
       return this.#warnNonActiveModel(`Can't dispatch "${event.type}" for a`);
-    this.#handleEvent(event);
+    untrack(() => {
+      this.#handleEvent(event);
+    });
   }
 
   toJSON(): Snapshot<string, Data> {
-    return this.#jsonModel(this);
+    return untrack(() => {
+      return this.#jsonModel(this);
+    });
   }
 
   getPersistedSnapshot(): unknown {
@@ -313,7 +317,9 @@ export abstract class ComponentModel<
 
     this.#startHandlingFx();
     // TODO: Should parent, or its children start first?
-    this.#findAndStartChildren(this.data);
+    untrack(() => {
+      this.#findAndStartChildren(this.data);
+    });
     this.#finishHandlingFx();
 
     this.status = "active";
@@ -327,12 +333,14 @@ export abstract class ComponentModel<
       modelChildrenMap.set(parent._id, children);
     }
     if (this.stateChart) {
-      const target = this.state(); // can be any state if node restored from snapshot
-      if (target !== "") this.#stateSetter(""); // to make sure a model'll enter all state nodes in a hierarchial state
-      this.#executeEventHandler(
-        { type: InternalEventName.Start },
-        { target, reenter: this.state() !== "" }
-      );
+      untrack(() => {
+        const target = this.state(); // can be any state if node restored from snapshot
+        if (target !== "") this.#stateSetter(""); // to make sure a model'll enter all state nodes in a hierarchial state
+        this.#executeEventHandler(
+          { type: InternalEventName.Start },
+          { target, reenter: this.state() !== "" }
+        );
+      });
     }
   }
 
@@ -448,17 +456,19 @@ export abstract class ComponentModel<
         } else if (handler instanceof Error)
           return this.#toErrorWithReason(handler);
 
-        this.#executeEventHandler(event, handler as Transition<this, any>);
+        if (!signal.aborted)
+          this.#executeEventHandler(event, handler as Transition<this, any>);
       } catch (error) {
         if (error instanceof MachineMalformed) {
           this.#machineMalformedInRuntime(error);
           return;
         }
         if (params.onError) {
-          this.#executeEventHandler(
-            { type: InternalEventName.InvokedError, error, state },
-            params.onError as Transition<this, any>
-          );
+          if (!signal.aborted)
+            this.#executeEventHandler(
+              { type: InternalEventName.InvokedError, error, state },
+              params.onError as Transition<this, any>
+            );
         } else {
           const malformedErr = new MachineMalformed(
             `unhandled promise rejection in "${state}"`,
