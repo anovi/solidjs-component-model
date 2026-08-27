@@ -1,4 +1,4 @@
-import { ComponentModel } from "../../src";
+import { action, ComponentModel } from "../../src";
 
 type Data = {
   count: number;
@@ -13,6 +13,7 @@ export class ModelWithParams extends ComponentModel<Data> {
     });
   }
 
+  @action
   increment() {
     this.setData("count", this.data.count + 1);
   }

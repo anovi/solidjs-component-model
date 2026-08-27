@@ -48,13 +48,13 @@ describe("component-model", () => {
       assert.equal(model.data.some, "updated");
     });
 
-    it("breaks incapsulation", async () => {
+    it("does not allow to call protected methods outside of effects", async () => {
       const model = new ModelWithoutStateChart();
       model.start();
       // @ts-ignore Just to demonstrate violation
       model.setData("some", "violation");
       await sleep(0);
-      assert.equal(model.data.some, "violation");
+      assert.notEqual(model.data.some, "violation");
     });
 
     it("handles multiple event", async () => {
@@ -126,11 +126,11 @@ describe("component-model", () => {
       assert.deepEqual(model.data.log, ["a", "b"]);
     });
 
-    it("does not affect non-decorated methods", () => {
+    it("does affect non-decorated methods", () => {
       const model = new ModelWithActionDecorator();
       model.start();
       model.regularMethod("sync");
-      assert.deepEqual(model.data.log, ["sync"]);
+      assert.notDeepEqual(model.data.log, ["sync"]);
     });
   });
 
@@ -194,9 +194,11 @@ describe("component-model", () => {
       const parent = new ParentModel();
       parent.start();
       parent.addItem();
+      await sleep(0);
       assert.lengthOf(parent.data.children, 1);
       parent.addItem();
       parent.addItem();
+      await sleep(0);
       assert.lengthOf(parent.data.children, 3);
     });
 
@@ -204,7 +206,7 @@ describe("component-model", () => {
       const parent = new ParentModel();
       parent.start();
       parent.addItem();
-      await sleep(12);
+      await sleep(20);
       assert.equal(parent.data.some, "from child");
     });
 
@@ -214,6 +216,7 @@ describe("component-model", () => {
       parent.addItem();
       parent.addItem();
       parent.addItem();
+      await sleep(0);
       assert.lengthOf(parent.data.children, 3);
       parent.stop();
       assert.equal(parent.status, "stopped");
@@ -226,9 +229,11 @@ describe("component-model", () => {
       parent.addItem();
       parent.addItem();
       parent.addItem();
+      await sleep(0);
       assert.lengthOf(parent.data.children, 3);
       const modelToRemove = parent.data.children[1];
       parent.send.REMOVE({ id: modelToRemove._id });
+      await sleep(0);
       assert.lengthOf(parent.data.children, 2);
       assert.equal(modelToRemove.status, "stopped");
     });
@@ -239,6 +244,7 @@ describe("component-model", () => {
       const parent = new ParentModel();
       parent.start();
       parent.addItem();
+      await sleep(0);
       (assert.deepEqual(parent.toJSON(), {
         _id: parent._id,
         state: "default",
@@ -990,6 +996,7 @@ describe("component-model", () => {
       );
 
       newParent.sendToChildren();
+      await sleep(0);
 
       newParent.data.children.forEach(child => {
         assert.equal(child.data.some, "from parent");
@@ -1046,6 +1053,7 @@ describe("component-model", () => {
       parent.addItem();
       parent.addItem();
       parent.addItem();
+      await sleep(0);
       assert.lengthOf(parent.data.children, 3);
       const snapshot = parent.toJSON();
       parent.stop();

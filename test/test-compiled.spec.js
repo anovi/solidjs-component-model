@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import assert from 'node:assert'
 import { ComponentModel, WithStateChart } from "../dist";
 
 function sleep(ms) {
@@ -61,7 +62,7 @@ class ParentModelB extends ComponentModel {
 const ParentModel = WithStateChart(ParentModelB, config);
 
 describe("Test compiled", () => {
-  it("calls schedule but without effect executed", async () => {
+  it("does not allow to call protected methods", async () => {
     const model = new ParentModel();
     model.start();
 
@@ -77,10 +78,23 @@ describe("Test compiled", () => {
 
     await sleep(20);
 
-    expect(model.data.some).toEqual('violation')
+    assert.notDeepEqual(model.data.some, 'violation');
   });
 
   it("works", async () => {
+    const model = new ParentModel();
+    model.start();
+
+    model.enqueue(() => {
+      model.setData('some', 'violation');
+    })
+
+    await sleep(10);
+
+    expect(model.data.some).toEqual('violation')
+  });
+
+  it("allows to dispatch events", async () => {
     const model = new ParentModel();
     model.start();
 

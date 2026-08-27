@@ -73,6 +73,7 @@ import type { Span, Tracer } from "./tracer-types";
 import { EffectFailed } from "./errors";
 import type { Model } from "./interfaces";
 import { Stack } from "./stack";
+import { Violation } from "./state-chart/errors";
 
 type SendApi<E extends { type: string }> = {
   [K in EventName<E>]: (
@@ -127,6 +128,13 @@ const actionsExecutionStack: Stack<AnyComponentModel> = new Stack();
 const modelChildrenMap = new Map<string, AnyComponentModel[]>();
 
 /**
+ * Allow to call protected method enqueue.
+ * This flag is needed to call this method outside of effects.
+ * Usually it's from `dispatch` method.
+ */
+let allowNextEnqueue = false;
+
+/**
  * Decorator that wraps a method so its body is enqueued as an effect
  * and the queue is processed. Use on methods in classes extending ComponentModel.
  */
@@ -136,14 +144,49 @@ export function action(
   descriptor: PropertyDescriptor
 ): PropertyDescriptor {
   const originalMethod = descriptor.value;
-
   descriptor.value = function (this: AnyComponentModel, ...args: unknown[]) {
+    allowNextEnqueue = true;
     this.enqueue(() => {
       originalMethod.apply(this, args);
     });
   };
-
   return descriptor;
+}
+
+/** Decorator for protected method. Does not allow a target to be called outside effects.  */
+export function protectedMethod(
+  _target: object,
+  propertyKey: string,
+  descriptor: PropertyDescriptor
+): PropertyDescriptor {
+  const originalMethod = descriptor.value;
+  descriptor.value = function (this: AnyComponentModel, ...args: unknown[]) {
+    if (
+      !allowNextEnqueue &&
+      propertyKey === "enqueue" &&
+      actionsExecutionStack.peek() !== this
+    ) {
+      console.error(new Violation(propertyKey));
+      return;
+    }
+    return originalMethod.apply(this, args);
+  };
+  return descriptor;
+}
+
+/** Dynamic decorator for protected method. Does not allow a target to be called outside effects.  */
+function protectMethod<T extends (...args: any[]) => any>(
+  method: T,
+  propertyKey: string
+): T {
+  return function (this: AnyComponentModel, ...args: Parameters<T>) {
+    if (actionsExecutionStack.peek() !== this) {
+      console.error(new Violation(propertyKey));
+      return;
+    }
+
+    return method.apply(this, args);
+  } as T;
 }
 
 export abstract class ComponentModel<
@@ -172,12 +215,14 @@ export abstract class ComponentModel<
   constructor(ctx: Data) {
     const [store, setData] = createStore(ctx);
     this.data = store;
-    this.setData = (...args: any[]) => {
+
+    this.setData = protectMethod((...args: any[]) => {
       //TODO: decide how to deal with this
       // if (this.status !== 'active') return this.#warnNonActiveModel(`Can't set data for a`);
       // @ts-ignore
       setData(...args);
-    };
+    }, "setData");
+
     this.#queue = new Queue();
     this.send = this.#createSendApi();
     const stateChartSetup = (
@@ -302,6 +347,7 @@ export abstract class ComponentModel<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   declare protected parent?: any;
 
+  @protectedMethod
   protected invokeObservable<Next>(
     observable: Observable<Next>,
     handler: {
@@ -319,16 +365,17 @@ export abstract class ComponentModel<
     this.#invoke(({ signal }) => {
       const sub = observable.subscribe({
         next: value => {
-          if (handler.next)
-            this.enqueue(() => {
-              this.#executeEventHandler(
-                { type: InternalEventName.InvokedNext, value, state },
-                handler.next as Transition<this, E | InternalEvent>
-              );
-            });
+          if (handler.next) allowNextEnqueue = true;
+          this.enqueue(() => {
+            this.#executeEventHandler(
+              { type: InternalEventName.InvokedNext, value, state },
+              handler.next as Transition<this, E | InternalEvent>
+            );
+          });
         },
         error: error => {
           if (handler.error) {
+            allowNextEnqueue = true;
             this.enqueue(() => {
               this.#executeEventHandler(
                 { type: InternalEventName.InvokedError, error, state },
@@ -347,17 +394,17 @@ export abstract class ComponentModel<
           }
         },
         complete: () => {
-          if (handler.complete)
-            this.enqueue(() => {
-              this.#executeEventHandler(
-                {
-                  type: InternalEventName.InvokedDone,
-                  result: undefined,
-                  state,
-                },
-                handler.complete as Transition<this, E | InternalEvent>
-              );
-            });
+          if (handler.complete) allowNextEnqueue = true;
+          this.enqueue(() => {
+            this.#executeEventHandler(
+              {
+                type: InternalEventName.InvokedDone,
+                result: undefined,
+                state,
+              },
+              handler.complete as Transition<this, E | InternalEvent>
+            );
+          });
         },
       });
       signal.addEventListener("abort", () => {
@@ -366,6 +413,7 @@ export abstract class ComponentModel<
     });
   }
 
+  @protectedMethod
   protected invokePromise<T>(
     promise: (signal: AbortSignal) => Promise<T>,
     params: {
@@ -420,6 +468,7 @@ export abstract class ComponentModel<
     });
   }
 
+  @protectedMethod
   protected emit(event: Emitted) {
     event = unwrap(event);
     if (this.status !== "active")
@@ -429,10 +478,13 @@ export abstract class ComponentModel<
     });
   }
 
+  /** Define this method in a subclass if you need additional cleanup. */
   protected onCleanup?: () => void;
 
+  // protected dynamically
   protected setData: SetStoreFunction<Data>;
 
+  @protectedMethod
   protected schedule(
     handler: Transition<this, E | InternalEvent> & { after?: number }
   ): void {
@@ -450,23 +502,30 @@ export abstract class ComponentModel<
     );
   }
 
+  @protectedMethod
   protected enqueue(task: () => void, parentSpan?: Span) {
     void parentSpan; //TODO: return tracing
     if (this.status !== "active")
       return this.#warnNonActiveModel(`Can't enque in a`);
     this.#queue.enqueue(task);
-    if (actionsExecutionStack.isEmpty())
-      // Question: Or should do differently?
-      // It changes sync how actions are executed
-      // when they are enqueued not from an effect
+    if (
+      allowNextEnqueue &&
+      (actionsExecutionStack.isEmpty() || actionsExecutionStack.peek() !== this)
+    ) {
+      // It should be handled async when model in stable state.
+      // Usually it's an event sent to the models.
+      allowNextEnqueue = false;
       queueMicrotask(() => {
         this.#processQueue(this.state(), "event");
       });
+    }
+    allowNextEnqueue = false;
   }
 
   protected get logger(): Logger | undefined {
     return this.#logger ?? ComponentModel.defaults.logger;
   }
+
   protected set logger(logger: Logger | null) {
     this.#logger = logger || undefined;
   }
@@ -707,6 +766,7 @@ export abstract class ComponentModel<
     this.#logEvent(event);
 
     // Event Effect runs before transition effects
+    allowNextEnqueue = true;
     if (Transition?.action) this.enqueue(Transition.action.bind(this, event));
 
     // Running queued effects
@@ -774,7 +834,10 @@ export abstract class ComponentModel<
             attributes: { state: step.path },
           });
 
-        if (effect) this.enqueue(effect.bind(this, event));
+        if (effect) {
+          allowNextEnqueue = true;
+          this.enqueue(effect.bind(this, event));
+        }
 
         this.#stopInvocations(step.path);
         this.#stopScheduled(step.path);
@@ -795,7 +858,10 @@ export abstract class ComponentModel<
             attributes: { state: step.path },
           });
 
-        if (effect) this.enqueue(effect.bind(this, event));
+        if (effect) {
+          allowNextEnqueue = true;
+          this.enqueue(effect.bind(this, event));
+        }
 
         // Running Queued effects
         if (this.#queue.size > 0) this.#processQueue(step.path, "entry");
@@ -937,11 +1003,18 @@ export abstract class ComponentModel<
       ) as AnyComponentModel;
     }
 
-    inst.setData(data);
-    inst.#stateSetter(snapshot.state);
-    inst._id =
-      snapshot._id as `${string}-${string}-${string}-${string}-${string}`;
-    inst.status = "idle";
+    actionsExecutionStack.push(inst);
+    try {
+      inst.setData(data);
+      inst.#stateSetter(snapshot.state);
+      inst._id =
+        snapshot._id as `${string}-${string}-${string}-${string}-${string}`;
+      inst.status = "idle";
+    } catch (error) {
+      actionsExecutionStack.pop();
+      throw error;
+    }
+    actionsExecutionStack.pop();
     return inst;
   }
 

@@ -1,4 +1,4 @@
-import { ComponentModel } from "../../src";
+import { action, ComponentModel } from "../../src";
 import { WithStateChart } from "../../src/create-chart";
 import type { StateChartConfig } from "../../src/state-chart";
 import { ChildModel } from "./child-model";
@@ -85,14 +85,17 @@ class ParentModelB extends ComponentModel<ParentModelData, Events> {
     });
   }
 
+  @action
   someEvent(value: string) {
     this.default({ type: "SOME", value });
   }
 
+  @action
   addItem() {
     this.dispatch({ type: "ADD" });
   }
 
+  @action
   sendToChildren() {
     this.data.children.forEach(ch =>
       ch.dispatch({ type: "some", value: "from parent" })

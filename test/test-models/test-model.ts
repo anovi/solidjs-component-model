@@ -1,4 +1,4 @@
-import { ComponentModel } from "../../src";
+import { action, ComponentModel } from "../../src";
 import { WithStateChart } from "../../src/create-chart";
 
 type Data = {
@@ -20,6 +20,7 @@ class Model extends ComponentModel<Data, Events> {
     });
   }
 
+  @action
   eventThatSchedules(value: string) {
     this.schedule({
       after: 10,

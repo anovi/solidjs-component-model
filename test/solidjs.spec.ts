@@ -4,6 +4,7 @@ import { createRoot } from "solid-js";
 import { useModel, useEvents } from "../src/solidjs";
 import { ModelWithParams } from "./test-models/model-with-params";
 import { ModelWithStateNodes } from "./test-models/model-with-state-nodes";
+import { sleep } from "./test-kit";
 
 describe("solidjs", () => {
   describe("useModel", () => {
@@ -47,10 +48,11 @@ describe("solidjs", () => {
     });
 
     it("the returned model behaves like a normal instance", () => {
-      createRoot(dispose => {
+      createRoot(async dispose => {
         const model = useModel(ModelWithParams, 0, "counter");
         model.increment();
         model.increment();
+        await sleep(0);
         assert.equal(model.data.count, 2);
         dispose();
       });

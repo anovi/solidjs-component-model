@@ -72,6 +72,7 @@ export class ModelWithoutStateChart extends ComponentModel<Data> {
     this.setData("children", children => children.filter(m => m !== child));
   }
 
+  @action
   protected setSome(value: string) {
     this.setData("some", value);
   }
