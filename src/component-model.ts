@@ -1,27 +1,3 @@
-/* =====================================================
-REQUIREMENTS
-
-Model:
-- [x] Has data
-- [x] Handles events synchronously and makes batch changes
-      to the data
-- [x] Transitions and Conditional transitions
-- [x] Can have children
-- [x] Has a scheduler
-- [x] Perform actions based on events
-- [x] Can emit events
-- [x] State node can have entry and exit handlers
-- [x] Processes events per state
-- [x] Serializable
-- [x] Invokes promises, observables per state or lifecycle
-- [x] Has lifecycle events: complete event
-- [x] Delayed events
-- [x] Error channel; propagating errors
-- [x] Snapshots for debugging
-- [x] "Always" eventless transitions
-- [x] Restoring from persitence snapshot
-===================================================== */
-
 import {
   batch,
   createSignal,
@@ -189,14 +165,40 @@ function protectMethod<T extends (...args: any[]) => any>(
   } as T;
 }
 
+/* =====================================================
+REQUIREMENTS
+
+Model:
+- [x] Has data
+- [x] Handles events synchronously and makes batch changes
+      to the data
+- [x] Transitions and Conditional transitions
+- [x] Can have children
+- [x] Has a scheduler
+- [x] Perform actions based on events
+- [x] Can emit events
+- [x] State node can have entry and exit handlers
+- [x] Processes events per state
+- [x] Serializable
+- [x] Invokes promises, observables per state or lifecycle
+- [x] Has lifecycle events: complete event
+- [x] Delayed events
+- [x] Error channel; propagating errors
+- [x] Snapshots for debugging
+- [x] "Always" eventless transitions
+- [x] Restoring from persitence snapshot
+===================================================== */
+
 export abstract class ComponentModel<
   Data extends AnyModelData = AnyModelData,
   E extends Event = { type: string },
   Emitted extends Event = { type: string },
   DoneData = unknown,
 > implements Model<Data, E, Emitted, DoneData> {
+  /** Define child in a model when you need it to be serializable with children models. */
   static childTypes: ChildTypes = {};
 
+  /** Reactive data  */
   data: Store<Data>;
 
   state: Accessor<string>;
