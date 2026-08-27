@@ -776,14 +776,18 @@ export abstract class ComponentModel<
 
     // Make a transition by microsteps, executing Entry, Exit effects
     if (Transition?.target != null) {
-      this.#transitionStepByStep(
-        this.stateChart!.transition(
-          this.state(),
-          Transition.target,
-          Transition.reenter
-        ),
-        event
-      );
+      // Or else a change of the state signal during transition
+      // immediately causes reactive computations
+      batch(() => {
+        this.#transitionStepByStep(
+          this.stateChart!.transition(
+            this.state(),
+            Transition.target!,
+            Transition.reenter
+          ),
+          event
+        );
+      });
     }
 
     const state = this.state();
