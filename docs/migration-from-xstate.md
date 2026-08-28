@@ -144,6 +144,36 @@ Correct (method function):
 
 Because the library calls guards and actions with `.call(this, event)` at runtime, arrow functions would receive the wrong `this` value. TypeScript also cannot infer the model class as the `this` type for an arrow property, so autocomplete for model-specific methods would be lost.
 
+The exception is transitions inside `invoke`. Because they are created dynamically inside actions, their actions must preserve the parent action's this context. Use an arrow function in this case:
+
+```ts
+states: {
+  loading: {
+    entry() {
+      this.invokePromise(
+        signal => fetch(`/api/users/${this.data.id}`, { signal }),
+        {
+          onDone: {
+            // Arrow function preserves the parent action's `this`
+            action: (event) => {
+              this.setData("user", event.result);
+            },
+            target: "success",
+          },
+          onError: {
+            // Arrow function preserves the parent action's `this`
+            action: (event) => {
+              this.setData("error", String(event.error));
+            },
+            target: "error",
+          },
+        }
+      );
+    },
+  },
+}
+```
+
 ## Input
 
 **Xstate**
