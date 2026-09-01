@@ -13,6 +13,12 @@ export class ModelWithParams extends ComponentModel<Data> {
     });
   }
 
+  protected override onCleanup() {
+    this.onCleanupOverrideRun = true;
+  }
+
+  onCleanupOverrideRun = false;
+
   @action
   increment() {
     this.setData("count", this.data.count + 1);

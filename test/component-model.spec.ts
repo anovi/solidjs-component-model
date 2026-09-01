@@ -32,6 +32,7 @@ import { ModelWithEffectOrder } from "./test-models/model-with-effect-order";
 import { CustomizedParentModelMachine } from "./test-models/parent-with-custom-serialization";
 import { ParentModelHiddenChildren } from "./test-models/parent-model-no-explicit-children";
 import { ModelWithActionDecorator } from "./test-models/model-with-action-decorator";
+import { ModelWithParams } from "./test-models/model-with-params";
 void TerminalLogger;
 
 ComponentModel.configure({
@@ -92,6 +93,15 @@ describe("component-model", () => {
       const child = model.data.children[0];
       model.stop();
       assert.equal(child.status, "stopped");
+    });
+  });
+
+  describe("Lifecycle", () => {
+    it("runs custom onCleanup method", async () => {
+      const model = new ModelWithParams(9, "");
+      model.start();
+      model.stop();
+      expect(model.onCleanupOverrideRun).toBe(true);
     });
   });
 
@@ -558,7 +568,6 @@ describe("component-model", () => {
         model.subscribe({
           next: snapshot => {
             const _id = snapshot._id;
-            console.log(snapshot);
             assert.deepEqual(snapshot, {
               _id,
               name: "ModelWithStateNodesBase",

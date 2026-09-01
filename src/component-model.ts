@@ -516,7 +516,7 @@ export abstract class ComponentModel<
   }
 
   /** Define this method in a subclass if you need additional cleanup. */
-  protected onCleanup?: () => void;
+  protected onCleanup() {}
 
   // protected dynamically
   protected setData: SetStoreFunction<Data>;
