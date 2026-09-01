@@ -307,6 +307,16 @@ export abstract class ComponentModel<
     return this.#snapshots$.subscribe(observer);
   }
 
+  // For interop with RxJs
+  [Symbol.observable]() {
+    return this;
+  }
+
+  // For older versions of RxJs
+  ["@@observable"]() {
+    return this;
+  }
+
   dispatch(event: E): void {
     event = unwrap(event);
     if (this.status !== "active")

@@ -95,6 +95,16 @@ export class Subject<T> implements SubjectLike<T>, SubscriptionLike {
     this.#isClosed = true;
   }
 
+  // For interop with RxJs
+  [Symbol.observable]() {
+    return this;
+  }
+
+  // For older versions of RxJs
+  ["@@observable"]() {
+    return this;
+  }
+
   /** @internal */
   protected _throwIfClosed() {
     if (this.#isClosed) throw new Error("Subject is already stopped.");
