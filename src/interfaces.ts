@@ -26,7 +26,26 @@ export interface Model<
     handler: (event: Extract<Emitted, { type: T }>) => void
   ) => Unsubscribable;
 
-  subscribe: (observerOrNext: Partial<Observer<Emitted>>) => Unsubscribable;
+  /**
+   * Returns a promise that resolves when the model's snapshot satisfies the given condition.
+   * The promise rejects if the model stops with an error.
+   *
+   * @param matcher A function evaluated against the model's snapshot whenever it changes.
+   * @returns A promise that resolves when `matcher` returns `true`.
+   */
+  waitFor: (
+    matcher: (snapshot: Snapshot<string, Data>) => boolean
+  ) => Promise<void>;
+
+  /**
+   * Subscribes to the model's snapshot updates and lifecycle events.
+   *
+   * @param observerOrNext An observer that receives snapshot updates and lifecycle events.
+   * @returns An object that can be used to unsubscribe from the subscription.
+   */
+  subscribe: (
+    observerOrNext: Partial<Observer<Snapshot<string, Data>>>
+  ) => Unsubscribable;
 
   dispatch: (event: E) => void;
 

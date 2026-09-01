@@ -149,37 +149,6 @@ describe("component-model", () => {
       assert.equal(model.state(), "default");
     });
 
-    it("emits events", async () => {
-      return new Promise<void>(done => {
-        const model = new ModelWithStateNodes();
-        model.start();
-        model.send.SOME({ value: "one" });
-        assert.equal(model.state(), "loading");
-
-        model.on("SOME_HAPPEND", event => {
-          assert.equal(event.type, "SOME_HAPPEND");
-          done();
-        });
-
-        model.send.OTHER({ value: "three" });
-      });
-    });
-
-    it("emits complete event", async () => {
-      return new Promise<void>(done => {
-        const model = new ModelWithStateNodes();
-        model.start();
-
-        model.subscribe({
-          complete: () => {
-            done();
-          },
-        });
-
-        model.stop();
-      });
-    });
-
     it("handles entry event", async () => {
       const model = new ModelWithStateNodes();
       model.start();
@@ -249,7 +218,7 @@ describe("component-model", () => {
         _id: parent._id,
         state: "default",
         status: "active",
-        name: "",
+        name: "ParentModelB",
         data: {
           counter: 0,
           some: "info",
@@ -517,6 +486,109 @@ describe("component-model", () => {
       await sleep(60);
       assert.equal(model.data.delayedFired, false);
       assert.equal(model.data.secondScheduleFired, false);
+    });
+  });
+
+  describe("subscribable", () => {
+    it("emits defined events", async () => {
+      return new Promise<void>(done => {
+        const model = new ModelWithStateNodes();
+        model.start();
+        model.send.SOME({ value: "one" });
+        assert.equal(model.state(), "loading");
+
+        model.on("SOME_HAPPEND", event => {
+          assert.equal(event.type, "SOME_HAPPEND");
+          done();
+        });
+
+        model.send.OTHER({ value: "three" });
+      });
+    });
+
+    it("emits a `complete` event", async () => {
+      return new Promise<void>(done => {
+        const model = new ModelWithStateNodes();
+        model.start();
+
+        model.subscribe({
+          complete: () => {
+            done();
+          },
+        });
+
+        model.stop();
+      });
+    });
+
+    it("emits a `complete` event after a model was stopped", async () => {
+      return new Promise<void>(done => {
+        const model = new ModelWithStateNodes();
+        model.start();
+        model.stop();
+
+        model.subscribe({
+          complete: () => {
+            done();
+          },
+        });
+      });
+    });
+
+    it("emits `error` after a model was stopped", async () => {
+      return new Promise<void>(done => {
+        const model = new ModelWithErrors();
+        model.start();
+        model.dispatch({ type: "TO_BROKEN_GUARD" });
+        model.dispatch({ type: "SOME", value: "" });
+        model.subscribe({
+          error: err => {
+            assert.ok(err);
+            assert.ok(err instanceof Error);
+            done();
+          },
+        });
+      });
+    });
+
+    it("emits snapshots for subscribers", async () => {
+      return new Promise<void>(done => {
+        const model = new ModelWithStateNodes();
+        model.start();
+        model.subscribe({
+          next: snapshot => {
+            const _id = snapshot._id;
+            console.log(snapshot);
+            assert.deepEqual(snapshot, {
+              _id,
+              name: "ModelWithStateNodesBase",
+              state: "loading",
+              data: {
+                some: "new val",
+                entry: 1,
+                data: undefined,
+              },
+              status: "active",
+            });
+            model.stop();
+            done();
+          },
+        });
+        model.dispatch({ type: "SOME", value: "new val" });
+      });
+    });
+
+    it("waits for a snapshots that matches conditions with `waitFor`", async () => {
+      const model = new ModelWithStateNodes();
+      model.start();
+      queueMicrotask(() => model.dispatch({ type: "SOME", value: "" }));
+      await model.waitFor(snapshot => {
+        return (
+          snapshot.state === "default" && snapshot.data.data === "some data"
+        );
+      });
+      assert.ok("it worked!");
+      model.stop();
     });
   });
 

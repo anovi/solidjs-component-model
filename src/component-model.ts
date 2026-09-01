@@ -284,11 +284,27 @@ export abstract class ComponentModel<
     });
   }
 
-  subscribe(observer: Partial<Observer<Emitted>>): Unsubscribable {
-    if (!this.#emittedEvents$) this.#emittedEvents$ = new Subject<Emitted>();
-    if (this.status === "error") this.#emittedEvents$.error(this.error);
-    if (this.status === "stopped") this.#emittedEvents$.complete();
-    return this.#emittedEvents$.subscribe(observer);
+  waitFor(matcher: (snapshot: Snapshot<string, Data>) => boolean) {
+    return new Promise<void>((resolve, reject) => {
+      const subscription = this.#snapshots$.subscribe({
+        next(value) {
+          if (matcher(value)) {
+            subscription.unsubscribe();
+            resolve();
+          }
+        },
+        error(err) {
+          subscription.unsubscribe();
+          reject(err);
+        },
+      });
+    });
+  }
+
+  subscribe(
+    observer: Partial<Observer<Snapshot<string, Data>>>
+  ): Unsubscribable {
+    return this.#snapshots$.subscribe(observer);
   }
 
   dispatch(event: E): void {
@@ -348,7 +364,7 @@ export abstract class ComponentModel<
       return this.#warnNonActiveModel(`Can't stop a`);
     this.status = "stopped";
     this.#destroy();
-    this.#emittedEvents$?.complete();
+    this.#__snapshots$?.complete();
   }
 
   /* ====================== Sub-classes API ====================== */
@@ -570,6 +586,22 @@ export abstract class ComponentModel<
   // Lazily created
   #emittedEvents$: Subject<Emitted> | null = null;
 
+  #__snapshots$: Subject<Snapshot<string, Data>> | null = null;
+
+  get #snapshots$(): Subject<Snapshot<string, Data>> {
+    if (!this.#__snapshots$)
+      this.#__snapshots$ = new Subject<Snapshot<string, Data>>();
+    // Catch-up notificaion: error or completion, for late subscribers
+    queueMicrotask(() => {
+      if (this.status === "error") {
+        this.#__snapshots$!.error(this.error);
+      } else if (this.status == "done" || this.status === "stopped") {
+        this.#__snapshots$!.complete();
+      }
+    });
+    return this.#__snapshots$;
+  }
+
   /* ----------------------------------------------------- */
 
   private readonly stateChart?: Interpreter<
@@ -673,7 +705,7 @@ export abstract class ComponentModel<
     this.error = err;
     this.#logError("err", err);
     console.error(err);
-    this.#emittedEvents$?.error(err);
+    this.#__snapshots$?.error(err);
   }
 
   #machineMalformedInRuntime(err: MachineMalformed, async?: boolean) {
@@ -820,6 +852,9 @@ export abstract class ComponentModel<
 
     if (span) span.end();
     this.#logGroupEnd();
+
+    // Emit snapshots to subscribers if there are any.
+    this.#__snapshots$?.next(this.toJSON());
   }
 
   #startHandlingFx() {
@@ -933,7 +968,7 @@ export abstract class ComponentModel<
 
   #jsonModel(
     value: AnyComponentModel,
-    name: string = ""
+    name: string = this.constructor.name
   ): Snapshot<string, Data> {
     return {
       _id: value._id,
