@@ -16,7 +16,7 @@ type Events =
   | { type: "TO_OBSERVABLE" }
   | { type: "BREAK_LOADING" };
 
-type Emits = { type: "SOME_HAPPEND" };
+type Emits = { type: "SOME_HAPPEND"; optional?: boolean };
 
 class ModelWithStateNodesBase extends ComponentModel<
   MyModelData,

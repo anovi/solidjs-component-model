@@ -105,5 +105,17 @@ describe("solidjs", () => {
         assert.doesNotThrow(() => dispose());
       });
     });
+
+    it("preserve types of events", async function () {
+      const model = new ModelWithStateNodes();
+      useEvents(model, {
+        SOME_HAPPEND: event => {
+          expectTypeOf(event).toEqualTypeOf<{
+            type: "SOME_HAPPEND";
+            optional?: boolean;
+          }>();
+        },
+      });
+    });
   });
 });

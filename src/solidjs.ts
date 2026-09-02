@@ -2,21 +2,18 @@
 import { onCleanup } from "solid-js";
 import type { AnyModel, EventType } from "./types";
 import type { Event } from "./state-chart";
-import type { Observer, Unsubscribable } from "./observable";
+import type { Unsubscribable } from "./observable";
 
 export type EventHandlers<E extends Event> = {
   [K in EventType<E>]?: (event: Extract<E, { type: K }>) => void;
 };
 
 type HasEvents<E extends Event> = {
-  on: (type: EventType<E>, handler: (event: E) => void) => Unsubscribable;
+  on: <T extends EventType<E>>(
+    type: T,
+    handler: (event: Extract<E, { type: T }>) => void
+  ) => Unsubscribable;
 };
-
-type EmittedOf<T> = T extends {
-  subscribe: (observer: Partial<Observer<infer E>>) => any;
-}
-  ? E
-  : never;
 
 export function useModel<M extends new (...args: any[]) => AnyModel>(
   ctor: M,
@@ -77,11 +74,10 @@ export function useModel(
 /**
  * Subscribe to events with automatic disposal of subscription.
  */
-export function useEvents<
-  TModel extends HasEvents<EmittedOf<TModel>> & {
-    subscribe: (observer: Partial<Observer<any>>) => Unsubscribable;
-  },
->(model: TModel, handlers: EventHandlers<EmittedOf<TModel>>) {
+export function useEvents<E extends Event>(
+  model: HasEvents<E>,
+  handlers: EventHandlers<E>
+) {
   const subscriptions = Object.entries(handlers).map(([type, handler]) =>
     model.on(type as never, handler as never)
   );
