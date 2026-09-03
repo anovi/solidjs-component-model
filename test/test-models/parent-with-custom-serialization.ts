@@ -18,14 +18,14 @@ class ParentModel extends ComponentModel<ParentModelData, Events> {
     Child: ChildModel,
   };
 
-  #customProp = "some";
+  private __customProp = "some";
 
   get customProp() {
-    return this.#customProp;
+    return this.__customProp;
   }
 
   set customProp(val: string) {
-    this.#customProp = val;
+    this.__customProp = val;
   }
 
   constructor() {
@@ -42,7 +42,7 @@ class ParentModel extends ComponentModel<ParentModelData, Events> {
   }
 
   protected applyPersistedSnapshot(snapshot: any) {
-    this.#customProp = snapshot.customProp;
+    this.__customProp = snapshot.customProp;
   }
 
   someEvent(value: string) {

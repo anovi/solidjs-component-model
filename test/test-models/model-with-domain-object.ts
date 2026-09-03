@@ -19,6 +19,12 @@ class ModelWithDomainPath extends ComponentModel<ChildModelData, Events> {
       path: DomainPath.fromPersistence(path),
     });
   }
+
+  static prepareSnapshotData(snapshot: any): void {
+    const path = DomainPath.fromDomain(snapshot.data.path);
+    snapshot.data.path = path;
+    return snapshot;
+  }
 }
 
 export const WithDomainPathMachine = WithStateChart(ModelWithDomainPath, {

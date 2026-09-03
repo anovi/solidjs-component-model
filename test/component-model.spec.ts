@@ -1142,6 +1142,7 @@ describe("component-model", () => {
       assert.ok(newParent instanceof ParentModelHiddenChildren);
       assert.equal(newParent._id, parent._id);
       assert.equal(newParent.status, "active");
+      // TODO: the problem is that now restoration does not call constructor. So `children` are not initialized.
       assert.equal(
         newParent.childrenLength,
         0,
@@ -1235,7 +1236,7 @@ describe("component-model", () => {
       );
     });
 
-    it.skip("restores model with domain object correctly", async () => {
+    it("restores model with domain object correctly", async () => {
       const model = new WithDomainPathMachine("info", "/some.md");
       model.start();
       expect(model.data.path).toBeInstanceOf(DomainPath);
@@ -1243,6 +1244,7 @@ describe("component-model", () => {
       const snapshot = model.getPersistedSnapshot();
       model.stop();
 
+      WithDomainPathMachine.prepareSnapshotData(snapshot);
       const newModel = WithDomainPathMachine.fromPersistedSnapshot(snapshot);
       newModel.start();
 

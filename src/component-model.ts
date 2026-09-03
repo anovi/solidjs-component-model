@@ -49,6 +49,7 @@ import type { Span, Tracer } from "./tracer-types";
 import { EffectFailed, Violation } from "./errors";
 import type { Model } from "./interfaces";
 import { Stack } from "./stack";
+import { hasToJSON, isClassInstance } from "./object";
 
 type SendApi<E extends { type: string }> = {
   [K in EventName<E>]: (
@@ -219,13 +220,13 @@ export abstract class ComponentModel<
 
     this.setData = protectMethod((...args: any[]) => {
       //TODO: decide how to deal with this
-      // if (this.status !== 'active') return this.#warnNonActiveModel(`Can't set data for a`);
+      // if (this.status !== 'active') return this.__warnNonActiveModel(`Can't set data for a`);
       // @ts-ignore
       setData(...args);
     }, "setData");
 
-    this.#queue = new Queue();
-    this.send = this.#createSendApi();
+    this.__queue = new Queue();
+    this.send = this.__createSendApi();
     const stateChartSetup = (
       this.constructor as ModelConstructor<
         Model<Data, E, Emitted, DoneData>,
@@ -235,10 +236,10 @@ export abstract class ComponentModel<
     if (stateChartSetup) {
       const [state, setState] = createSignal("");
       this.state = state;
-      this.#stateSetter = setState;
+      this.__stateSetter = setState;
       this.stateChart = stateChartSetup.createRuntime(this);
     } else {
-      this.#stateSetter = NOOP_STATE_SETTER;
+      this.__stateSetter = NOOP_STATE_SETTER;
       this.state = STATELESS;
     }
   }
@@ -280,8 +281,8 @@ export abstract class ComponentModel<
     type: T,
     handler: (event: Extract<Emitted, { type: T }>) => void
   ): Unsubscribable {
-    if (!this.#emittedEvents$) this.#emittedEvents$ = new Subject<Emitted>();
-    return this.#emittedEvents$.subscribe({
+    if (!this.__emittedEvents$) this.__emittedEvents$ = new Subject<Emitted>();
+    return this.__emittedEvents$.subscribe({
       next(ev) {
         if ("type" in ev && ev.type === type)
           handler(ev as Extract<Emitted, { type: T }>);
@@ -291,7 +292,7 @@ export abstract class ComponentModel<
 
   waitFor(matcher: (snapshot: Snapshot<string, Data>) => boolean) {
     return new Promise<void>((resolve, reject) => {
-      const subscription = this.#snapshots$.subscribe({
+      const subscription = this.snapshots$.subscribe({
         next(value) {
           if (matcher(value)) {
             subscription.unsubscribe();
@@ -309,7 +310,7 @@ export abstract class ComponentModel<
   subscribe(
     observer: Partial<Observer<Snapshot<string, Data>>>
   ): Unsubscribable {
-    return this.#snapshots$.subscribe(observer);
+    return this.snapshots$.subscribe(observer);
   }
 
   // For interop with RxJs
@@ -325,15 +326,15 @@ export abstract class ComponentModel<
   dispatch(event: E): void {
     event = unwrap(event);
     if (this.status !== "active")
-      return this.#warnNonActiveModel(`Can't dispatch "${event.type}" for a`);
+      return this.__warnNonActiveModel(`Can't dispatch "${event.type}" for a`);
     untrack(() => {
-      this.#handleEvent(event);
+      this.__handleEvent(event);
     });
   }
 
   toJSON(): Snapshot<string, Data> {
     return untrack(() => {
-      return this.#jsonModel(this);
+      return this.__jsonModel(this);
     });
   }
 
@@ -349,14 +350,14 @@ export abstract class ComponentModel<
 
   start() {
     if (this.status !== "idle")
-      return this.#warnNonActiveModel(`Can't start a`);
+      return this.__warnNonActiveModel(`Can't start a`);
 
-    this.#startHandlingFx();
+    this.__startHandlingFx();
     // TODO: Should parent, or its children start first?
     untrack(() => {
-      this.#findAndStartChildren(this.data);
+      this.__findAndStartChildren(this.data);
     });
-    this.#finishHandlingFx();
+    this.__finishHandlingFx();
 
     this.status = "active";
     aliveModels.set(this._id, this);
@@ -371,8 +372,8 @@ export abstract class ComponentModel<
     if (this.stateChart) {
       untrack(() => {
         const target = this.state(); // can be any state if node restored from snapshot
-        if (target !== "") this.#stateSetter(""); // to make sure a model'll enter all state nodes in a hierarchial state
-        this.#executeEventHandler(
+        if (target !== "") this.__stateSetter(""); // to make sure a model'll enter all state nodes in a hierarchial state
+        this.__executeEventHandler(
           { type: InternalEventName.Start },
           { target, reenter: this.state() !== "" }
         );
@@ -382,10 +383,10 @@ export abstract class ComponentModel<
 
   stop() {
     if (this.status !== "active")
-      return this.#warnNonActiveModel(`Can't stop a`);
+      return this.__warnNonActiveModel(`Can't stop a`);
     this.status = "stopped";
-    this.#destroy();
-    this.#__snapshots$?.complete();
+    this.__destroy();
+    this.__snapshots$?.complete();
   }
 
   /* ====================== Sub-classes API ====================== */
@@ -406,14 +407,14 @@ export abstract class ComponentModel<
     }
   ) {
     if (this.status !== "active")
-      return this.#warnNonActiveModel(`Can't invoke observable for a`);
+      return this.__warnNonActiveModel(`Can't invoke observable for a`);
     const state = this.state();
-    this.#invoke(({ signal }) => {
+    this.__invoke(({ signal }) => {
       const sub = observable.subscribe({
         next: value => {
           if (handler.next) allowNextEnqueue = true;
           this.enqueue(() => {
-            this.#executeEventHandler(
+            this.__executeEventHandler(
               { type: InternalEventName.InvokedNext, value, state },
               handler.next as Transition<this, E | InternalEvent>
             );
@@ -423,13 +424,13 @@ export abstract class ComponentModel<
           if (handler.error) {
             allowNextEnqueue = true;
             this.enqueue(() => {
-              this.#executeEventHandler(
+              this.__executeEventHandler(
                 { type: InternalEventName.InvokedError, error, state },
                 handler.error as Transition<this, E | InternalEvent>
               );
             });
           } else {
-            this.#machineMalformedInRuntime(
+            this.__machineMalformedInRuntime(
               new MachineMalformed(
                 `unhandled error in observable in "${state}"`,
                 { cause: error, machineConfig: this.constructor }
@@ -442,7 +443,7 @@ export abstract class ComponentModel<
         complete: () => {
           if (handler.complete) allowNextEnqueue = true;
           this.enqueue(() => {
-            this.#executeEventHandler(
+            this.__executeEventHandler(
               {
                 type: InternalEventName.InvokedDone,
                 result: undefined,
@@ -470,19 +471,19 @@ export abstract class ComponentModel<
     }
   ) {
     if (this.status !== "active")
-      return this.#warnNonActiveModel(`Can't invoke promise for a`);
+      return this.__warnNonActiveModel(`Can't invoke promise for a`);
     const state = this.state();
-    this.#invoke(async ({ signal }) => {
+    this.__invoke(async ({ signal }) => {
       try {
         const result = await promise(signal);
         const event = { type: InternalEventName.InvokedDone, result, state };
-        const handler = this.#getOnDoneHandler(
+        const handler = this.__getOnDoneHandler(
           Array.isArray(params.onDone) ? params.onDone : [params.onDone],
           state,
           event
         );
         if (!handler || handler instanceof MachineMalformed) {
-          return this.#machineMalformedInRuntime(
+          return this.__machineMalformedInRuntime(
             handler ||
               new MachineMalformed(`error in state "${state}"`, {
                 cause: "No onDone handler found",
@@ -490,18 +491,18 @@ export abstract class ComponentModel<
               })
           );
         } else if (handler instanceof Error)
-          return this.#toErrorWithReason(handler);
+          return this.__toErrorWithReason(handler);
 
         if (!signal.aborted)
-          this.#executeEventHandler(event, handler as Transition<this, any>);
+          this.__executeEventHandler(event, handler as Transition<this, any>);
       } catch (error) {
         if (error instanceof MachineMalformed) {
-          this.#machineMalformedInRuntime(error);
+          this.__machineMalformedInRuntime(error);
           return;
         }
         if (params.onError) {
           if (!signal.aborted)
-            this.#executeEventHandler(
+            this.__executeEventHandler(
               { type: InternalEventName.InvokedError, error, state },
               params.onError as Transition<this, any>
             );
@@ -510,7 +511,7 @@ export abstract class ComponentModel<
             `unhandled promise rejection in "${state}"`,
             { cause: error, machineConfig: this.constructor }
           );
-          this.#machineMalformedInRuntime(malformedErr);
+          this.__machineMalformedInRuntime(malformedErr);
         }
       }
     });
@@ -520,9 +521,9 @@ export abstract class ComponentModel<
   protected emit(event: Emitted) {
     event = unwrap(event);
     if (this.status !== "active")
-      return this.#warnNonActiveModel(`Can't emit "${event.type}" in a`);
+      return this.__warnNonActiveModel(`Can't emit "${event.type}" in a`);
     this.enqueue(() => {
-      this.#emittedEvents$?.next(event);
+      this.__emittedEvents$?.next(event);
     });
   }
 
@@ -537,10 +538,10 @@ export abstract class ComponentModel<
     handler: Transition<this, E | InternalEvent> & { after?: number }
   ): void {
     if (this.status !== "active")
-      return this.#warnNonActiveModel(`Can't schedule in a`);
-    if (!this.#scheduler) this.#scheduler = new Scheduler();
-    this.#scheduler.schedule(
-      this.#executeEventHandler.bind(
+      return this.__warnNonActiveModel(`Can't schedule in a`);
+    if (!this.__scheduler) this.__scheduler = new Scheduler();
+    this.__scheduler.schedule(
+      this.__executeEventHandler.bind(
         this,
         { type: InternalEventName.ScheduledExecute, state: this.state() },
         handler
@@ -554,8 +555,8 @@ export abstract class ComponentModel<
   protected enqueue(task: () => void, parentSpan?: Span) {
     void parentSpan; //TODO: return tracing
     if (this.status !== "active")
-      return this.#warnNonActiveModel(`Can't enque in a`);
-    this.#queue.enqueue(task);
+      return this.__warnNonActiveModel(`Can't enque in a`);
+    this.__queue.enqueue(task);
     if (
       allowNextEnqueue &&
       (actionsExecutionStack.isEmpty() || actionsExecutionStack.peek() !== this)
@@ -564,26 +565,26 @@ export abstract class ComponentModel<
       // Usually it's an event sent to the models.
       allowNextEnqueue = false;
       queueMicrotask(() => {
-        this.#processQueue(this.state(), "event");
+        this.__processQueue(this.state(), "event");
       });
     }
     allowNextEnqueue = false;
   }
 
   protected get logger(): Logger | undefined {
-    return this.#logger ?? ComponentModel.defaults.logger;
+    return this.__logger ?? ComponentModel.defaults.logger;
   }
 
   protected set logger(logger: Logger | null) {
-    this.#logger = logger || undefined;
+    this.__logger = logger || undefined;
   }
 
   protected get tracer(): Tracer | undefined {
-    return this.#tracer ?? ComponentModel.defaults.tracer;
+    return this.__tracer ?? ComponentModel.defaults.tracer;
   }
 
   protected set tracer(tracer: Tracer | null) {
-    this.#tracer = tracer || undefined;
+    this.__tracer = tracer || undefined;
   }
 
   /* ====================== Private ====================== */
@@ -591,36 +592,36 @@ export abstract class ComponentModel<
   /* ----------------------- Deps ------------------------ */
 
   // Lazily created
-  #scheduler: Scheduler | null = null;
+  private __scheduler: Scheduler | null = null;
 
-  #queue: Queue;
+  private __queue: Queue;
 
-  #stateSetter: Setter<string>;
+  private __stateSetter: Setter<string>;
 
   /* ---------------------- State Data ----------------------- */
 
   // Lazily created
-  #invocations: Map<string, Set<Invoked>> | null = null;
+  private __invocations: Map<string, Set<Invoked>> | null = null;
 
   /* ---------------------- Events ----------------------- */
 
   // Lazily created
-  #emittedEvents$: Subject<Emitted> | null = null;
+  private __emittedEvents$: Subject<Emitted> | null = null;
 
-  #__snapshots$: Subject<Snapshot<string, Data>> | null = null;
+  private __snapshots$: Subject<Snapshot<string, Data>> | null = null;
 
-  get #snapshots$(): Subject<Snapshot<string, Data>> {
-    if (!this.#__snapshots$)
-      this.#__snapshots$ = new Subject<Snapshot<string, Data>>();
+  get snapshots$(): Subject<Snapshot<string, Data>> {
+    if (!this.__snapshots$)
+      this.__snapshots$ = new Subject<Snapshot<string, Data>>();
     // Catch-up notificaion: error or completion, for late subscribers
     queueMicrotask(() => {
       if (this.status === "error") {
-        this.#__snapshots$!.error(this.error);
+        this.__snapshots$!.error(this.error);
       } else if (this.status == "done" || this.status === "stopped") {
-        this.#__snapshots$!.complete();
+        this.__snapshots$!.complete();
       }
     });
-    return this.#__snapshots$;
+    return this.__snapshots$;
   }
 
   /* ----------------------------------------------------- */
@@ -632,21 +633,22 @@ export abstract class ComponentModel<
 
   private static defaults: FrameworkConfig = {};
 
-  #addInvoked(state: string, invoked: Invoked) {
-    if (!this.#invocations) this.#invocations = new Map<string, Set<Invoked>>();
-    const set = this.#invocations.get(state) || new Set();
+  private __addInvoked(state: string, invoked: Invoked) {
+    if (!this.__invocations)
+      this.__invocations = new Map<string, Set<Invoked>>();
+    const set = this.__invocations.get(state) || new Set();
     set.add(invoked);
-    this.#invocations.set(state, set);
+    this.__invocations.set(state, set);
   }
 
-  #removeInvoked(state: string, invoked: Invoked) {
-    const set = this.#invocations!.get(state);
+  private __removeInvoked(state: string, invoked: Invoked) {
+    const set = this.__invocations!.get(state);
     if (!set) return;
     set.delete(invoked);
-    if (set.size === 0) this.#invocations!.delete(state);
+    if (set.size === 0) this.__invocations!.delete(state);
   }
 
-  #getOnDoneHandler(
+  private __getOnDoneHandler(
     handlers: Transition<ComponentModel<Data, any, Emitted>, any>[],
     foundPath: string,
     event?: E | InternalEvent
@@ -676,9 +678,9 @@ export abstract class ComponentModel<
     }
   }
 
-  #invoke(effect: Invoke<E>) {
+  private __invoke(effect: Invoke<E>) {
     if (this.status !== "active")
-      return this.#warnNonActiveModel(`Can't invoke for a`);
+      return this.__warnNonActiveModel(`Can't invoke for a`);
     const controller = new AbortController();
 
     const invocation = {
@@ -687,7 +689,7 @@ export abstract class ComponentModel<
     };
 
     const state = this.state();
-    this.#addInvoked(state, invocation);
+    this.__addInvoked(state, invocation);
 
     Promise.resolve(
       effect({
@@ -716,21 +718,21 @@ export abstract class ComponentModel<
     return () => {
       controller.abort();
       invocation.cleanup?.();
-      this.#removeInvoked(state, invocation);
+      this.__removeInvoked(state, invocation);
     };
   }
 
-  #toErrorWithReason(err: Error) {
+  private __toErrorWithReason(err: Error) {
     this.status = "error";
-    this.#destroy();
+    this.__destroy();
     this.error = err;
-    this.#logError("err", err);
+    this.__logError("err", err);
     console.error(err);
-    this.#__snapshots$?.error(err);
+    this.__snapshots$?.error(err);
   }
 
-  #machineMalformedInRuntime(err: MachineMalformed, async?: boolean) {
-    this.#toErrorWithReason(err);
+  private __machineMalformedInRuntime(err: MachineMalformed, async?: boolean) {
+    this.__toErrorWithReason(err);
     if (actionsExecutionStack.peek() === this) actionsExecutionStack.pop();
     if (!async) throw err;
     queueMicrotask(() => {
@@ -739,15 +741,15 @@ export abstract class ComponentModel<
     });
   }
 
-  #destroy(): void {
+  private __destroy(): void {
     aliveModels.delete(this._id);
-    this.#queue.flush();
-    if (this.#invocations)
-      for (const [state] of this.#invocations) {
-        this.#stopInvocations(state);
+    this.__queue.flush();
+    if (this.__invocations)
+      for (const [state] of this.__invocations) {
+        this.__stopInvocations(state);
       }
     // TODO: potential bug, need to check if scheduled in deep state are stopped
-    this.#stopScheduled("");
+    this.__stopScheduled("");
     const spawned = modelChildrenMap.get(this._id);
     if (spawned) {
       for (let i = 0; i < spawned.length; i++) {
@@ -766,37 +768,37 @@ export abstract class ComponentModel<
     if (this.onCleanup) this.onCleanup();
   }
 
-  #stopScheduled(state: string) {
+  private __stopScheduled(state: string) {
     // For top state node or for model without state chart state name is "".
-    this.#scheduler?.flush(state);
+    this.__scheduler?.flush(state);
   }
 
-  #stopInvocations(state: string) {
-    const set = this.#invocations?.get(state);
+  private __stopInvocations(state: string) {
+    const set = this.__invocations?.get(state);
     if (!set) return;
     for (const stop of [...set]) {
       stop.controller.abort();
       stop.cleanup?.();
-      this.#invocations?.delete(state);
+      this.__invocations?.delete(state);
     }
   }
 
-  #handleEvent(event: E): void {
+  private __handleEvent(event: E): void {
     if (this.status !== "active")
-      return this.#warnNonActiveModel(`Can't handle "${event.type}" in a`);
+      return this.__warnNonActiveModel(`Can't handle "${event.type}" in a`);
     const handler = this.stateChart!.getMostSpecificHandler(
       this.state(),
       event
     );
     if (!handler) return;
-    if (handler instanceof Error) return this.#toErrorWithReason(handler);
-    this.#executeEventHandler(
+    if (handler instanceof Error) return this.__toErrorWithReason(handler);
+    this.__executeEventHandler(
       event,
       handler as Transition<this, E | InternalEvent>
     );
   }
 
-  #internalEventToTracer(event: InternalEvent) {
+  private __internalEventToTracer(event: InternalEvent) {
     switch (event.type) {
       case InternalEventName.InvokedDone:
         return { type: event.type, result: String(event.result) };
@@ -809,39 +811,39 @@ export abstract class ComponentModel<
     }
   }
 
-  #isNormalEvent(event: E | InternalEvent): event is E {
+  private __isNormalEvent(event: E | InternalEvent): event is E {
     return !event.type.startsWith("@");
   }
 
   /** The main cycle of handling event or eventless transitions. */
-  #executeEventHandler(
+  private __executeEventHandler(
     event: E | InternalEvent,
     Transition: Transition<this, E | InternalEvent>
   ): void {
     if (this.status !== "active")
-      return this.#warnNonActiveModel(`Can't handle "${event.type}" in a`);
-    const span = this.#startTrace(
+      return this.__warnNonActiveModel(`Can't handle "${event.type}" in a`);
+    const span = this.__startTrace(
       `Event`,
-      this.#isNormalEvent(event)
+      this.__isNormalEvent(event)
         ? { ...event }
-        : this.#internalEventToTracer(event)
+        : this.__internalEventToTracer(event)
     );
-    this.#logGroup();
-    this.#logEvent(event);
+    this.__logGroup();
+    this.__logEvent(event);
 
     // Event Effect runs before transition effects
     allowNextEnqueue = true;
     if (Transition?.action) this.enqueue(Transition.action.bind(this, event));
 
     // Running queued effects
-    if (this.#queue.size > 0) this.#processQueue(this.state(), "event");
+    if (this.__queue.size > 0) this.__processQueue(this.state(), "event");
 
     // Make a transition by microsteps, executing Entry, Exit effects
     if (Transition?.target != null) {
       // Or else a change of the state signal during transition
       // immediately causes reactive computations
       batch(() => {
-        this.#transitionStepByStep(
+        this.__transitionStepByStep(
           this.stateChart!.transition(
             this.state(),
             Transition.target!,
@@ -863,30 +865,30 @@ export abstract class ComponentModel<
       // Eventless transition (Always)
       const always = this.stateChart?.getMostSpecificHandler(state);
       if (always && always instanceof Error) {
-        this.#toErrorWithReason(always);
+        this.__toErrorWithReason(always);
       } else if (always)
-        this.#executeEventHandler(
+        this.__executeEventHandler(
           { type: InternalEventName.Eventless, state: state },
           always
         );
     }
 
     if (span) span.end();
-    this.#logGroupEnd();
+    this.__logGroupEnd();
 
     // Emit snapshots to subscribers if there are any.
-    this.#__snapshots$?.next(this.toJSON());
+    this.__snapshots$?.next(this.toJSON());
   }
 
-  #startHandlingFx() {
+  private __startHandlingFx() {
     actionsExecutionStack.push(this);
   }
 
-  #finishHandlingFx() {
+  private __finishHandlingFx() {
     actionsExecutionStack.pop();
   }
 
-  #transitionStepByStep(
+  private __transitionStepByStep(
     generator: Generator<
       TransitionStep<Model<Data, E, Emitted, DoneData>, E | InternalEvent>
     >,
@@ -900,7 +902,7 @@ export abstract class ComponentModel<
         const effect = step.effect;
         const span =
           effect &&
-          this.#startSpan("Exit", {
+          this.__startSpan("Exit", {
             parent: parentSpan?.context(),
             attributes: { state: step.path },
           });
@@ -910,21 +912,21 @@ export abstract class ComponentModel<
           this.enqueue(effect.bind(this, event));
         }
 
-        this.#stopInvocations(step.path);
-        this.#stopScheduled(step.path);
+        this.__stopInvocations(step.path);
+        this.__stopScheduled(step.path);
 
         // Running Queued effects
-        if (this.#queue.size > 0) this.#processQueue(initial, "exit");
+        if (this.__queue.size > 0) this.__processQueue(initial, "exit");
 
         span?.end();
 
-        this.#stateSetter(step.path);
+        this.__stateSetter(step.path);
       } else {
-        this.#stateSetter(step.path);
+        this.__stateSetter(step.path);
         const effect = step.effect;
         const span =
           effect &&
-          this.#startSpan("Entry", {
+          this.__startSpan("Entry", {
             parent: parentSpan,
             attributes: { state: step.path },
           });
@@ -935,18 +937,18 @@ export abstract class ComponentModel<
         }
 
         // Running Queued effects
-        if (this.#queue.size > 0) this.#processQueue(step.path, "entry");
+        if (this.__queue.size > 0) this.__processQueue(step.path, "entry");
 
         span?.end();
       }
     }
-    this.#logTransitoin(initial, this.state());
+    this.__logTransitoin(initial, this.state());
   }
 
-  #processQueue(state: string, type: "entry" | "exit" | "event") {
-    let fn = this.#queue.dequeue();
+  private __processQueue(state: string, type: "entry" | "exit" | "event") {
+    let fn = this.__queue.dequeue();
     if (!fn) return;
-    this.#startHandlingFx();
+    this.__startHandlingFx();
     untrack(() =>
       batch(() => {
         while (fn) {
@@ -954,7 +956,7 @@ export abstract class ComponentModel<
             fn();
           } catch (error) {
             if (error instanceof MachineMalformed) {
-              this.#machineMalformedInRuntime(error);
+              this.__machineMalformedInRuntime(error);
               return;
             }
             // Errors in effects do not stop the machine and do not prevent transitions
@@ -962,17 +964,17 @@ export abstract class ComponentModel<
               `${type} effect in "${state}" state failed`,
               { cause: error }
             );
-            this.#logError("err", err);
+            this.__logError("err", err);
             console.error(err);
           }
-          fn = this.#queue.dequeue();
+          fn = this.__queue.dequeue();
         }
       })
     );
-    this.#finishHandlingFx();
+    this.__finishHandlingFx();
   }
 
-  #createSendApi(): SendApi<E> {
+  private __createSendApi(): SendApi<E> {
     return new Proxy({} as SendApi<E>, {
       get: (_, type: string) => {
         return (payload?: object) => {
@@ -987,7 +989,7 @@ export abstract class ComponentModel<
 
   /* ----------------------- Serialzation & Snapshots ----------------------- */
 
-  #jsonModel(
+  private __jsonModel(
     value: AnyComponentModel,
     name: string = this.constructor.name
   ): Snapshot<string, Data> {
@@ -995,12 +997,15 @@ export abstract class ComponentModel<
       _id: value._id,
       state: value.state(),
       name: name,
-      data: value.#jsonData(unwrap(value.data), this) as Data,
+      data: value.__jsonData(unwrap(value.data), this) as Data,
       status: value.status,
     };
   }
 
-  #getChildName(children: ChildTypes, constructor: ModelCtorWithChildren) {
+  private __getChildName(
+    children: ChildTypes,
+    constructor: ModelCtorWithChildren
+  ) {
     for (const key in children) {
       if (!Object.hasOwn(children, key)) continue;
       const element = children[key];
@@ -1008,26 +1013,30 @@ export abstract class ComponentModel<
     }
   }
 
-  #jsonData(value: unknown, owner: AnyComponentModel): unknown {
+  private __jsonData(value: unknown, owner: AnyComponentModel): unknown {
     if (value instanceof ComponentModel) {
       const parentsConstructor = (value.parent as AnyComponentModel)
         .constructor as ModelCtorWithChildren;
       const childObject = parentsConstructor.childTypes;
       const ctor = value.constructor as ModelCtorWithChildren;
-      const name = this.#getChildName(childObject, ctor);
+      const name = this.__getChildName(childObject, ctor);
       if (!name) throw new Error(`Can't find a child to spawn a model`);
-      return value.#jsonModel(value, name);
+      return value.__jsonModel(value, name);
     }
 
     if (Array.isArray(value)) {
-      return value.map(item => this.#jsonData(item, owner));
+      return value.map(item => this.__jsonData(item, owner));
     }
 
-    if (value && typeof value === "object") {
+    if (value && typeof value === "object" && value !== null) {
+      if (hasToJSON(value)) {
+        return value.toJSON();
+      }
+
       const result: Record<string, unknown> = {};
 
       for (const [k, v] of Object.entries(value)) {
-        result[k] = this.#jsonData(v, owner);
+        result[k] = this.__jsonData(v, owner);
       }
 
       return result;
@@ -1037,6 +1046,38 @@ export abstract class ComponentModel<
   }
 
   /* ------------------------------ Restoring ------------------------------ */
+
+  private __initialize(ctx: Data) {
+    const [store, setData] = createStore(ctx);
+    this.data = store;
+
+    this.setData = protectMethod((...args: any[]) => {
+      //TODO: decide how to deal with this
+      // if (this.status !== 'active') return this.__warnNonActiveModel(`Can't set data for a`);
+      // @ts-ignore
+      setData(...args);
+    }, "setData");
+
+    this.__queue = new Queue();
+    // @ts-ignore
+    this.send = this.__createSendApi();
+    const stateChartSetup = (
+      this.constructor as ModelConstructor<
+        Model<Data, E, Emitted, DoneData>,
+        E | InternalEvent
+      >
+    ).chart;
+    if (stateChartSetup) {
+      const [state, setState] = createSignal("");
+      this.state = state;
+      this.__stateSetter = setState;
+      // @ts-ignore
+      this.stateChart = stateChartSetup.createRuntime(this);
+    } else {
+      this.__stateSetter = NOOP_STATE_SETTER;
+      this.state = STATELESS;
+    }
+  }
 
   private static fromSnapshot(
     snapshot: Snapshot<string, AnyModelData>,
@@ -1063,7 +1104,11 @@ export abstract class ComponentModel<
       );
 
     // TODO: bad, because constructor can setting other props, like dependencies.
-    const inst: AnyComponentModel = new ctor({}) as AnyComponentModel;
+    // const inst: AnyComponentModel = new ctor({}) as AnyComponentModel;
+    // UPD: replaced with Object.create, but now avoiding constructor brings its own problems
+    const inst: AnyComponentModel = Object.create(
+      ctor.prototype
+    ) as AnyComponentModel;
 
     const data = this.dataFromJSON(
       snapshot.data,
@@ -1072,8 +1117,8 @@ export abstract class ComponentModel<
 
     actionsExecutionStack.push(inst);
     try {
-      inst.setData(data);
-      inst.#stateSetter(snapshot.state);
+      inst.__initialize(data);
+      inst.__stateSetter(snapshot.state);
       inst._id =
         snapshot._id as `${string}-${string}-${string}-${string}-${string}`;
       inst.status = "idle";
@@ -1095,6 +1140,10 @@ export abstract class ComponentModel<
 
     if (Array.isArray(value)) {
       return value.map(v => this.dataFromJSON(v, ownerCtor));
+    }
+
+    if (isClassInstance(value)) {
+      return value;
     }
 
     if (value && typeof value === "object") {
@@ -1135,7 +1184,7 @@ export abstract class ComponentModel<
       return children[name] as ModelCtorWithChildren;
   }
 
-  #findAndStartChildren(value: unknown): unknown {
+  private __findAndStartChildren(value: unknown): unknown {
     if (value instanceof ComponentModel) {
       console.log("child is in", value.status, "status");
       if (value.status === "idle") value.start();
@@ -1143,55 +1192,59 @@ export abstract class ComponentModel<
     }
 
     if (Array.isArray(value)) {
-      return value.map(this.#findAndStartChildren.bind(this));
+      return value.map(this.__findAndStartChildren.bind(this));
     }
 
     if (value && typeof value === "object") {
       const result: Record<string, unknown> = {};
 
       for (const [k, v] of Object.entries(value)) {
-        result[k] = this.#findAndStartChildren(v);
+        result[k] = this.__findAndStartChildren(v);
       }
     }
   }
 
   /* ------------------------------ Logging ------------------------------ */
 
-  #logger: Logger | undefined;
+  private __logger: Logger | undefined;
 
-  #tracer?: Tracer;
+  private __tracer?: Tracer;
 
-  #warnNonActiveModel(message: string) {
+  private __warnNonActiveModel(message: string) {
     console.warn(message + ` model in "${this.status}" status.`);
   }
 
-  #logTransitoin(from: string, to: string) {
+  private __logTransitoin(from: string, to: string) {
     if (this.logger) this.logger.transition(from, to);
   }
 
-  #logEvent(event: E | InternalEvent) {
+  private __logEvent(event: E | InternalEvent) {
     if (this.logger) this.logger.event(event);
   }
 
-  #logGroup() {
+  private __logGroup() {
     if (this.logger) this.logger.group(this.constructor.name, this._id);
   }
 
-  #logGroupEnd() {
+  private __logGroupEnd() {
     if (this.logger) this.logger.groupEnd();
   }
 
-  #logError(message: string, err: Error) {
+  private __logError(message: string, err: Error) {
     if (this.logger) this.logger.error(message, { cause: err });
   }
 
   /* ------------------------------ Tracing ------------------------------ */
 
-  #startSpan(...args: Parameters<Tracer["startSpan"]>): Span | undefined {
+  private __startSpan(
+    ...args: Parameters<Tracer["startSpan"]>
+  ): Span | undefined {
     if (this.tracer) return this.tracer.startSpan(...args);
   }
 
-  #startTrace(...args: Parameters<Tracer["startTrace"]>): Span | undefined {
+  private __startTrace(
+    ...args: Parameters<Tracer["startTrace"]>
+  ): Span | undefined {
     if (this.tracer) return this.tracer.startTrace(...args);
   }
 }
