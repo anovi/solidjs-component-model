@@ -38,6 +38,8 @@ import {
   ParenTripleMachine,
   TopChildModel,
 } from "./test-models/triple-models-hierarchy";
+import { WithDomainPathMachine } from "./test-models/model-with-domain-object";
+import { DomainPath } from "./test-models/domain-object";
 void TerminalLogger;
 
 ComponentModel.configure({
@@ -1231,6 +1233,21 @@ describe("component-model", () => {
         1,
         "TopChild has BottomChild"
       );
+    });
+
+    it.skip("restores model with domain object correctly", async () => {
+      const model = new WithDomainPathMachine("info", "/some.md");
+      model.start();
+      expect(model.data.path).toBeInstanceOf(DomainPath);
+
+      const snapshot = model.getPersistedSnapshot();
+      model.stop();
+
+      const newModel = WithDomainPathMachine.fromPersistedSnapshot(snapshot);
+      newModel.start();
+
+      assert.equal(newModel.data.some, "info");
+      expect(newModel.data.path).toBeInstanceOf(DomainPath);
     });
   });
 });
