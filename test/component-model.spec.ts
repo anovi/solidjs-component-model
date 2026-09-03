@@ -599,6 +599,21 @@ describe("component-model", () => {
       assert.ok("it worked!");
       model.stop();
     });
+
+    it("`waitFor` works for an action only transition", async () => {
+      const model = new ModelWithStateNodes();
+      model.start();
+      queueMicrotask(() =>
+        model.dispatch({ type: "ACTION_ONLY", value: "awaited value" })
+      );
+      await model.waitFor(snapshot => {
+        return (
+          snapshot.state === "default" && snapshot.data.data === "awaited value"
+        );
+      });
+      assert.ok("it worked!");
+      model.stop();
+    });
   });
 
   describe("errors", () => {

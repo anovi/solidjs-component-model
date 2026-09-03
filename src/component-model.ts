@@ -999,9 +999,9 @@ export abstract class ComponentModel<
 
   #jsonData(value: unknown, owner: AnyComponentModel): unknown {
     if (value instanceof ComponentModel) {
-      const childObject = (
-        (value.parent as AnyComponentModel).constructor as ModelCtorWithChildren
-      ).childTypes;
+      const parentsConstructor = (value.parent as AnyComponentModel)
+        .constructor as ModelCtorWithChildren;
+      const childObject = parentsConstructor.childTypes;
       const ctor = value.constructor as ModelCtorWithChildren;
       const name = this.#getChildName(childObject, ctor);
       if (!name) throw new Error(`Can't find a child to spawn a model`);

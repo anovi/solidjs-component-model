@@ -11,6 +11,7 @@ type MyModelData = {
 type Events =
   | { type: "SOME"; value: string }
   | { type: "OTHER"; value: string }
+  | { type: "ACTION_ONLY"; value: string }
   | { type: "LOAD_RISKY_ENDPOINT"; value: string }
   | { type: "LOAD_WITH_GENERAL_INVOKE" }
   | { type: "TO_OBSERVABLE" }
@@ -48,6 +49,11 @@ export const ModelWithStateNodes = WithStateChart(ModelWithStateNodesBase, {
             this.setData({
               some: event.value,
             });
+          },
+        },
+        ACTION_ONLY: {
+          action(event) {
+            this.setData("data", event.value);
           },
         },
         TO_OBSERVABLE: {
