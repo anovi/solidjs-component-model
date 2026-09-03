@@ -266,7 +266,12 @@ export abstract class ComponentModel<
     return machine;
   }
 
-  /** Override to apply extra fields from a persisted snapshot to `this`. */
+  /**
+   * Override to apply extra fields from a persisted snapshot to `this`.
+   * It's inversia form `getPersistedSnapshot` method.
+   *
+   * By default this method does nothing.
+   */
   protected applyPersistedSnapshot(_snapshot: unknown): void {
     // no-op by default
   }
@@ -332,6 +337,12 @@ export abstract class ComponentModel<
     });
   }
 
+  /**
+   * Redefine method if you need additional fields in the model:
+   * - call this.toJSON() — it will return a snapshot, you can modify it safely;
+   * - add fields using Object.assign method;
+   * - return the result.
+   */
   getPersistedSnapshot(): unknown {
     return this.toJSON();
   }
@@ -1027,7 +1038,6 @@ export abstract class ComponentModel<
 
   /* ------------------------------ Restoring ------------------------------ */
 
-  /** Redefine method if you have highly customized model. */
   private static fromSnapshot(
     snapshot: Snapshot<string, AnyModelData>,
     ownerCtor?: ModelCtorWithChildren
@@ -1038,30 +1048,27 @@ export abstract class ComponentModel<
       );
     const name = snapshot.name;
 
-    let inst: AnyComponentModel;
+    const ctor = ownerCtor
+      ? this.getChildCtor(ownerCtor, name)
+      : (this as unknown as ModelCtorWithChildren);
 
-    const data = (this as typeof ComponentModel).dataFromJSON(
-      snapshot.data,
-      ownerCtor
-    );
-
-    if (ownerCtor) {
-      const ctor = (this as typeof ComponentModel).getChildCtor(
-        ownerCtor,
-        name
+    if (ownerCtor && !ctor)
+      throw new Error(
+        `Unable to find child constructor "${name}" in ${ownerCtor.name}`
       );
-      if (!ctor)
-        throw new Error(
-          `Unable to find child constructor "${name}" in ${ownerCtor}`
-        );
-      // It does not matter that data is empty, we update it immediately
-      inst = new ctor({}) as AnyComponentModel;
-    } else {
-      // It does not matter that data is empty, we update it immediately
-      inst = new (this as unknown as ModelCtorWithChildren)(
-        {}
-      ) as AnyComponentModel;
-    }
+
+    if (!ctor)
+      throw new Error(
+        `Unable to find child constructor "${name}" in ${this.name}`
+      );
+
+    // TODO: bad, because constructor can setting other props, like dependencies.
+    const inst: AnyComponentModel = new ctor({}) as AnyComponentModel;
+
+    const data = this.dataFromJSON(
+      snapshot.data,
+      ctor as unknown as ModelCtorWithChildren
+    );
 
     actionsExecutionStack.push(inst);
     try {
@@ -1083,10 +1090,7 @@ export abstract class ComponentModel<
     ownerCtor: ModelCtorWithChildren | undefined
   ): unknown {
     if (this.isModelSnapshot(value)) {
-      return (this as typeof ComponentModel).fromSnapshot(
-        value,
-        ownerCtor || (this as unknown as ModelCtorWithChildren)
-      );
+      return (this as typeof ComponentModel).fromSnapshot(value, ownerCtor);
     }
 
     if (Array.isArray(value)) {

@@ -33,10 +33,15 @@ import { CustomizedParentModelMachine } from "./test-models/parent-with-custom-s
 import { ParentModelHiddenChildren } from "./test-models/parent-model-no-explicit-children";
 import { ModelWithActionDecorator } from "./test-models/model-with-action-decorator";
 import { ModelWithParams } from "./test-models/model-with-params";
+import {
+  BottomChildModel,
+  ParenTripleMachine,
+  TopChildModel,
+} from "./test-models/triple-models-hierarchy";
 void TerminalLogger;
 
 ComponentModel.configure({
-  logger: new TerminalLogger(),
+  // logger: new TerminalLogger(),
 });
 
 describe("component-model", () => {
@@ -1185,6 +1190,47 @@ describe("component-model", () => {
       assert.ok(newParent instanceof CustomizedParentModelMachine);
       assert.equal(newParent.status, "active");
       assert.equal(newParent.customProp, "new value");
+    });
+
+    // TODO: cover this case
+    // - Move invoked objects and timers out of effects to declarative syntax
+    // - Entry effects should not run when model is restored
+    it.skip("should restore models with triple level of hierarchy", async () => {
+      const parent = new ParenTripleMachine();
+      parent.start();
+
+      parent.dispatch({ type: "ADD" });
+      await sleep(0);
+      assert.equal(parent.data.children.length, 1, "has TopChild");
+      expect(parent.data.children[0]).toBeInstanceOf(TopChildModel);
+      assert.equal(
+        parent.data.children[0].data.children.length,
+        1,
+        "has BottomChild"
+      );
+      expect(parent.data.children[0].data.children[0]).toBeInstanceOf(
+        BottomChildModel
+      );
+
+      const snapshot = parent.getPersistedSnapshot();
+      parent.stop();
+
+      const newParent = ParenTripleMachine.fromPersistedSnapshot(snapshot);
+      newParent.start();
+
+      assert.ok(newParent instanceof ParenTripleMachine);
+      assert.equal(newParent.status, "active");
+
+      assert.equal(newParent.data.children.length, 1, "newParent has TopChild");
+      expect(newParent.data.children[0]).toBeInstanceOf(TopChildModel);
+      expect(newParent.data.children[0].data.children[0]).toBeInstanceOf(
+        BottomChildModel
+      );
+      assert.equal(
+        newParent.data.children[0].data.children.length,
+        1,
+        "TopChild has BottomChild"
+      );
     });
   });
 });
