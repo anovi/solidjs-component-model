@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import assert from 'node:assert'
+import assert from "node:assert";
 import { ComponentModel, WithStateChart } from "../dist";
 
 function sleep(ms) {
@@ -74,11 +74,11 @@ describe("Test compiled", () => {
       },
     });
 
-    model.setData('some', 'violation');
+    model.setData("some", "violation");
 
     await sleep(20);
 
-    assert.notDeepEqual(model.data.some, 'violation');
+    assert.notDeepEqual(model.data.some, "violation");
   });
 
   it("works", async () => {
@@ -86,12 +86,12 @@ describe("Test compiled", () => {
     model.start();
 
     model.enqueue(() => {
-      model.setData('some', 'violation');
-    })
+      model.setData("some", "violation");
+    });
 
     await sleep(10);
 
-    expect(model.data.some).toEqual('violation')
+    expect(model.data.some).toEqual("violation");
   });
 
   it("allows to dispatch events", async () => {

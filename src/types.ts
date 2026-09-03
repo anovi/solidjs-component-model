@@ -7,7 +7,7 @@ import type { Tracer } from "./tracer-types";
 export type AnyModelData = Record<string, unknown>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyModel = Model<any, any, any, any>;
+export type AnyModel = Model<any, any, { type: string }, any>;
 
 export type Cleanup = void | (() => void);
 

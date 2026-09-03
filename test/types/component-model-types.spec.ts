@@ -4,6 +4,7 @@ import {
   WithStateChart,
   StateChart,
   type StateChartPaths,
+  type AnyModel,
 } from "../../src";
 import { ParentModel } from "../test-models/parent-model";
 import type { StateChartConfigPaths } from "../../src/state-chart/state-path";
@@ -102,5 +103,12 @@ describe("WithStateChart", function () {
 
     const newParent2 = ParentModel.fromPersistedSnapshot(snapshot);
     expectTypeOf(newParent2).toEqualTypeOf<ParentModelInstance>();
+  });
+
+  it("ComponentModel is equal to AnyModel", async () => {
+    const parent = new ParentModel();
+    const some: AnyModel = parent;
+    void some;
+    expectTypeOf(parent).toMatchTypeOf<AnyModel>();
   });
 });
