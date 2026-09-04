@@ -72,7 +72,7 @@ interface ModelCtorWithChildren {
 interface ComponentModelConstructor {
   new (...args: never[]): AnyComponentModel;
   isModelSnapshot: (value: unknown) => boolean;
-  fromSnapshot: (
+  __fromSnapshot: (
     snapshot: unknown,
     ownerCtor?: ModelCtorWithChildren
   ) => AnyComponentModel;
@@ -189,6 +189,7 @@ Model:
 - [x] Snapshots for debugging
 - [x] "Always" eventless transitions
 - [x] Restoring from persitence snapshot
+- [ ] Should restore without running entry effects
 ===================================================== */
 
 export abstract class ComponentModel<
@@ -257,7 +258,7 @@ export abstract class ComponentModel<
     const ctor = this as unknown as ComponentModelConstructor;
     if (!ctor.isModelSnapshot(snapshot))
       throw Error(`${snapshot} is not a model's snapshot.`);
-    return ctor.fromSnapshot(snapshot) as InstanceType<TThis>;
+    return ctor.__fromSnapshot(snapshot) as InstanceType<TThis>;
   }
 
   static fromPersistedSnapshot<
@@ -649,6 +650,8 @@ export abstract class ComponentModel<
   // Lazily created
   private __invocations: Map<string, Set<Invoked>> | null = null;
 
+  private __restored = false;
+
   /* ---------------------- Events ----------------------- */
 
   // Lazily created
@@ -987,7 +990,7 @@ export abstract class ComponentModel<
             attributes: { state: step.path },
           });
 
-        if (effect) {
+        if (effect && !this.__restored) {
           allowNextEnqueue = true;
           this.enqueue(effect.bind(this, event));
         }
@@ -1156,7 +1159,7 @@ export abstract class ComponentModel<
     }
   }
 
-  private static fromSnapshot(
+  private static __fromSnapshot(
     snapshot: Snapshot<string, AnyModelData>,
     ownerCtor?: ModelCtorWithChildren
   ): AnyComponentModel {
@@ -1187,6 +1190,8 @@ export abstract class ComponentModel<
       ctor.prototype
     ) as AnyComponentModel;
 
+    inst.__restored = true;
+
     const data = this.dataFromJSON(
       snapshot.data,
       ctor as unknown as ModelCtorWithChildren
@@ -1212,7 +1217,7 @@ export abstract class ComponentModel<
     ownerCtor: ModelCtorWithChildren | undefined
   ): unknown {
     if (this.isModelSnapshot(value)) {
-      return (this as typeof ComponentModel).fromSnapshot(value, ownerCtor);
+      return (this as typeof ComponentModel).__fromSnapshot(value, ownerCtor);
     }
 
     if (Array.isArray(value)) {

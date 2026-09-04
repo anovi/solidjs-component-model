@@ -40,6 +40,7 @@ import {
 } from "./test-models/triple-models-hierarchy";
 import { WithDomainPathMachine } from "./test-models/model-with-domain-object";
 import { DomainPath } from "./test-models/domain-object";
+import { CounterMachine } from "./test-models/model-counter";
 void TerminalLogger;
 
 ComponentModel.configure({
@@ -1054,6 +1055,23 @@ describe("component-model", () => {
       }
       const model = Object.create(Base.prototype);
       assert.ok(!model.govno);
+    });
+
+    it("does not run entry effects", async () => {
+      const model = new CounterMachine();
+      model.start();
+      model.dispatch({ type: "DO" });
+      model.dispatch({ type: "DO" });
+      model.dispatch({ type: "DO" });
+      assert.equal(model.data.counter, 2);
+      assert.ok(model.matches, "second");
+      const snapshot = model.getPersistedSnapshot();
+      model.stop();
+
+      const restored = CounterMachine.fromPersistedSnapshot(snapshot);
+      restored.start();
+      assert.equal(restored.data.counter, 2);
+      assert.ok(restored.matches, "second");
     });
 
     it("it restores a model as active", async () => {
