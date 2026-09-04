@@ -133,14 +133,16 @@ export const ModelWithEffectOrder = WithStateChart(ModelBase, {
           },
         },
         deeper: {
-          entry() {
-            this.record("second.deeper-entry");
-            this.schedule({
-              after: 5,
-              action: () => {
+          after: {
+            // Test of declarative scheduling
+            5: {
+              action() {
                 this.record("scheduled-action-in-deeper");
               },
-            });
+            },
+          },
+          entry() {
+            this.record("second.deeper-entry");
           },
           on: {
             GO: {

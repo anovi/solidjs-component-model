@@ -133,8 +133,13 @@ export class StateChart<
       node.always = handlers;
       this.#toValidate!.push(handlers as Transition<any, any>[]);
     }
+
     if (config.invoke) {
       node.invoke = config.invoke;
+    }
+
+    if (config.after) {
+      node.after = config.after;
     }
 
     if (config.type) {
@@ -264,6 +269,9 @@ export class Interpreter<
       step.effect = step.exit ? node.exit : node.entry;
       if (node.invoke && !step.exit) {
         step.invoke = node.invoke;
+      }
+      if (node.after && !step.exit) {
+        step.schedule = node.after;
       }
       yield step;
     }

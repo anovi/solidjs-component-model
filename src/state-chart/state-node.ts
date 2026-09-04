@@ -1,9 +1,11 @@
+import type { ScheduledExecute } from "../events";
 import type {
   Event,
   Action,
   HandlerForEvent,
   EventName,
   InvokeConfig,
+  Transition,
 } from "./state-chart-types";
 
 export enum NodeType {
@@ -31,6 +33,10 @@ export type StateNode<TModel, E extends Event> = {
   entry?: Action<TModel, E>;
 
   invoke?: InvokeConfig<TModel>;
+
+  after?: {
+    [key: number]: Transition<TModel, ScheduledExecute>;
+  };
 
   exit?: Action<TModel, E>;
 

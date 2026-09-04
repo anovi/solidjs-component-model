@@ -1002,10 +1002,42 @@ export abstract class ComponentModel<
           this.__handleInvoke(step.invoke);
         }
 
+        if (step.schedule) {
+          this.__handleSchedules(step.schedule, step.path);
+        }
+
         span?.end();
       }
     }
     this.__logTransitoin(initial, this.state());
+  }
+
+  private __handleSchedules(
+    toSchedule: {
+      [key: number]: Transition<
+        ComponentModel<Data, E, Emitted, DoneData>,
+        ScheduledExecute
+      >;
+    },
+    state: string
+  ) {
+    for (const timeout in toSchedule) {
+      if (!Object.hasOwn(toSchedule, timeout)) continue;
+      let num = 0;
+      try {
+        num = Number.parseInt(timeout);
+      } catch (error) {
+        throw new MachineMalformed(
+          `wrong "after" config in state "${state}", keys shoud be integers`
+        );
+      }
+
+      const transition = toSchedule[timeout];
+      this.schedule({
+        after: num,
+        ...transition,
+      });
+    }
   }
 
   private __handleInvoke(

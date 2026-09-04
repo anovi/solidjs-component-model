@@ -1,6 +1,11 @@
 /** Context in which actions and guards execute. */
 
-import type { InvokedDone, InvokedError, InvokedNext } from "../events";
+import type {
+  InvokedDone,
+  InvokedError,
+  InvokedNext,
+  ScheduledExecute,
+} from "../events";
 import type { Observable } from "../observable";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,6 +23,9 @@ export type TransitionStep<TModel, E extends Event> = {
   final?: boolean;
   effect?: Action<TModel, E>;
   invoke?: InvokeConfig<TModel>;
+  schedule?: {
+    [key: number]: Transition<TModel, ScheduledExecute>;
+  };
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,6 +63,10 @@ export type StateChartConfig<TModel, E extends Event> = {
   entry?: Action<TModel, E>;
 
   invoke?: InvokeConfig<TModel>;
+
+  after?: {
+    [key: number]: Transition<TModel, ScheduledExecute>;
+  };
 
   /** An exit effect executed just before machine exits this state. */
   exit?: Action<TModel, E>;
