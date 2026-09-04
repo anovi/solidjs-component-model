@@ -189,7 +189,7 @@ Model:
 - [x] Snapshots for debugging
 - [x] "Always" eventless transitions
 - [x] Restoring from persitence snapshot
-- [ ] Should restore without running entry effects
+- [x] Should restore without running entry effects
 ===================================================== */
 
 export abstract class ComponentModel<
@@ -898,8 +898,8 @@ export abstract class ComponentModel<
 
     // Make a transition by microsteps, executing Entry, Exit effects
     if (transition?.target != null) {
-      // Or else a change of the state signal during transition
-      // immediately causes reactive computations
+      // Prevents changes of the state signal during transition
+      // to cause immediate reactive computations
       batch(() => {
         this.__transitionStepByStep(
           this.stateChart!.transition(
