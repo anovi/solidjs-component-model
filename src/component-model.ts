@@ -50,6 +50,7 @@ import { EffectFailed, Violation } from "./errors";
 import type { Model } from "./interfaces";
 import { Stack } from "./stack";
 import { hasToJSON, isClassInstance } from "./object";
+import type { ScheduledExecute } from "./events";
 
 type SendApi<E extends { type: string }> = {
   [K in EventName<E>]: (
@@ -58,17 +59,17 @@ type SendApi<E extends { type: string }> = {
 };
 
 interface ModelConstructor<TModel extends AnyModel, E extends Event> {
-  new (...args: any[]): AnyComponentModel;
+  new (...args: never[]): AnyComponentModel;
   chart?: StateChart<TModel, E>;
 }
 
 interface ModelCtorWithChildren {
-  new (...args: any[]): AnyComponentModel;
+  new (...args: never[]): AnyComponentModel;
   childTypes: ChildTypes;
 }
 
 interface ComponentModelConstructor {
-  new (...args: any[]): AnyComponentModel;
+  new (...args: never[]): AnyComponentModel;
   isModelSnapshot: (value: unknown) => boolean;
   fromSnapshot: (
     snapshot: unknown,
@@ -151,7 +152,7 @@ export function protectedMethod(
 }
 
 /** Dynamic decorator for protected method. Does not allow a target to be called outside effects.  */
-function protectMethod<T extends (...args: any[]) => any>(
+function protectMethod<T extends (...args: unknown[]) => unknown>(
   method: T,
   propertyKey: string
 ): T {
@@ -218,7 +219,7 @@ export abstract class ComponentModel<
     const [store, setData] = createStore(ctx);
     this.data = store;
 
-    this.setData = protectMethod((...args: any[]) => {
+    this.setData = protectMethod((...args: unknown[]) => {
       //TODO: decide how to deal with this
       // if (this.status !== 'active') return this.__warnNonActiveModel(`Can't set data for a`);
       // @ts-ignore
@@ -248,7 +249,7 @@ export abstract class ComponentModel<
     Object.assign(this.defaults, config);
   }
 
-  static fromJSON<TThis extends new (...args: any[]) => AnyComponentModel>(
+  static fromJSON<TThis extends new (...args: unknown[]) => AnyComponentModel>(
     this: TThis,
     snapshot: unknown
   ): InstanceType<TThis> {
@@ -259,7 +260,10 @@ export abstract class ComponentModel<
   }
 
   static fromPersistedSnapshot<
-    TThis extends new (...args: any[]) => AnyComponentModel,
+    // Constructor constraint that doesn't care about its parameters, because
+    // the constructor arguments isn't actually used in the method, it's just for typing.
+    // Or else using fromPersistedSnapshot will yell.
+    TThis extends abstract new (...args: never[]) => AnyComponentModel,
   >(this: TThis, snapshot: unknown): InstanceType<TThis> {
     const ctor = this as unknown as ComponentModelConstructor;
     const machine = ctor.fromJSON(snapshot) as InstanceType<TThis>;
@@ -405,10 +409,16 @@ export abstract class ComponentModel<
   protected invokeObservable<Next>(
     observable: Observable<Next>,
     handler: {
-      next?: Transition<ComponentModel<Data, E, Emitted>, InvokedNext<Next>>;
-      error?: Transition<ComponentModel<Data, E, Emitted>, InvokedError>;
+      next?: Transition<
+        ComponentModel<Data, E, Emitted, DoneData>,
+        InvokedNext<Next>
+      >;
+      error?: Transition<
+        ComponentModel<Data, E, Emitted, DoneData>,
+        InvokedError
+      >;
       complete?: Transition<
-        ComponentModel<Data, E, Emitted>,
+        ComponentModel<Data, E, Emitted, DoneData>,
         InvokedDone<undefined>
       >;
     }
@@ -423,7 +433,10 @@ export abstract class ComponentModel<
           this.enqueue(() => {
             this.__executeEventHandler(
               { type: InternalEventName.InvokedNext, value, state },
-              handler.next as Transition<this, E | InternalEvent>
+              handler.next as Transition<
+                ComponentModel<Data, E, Emitted, DoneData>,
+                InvokedNext
+              >
             );
           });
         },
@@ -433,7 +446,10 @@ export abstract class ComponentModel<
             this.enqueue(() => {
               this.__executeEventHandler(
                 { type: InternalEventName.InvokedError, error, state },
-                handler.error as Transition<this, E | InternalEvent>
+                handler.error as Transition<
+                  ComponentModel<Data, E, Emitted, DoneData>,
+                  InvokedError
+                >
               );
             });
           } else {
@@ -456,7 +472,10 @@ export abstract class ComponentModel<
                 result: undefined,
                 state,
               },
-              handler.complete as Transition<this, E | InternalEvent>
+              handler.complete as Transition<
+                ComponentModel<Data, E, Emitted, DoneData>,
+                InvokedDone
+              >
             );
           });
         },
@@ -472,9 +491,15 @@ export abstract class ComponentModel<
     promise: (signal: AbortSignal) => Promise<T>,
     params: {
       onDone:
-        | Transition<ComponentModel<Data, any, Emitted>, InvokedDone<T>>
-        | Transition<ComponentModel<Data, E, Emitted>, InvokedDone<T>>[];
-      onError?: Transition<ComponentModel<Data, any, Emitted>, InvokedError>;
+        | Transition<ComponentModel<Data, E, Emitted, DoneData>, InvokedDone<T>>
+        | Transition<
+            ComponentModel<Data, E, Emitted, DoneData>,
+            InvokedDone<T>
+          >[];
+      onError?: Transition<
+        ComponentModel<Data, E, Emitted, DoneData>,
+        InvokedError
+      >;
     }
   ) {
     if (this.status !== "active")
@@ -501,7 +526,13 @@ export abstract class ComponentModel<
           return this.__toErrorWithReason(handler);
 
         if (!signal.aborted)
-          this.__executeEventHandler(event, handler as Transition<this, any>);
+          this.__executeEventHandler(
+            event,
+            handler as Transition<
+              ComponentModel<Data, E, Emitted, DoneData>,
+              InvokedDone
+            >
+          );
       } catch (error) {
         if (error instanceof MachineMalformed) {
           this.__machineMalformedInRuntime(error);
@@ -511,7 +542,10 @@ export abstract class ComponentModel<
           if (!signal.aborted)
             this.__executeEventHandler(
               { type: InternalEventName.InvokedError, error, state },
-              params.onError as Transition<this, any>
+              params.onError as Transition<
+                ComponentModel<Data, E, Emitted, DoneData>,
+                InvokedError
+              >
             );
         } else {
           const malformedErr = new MachineMalformed(
@@ -542,17 +576,21 @@ export abstract class ComponentModel<
 
   @protectedMethod
   protected schedule(
-    handler: Transition<this, E | InternalEvent> & { after?: number }
+    handler: Transition<
+      ComponentModel<Data, E, Emitted, DoneData>,
+      ScheduledExecute
+    > & { after?: number }
   ): void {
     if (this.status !== "active")
       return this.__warnNonActiveModel(`Can't schedule in a`);
     if (!this.__scheduler) this.__scheduler = new Scheduler();
     this.__scheduler.schedule(
-      this.__executeEventHandler.bind(
-        this,
-        { type: InternalEventName.ScheduledExecute, state: this.state() },
-        handler
-      ),
+      () => {
+        this.__executeEventHandler(
+          { type: InternalEventName.ScheduledExecute, state: this.state() },
+          handler
+        );
+      },
       handler.after || 0,
       this.state()
     );
@@ -655,14 +693,20 @@ export abstract class ComponentModel<
     if (set.size === 0) this.__invocations!.delete(state);
   }
 
-  private __getOnDoneHandler(
-    handlers: Transition<ComponentModel<Data, any, Emitted>, any>[],
+  private __getOnDoneHandler<T>(
+    handlers: Transition<
+      ComponentModel<Data, E, Emitted, DoneData>,
+      InvokedDone<T>
+    >[],
     foundPath: string,
-    event?: E | InternalEvent
-  ): Transition<ComponentModel<Data, any, Emitted>, any> | Error | undefined {
+    event?: InvokedDone<T>
+  ):
+    | Transition<ComponentModel<Data, E, Emitted, DoneData>, InvokedDone<T>>
+    | Error
+    | undefined {
     let handler:
-      Transition<ComponentModel<Data, any, Emitted>, any> | undefined =
-      undefined;
+      | Transition<ComponentModel<Data, E, Emitted, DoneData>, InvokedDone<T>>
+      | undefined = undefined;
     for (let i = 0; i < handlers.length; i++) {
       handler = handlers[i];
       if (handler.guard) {
@@ -670,7 +714,7 @@ export abstract class ComponentModel<
         try {
           if (
             handler.guard.call(
-              this as ComponentModel<Data, any, Emitted>,
+              this as ComponentModel<Data, E, Emitted, DoneData>,
               event as never
             )
           )
@@ -801,7 +845,10 @@ export abstract class ComponentModel<
     if (handler instanceof Error) return this.__toErrorWithReason(handler);
     this.__executeEventHandler(
       event,
-      handler as Transition<this, E | InternalEvent>
+      handler as Transition<
+        ComponentModel<Data, E, Emitted, DoneData>,
+        E | InternalEvent
+      >
     );
   }
 
@@ -818,43 +865,43 @@ export abstract class ComponentModel<
     }
   }
 
-  private __isNormalEvent(event: E | InternalEvent): event is E {
-    return !event.type.startsWith("@");
+  private __isInternalEvent(event: E | InternalEvent): event is InternalEvent {
+    return event.type.startsWith("@");
   }
 
   /** The main cycle of handling event or eventless transitions. */
-  private __executeEventHandler(
-    event: E | InternalEvent,
-    Transition: Transition<this, E | InternalEvent>
+  private __executeEventHandler<TEvent extends E | InternalEvent>(
+    event: TEvent,
+    transition: Transition<ComponentModel<Data, E, Emitted, DoneData>, TEvent>
   ): void {
     if (this.status !== "active")
       return this.__warnNonActiveModel(`Can't handle "${event.type}" in a`);
     const span = this.__startTrace(
       `Event`,
-      this.__isNormalEvent(event)
-        ? { ...event }
-        : this.__internalEventToTracer(event)
+      this.__isInternalEvent(event)
+        ? this.__internalEventToTracer(event)
+        : { ...event }
     );
     this.__logGroup();
     this.__logEvent(event);
 
     // Event Effect runs before transition effects
     allowNextEnqueue = true;
-    if (Transition?.action) this.enqueue(Transition.action.bind(this, event));
+    if (transition?.action) this.enqueue(transition.action.bind(this, event));
 
     // Running queued effects
     if (this.__queue.size > 0) this.__processQueue(this.state(), "event");
 
     // Make a transition by microsteps, executing Entry, Exit effects
-    if (Transition?.target != null) {
+    if (transition?.target != null) {
       // Or else a change of the state signal during transition
       // immediately causes reactive computations
       batch(() => {
         this.__transitionStepByStep(
           this.stateChart!.transition(
             this.state(),
-            Transition.target!,
-            Transition.reenter
+            transition.target!,
+            transition.reenter
           ),
           event
         );
@@ -870,7 +917,8 @@ export abstract class ComponentModel<
 
     if (!isTheSameAlwaysEffect) {
       // Eventless transition (Always)
-      const always = this.stateChart?.getMostSpecificHandler(state);
+      const always = this.stateChart?.getMostSpecificHandler(state) as
+        Transition<Model<Data, E, Emitted, DoneData>, Eventless> | undefined;
       if (always && always instanceof Error) {
         this.__toErrorWithReason(always);
       } else if (always)
@@ -1058,7 +1106,7 @@ export abstract class ComponentModel<
     const [store, setData] = createStore(ctx);
     this.data = store;
 
-    this.setData = protectMethod((...args: any[]) => {
+    this.setData = protectMethod((...args: unknown[]) => {
       //TODO: decide how to deal with this
       // if (this.status !== 'active') return this.__warnNonActiveModel(`Can't set data for a`);
       // @ts-ignore
