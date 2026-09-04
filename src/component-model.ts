@@ -22,7 +22,7 @@ import { Scheduler } from "./scheduler";
 import {
   type AnyModelData,
   type EventType,
-  type Invoke,
+  type InvokeParams,
   type Snapshot,
   type FrameworkConfig,
   type Status,
@@ -51,6 +51,7 @@ import type { Model } from "./interfaces";
 import { Stack } from "./stack";
 import { hasToJSON, isClassInstance } from "./object";
 import type { ScheduledExecute } from "./events";
+import type { InvokeConfig } from "./state-chart/state-chart-types";
 
 type SendApi<E extends { type: string }> = {
   [K in EventName<E>]: (
@@ -407,7 +408,7 @@ export abstract class ComponentModel<
 
   @protectedMethod
   protected invokeObservable<Next>(
-    observable: Observable<Next>,
+    observable: (signal: AbortSignal) => Observable<Next>,
     handler: {
       next?: Transition<
         ComponentModel<Data, E, Emitted, DoneData>,
@@ -427,7 +428,7 @@ export abstract class ComponentModel<
       return this.__warnNonActiveModel(`Can't invoke observable for a`);
     const state = this.state();
     this.__invoke(({ signal }) => {
-      const sub = observable.subscribe({
+      const sub = observable(signal).subscribe({
         next: value => {
           if (handler.next) allowNextEnqueue = true;
           this.enqueue(() => {
@@ -729,7 +730,7 @@ export abstract class ComponentModel<
     }
   }
 
-  private __invoke(effect: Invoke<E>) {
+  private __invoke(effect: InvokeParams<E>) {
     if (this.status !== "active")
       return this.__warnNonActiveModel(`Can't invoke for a`);
     const controller = new AbortController();
@@ -994,10 +995,31 @@ export abstract class ComponentModel<
         // Running Queued effects
         if (this.__queue.size > 0) this.__processQueue(step.path, "entry");
 
+        if (step.invoke) {
+          this.__handleInvoke(step.invoke);
+        }
+
         span?.end();
       }
     }
     this.__logTransitoin(initial, this.state());
+  }
+
+  private __handleInvoke(
+    invoke: InvokeConfig<ComponentModel<Data, E, Emitted, DoneData>>
+  ) {
+    if ("promise" in invoke) {
+      this.invokePromise(invoke.promise.bind(this), {
+        onDone: invoke.onDone,
+        onError: invoke.onError,
+      });
+    } else if ("observable" in invoke) {
+      this.invokeObservable(invoke.observable, {
+        next: invoke.next,
+        error: invoke.error,
+        complete: invoke.complete,
+      });
+    } else throw new MachineMalformed("wrong `invoke` config — unknown type.");
   }
 
   private __processQueue(state: string, type: "entry" | "exit" | "event") {

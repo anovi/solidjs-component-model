@@ -1,4 +1,4 @@
-import { action, ComponentModel } from "../../src";
+import { action, ComponentModel, type InvokedNext } from "../../src";
 import { WithStateChart } from "../../src/create-chart";
 import type { StateChartConfig } from "../../src/state-chart";
 import { ChildModel } from "./child-model";
@@ -18,14 +18,15 @@ type Events =
 
 const config = {
   initial: "default",
-  entry() {
-    this.invokeObservable(someObservableCounter, {
-      next: {
-        action: event => {
-          this.setData("counter", event.value);
-        },
+  invoke: {
+    observable() {
+      return someObservableCounter;
+    },
+    next: {
+      action(event: InvokedNext<number>) {
+        this.setData("counter", event.value);
       },
-    });
+    },
   },
   on: {
     ADD: {

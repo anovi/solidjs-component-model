@@ -133,6 +133,9 @@ export class StateChart<
       node.always = handlers;
       this.#toValidate!.push(handlers as Transition<any, any>[]);
     }
+    if (config.invoke) {
+      node.invoke = config.invoke;
+    }
 
     if (config.type) {
       switch (config.type) {
@@ -241,8 +244,17 @@ export class Interpreter<
     const target = new StatePath(this.chart.resolveFinalState(toStateString));
     const diff = target.diffFrom(from);
     // WHY: when model starts we need it to run an entry effect of the root node.
-    if (fromStateString === ROOT)
-      yield { path: ROOT, exit: false, effect: this.chart.root.entry };
+    if (fromStateString === ROOT) {
+      const step: TransitionStep<TModel, E> = {
+        path: ROOT,
+        exit: false,
+        effect: this.chart.root.entry,
+      };
+      if (this.chart.root.invoke) {
+        step.invoke = this.chart.root.invoke;
+      }
+      yield step;
+    }
     for (const step of generateTransitionSteps(diff)) {
       const node = this.chart.lookup.get(step.path);
       if (!node)
@@ -250,6 +262,9 @@ export class Interpreter<
           machineConfig: null,
         });
       step.effect = step.exit ? node.exit : node.entry;
+      if (node.invoke && !step.exit) {
+        step.invoke = node.invoke;
+      }
       yield step;
     }
   }

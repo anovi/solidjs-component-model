@@ -11,7 +11,7 @@ export type AnyModel = Model<any, any, { type: string }, any>;
 
 export type Cleanup = void | (() => void);
 
-export type Invoke<E> = (ctx: {
+export type InvokeParams<E> = (ctx: {
   signal: AbortSignal;
   send: (event: E) => void;
 }) => Cleanup | Promise<Cleanup>;

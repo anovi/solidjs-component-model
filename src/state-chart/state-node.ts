@@ -3,6 +3,7 @@ import type {
   Action,
   HandlerForEvent,
   EventName,
+  InvokeConfig,
 } from "./state-chart-types";
 
 export enum NodeType {
@@ -28,6 +29,8 @@ export type StateNode<TModel, E extends Event> = {
   type?: NodeType;
 
   entry?: Action<TModel, E>;
+
+  invoke?: InvokeConfig<TModel>;
 
   exit?: Action<TModel, E>;
 

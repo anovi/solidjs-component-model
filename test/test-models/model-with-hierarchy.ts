@@ -1,5 +1,5 @@
 import { Observable } from "rxjs";
-import { ComponentModel } from "../../src";
+import { ComponentModel, type InvokedNext } from "../../src";
 import { WithStateChart } from "../../src/create-chart";
 
 type Data = {
@@ -57,14 +57,13 @@ export const ModelWithChildStateNodes = WithStateChart(
   {
     govno: "alskjdf",
     initial: "default",
-    entry() {
-      this.invokeObservable(ObservableCounter, {
-        next: {
-          action: event => {
-            this.setData("counter", event.value);
-          },
+    invoke: {
+      observable: () => ObservableCounter,
+      next: {
+        action(event: InvokedNext<number>) {
+          this.setData("counter", event.value);
         },
-      });
+      },
     },
     states: {
       default: {

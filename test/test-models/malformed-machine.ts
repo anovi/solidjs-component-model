@@ -104,12 +104,13 @@ export const MachineWithWrongTargetInObservableNext = () =>
         },
       },
       loading: {
-        entry() {
-          this.invokeObservable(someObservableCounter, {
-            next: {
-              target: "some",
-            },
-          });
+        invoke: {
+          observable() {
+            return someObservableCounter;
+          },
+          next: {
+            target: "some",
+          },
         },
       },
     },

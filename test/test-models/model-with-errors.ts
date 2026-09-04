@@ -161,26 +161,28 @@ const config = {
     },
 
     observation: {
-      entry() {
-        this.invokeObservable(observableThatThrows, {
-          next: {
-            action: () => {},
+      invoke: {
+        observable() {
+          return observableThatThrows;
+        },
+        next: {
+          action: () => {},
+        },
+        error: {
+          action() {
+            this.observableErrorHandled = true;
           },
-          error: {
-            action: () => {
-              this.observableErrorHandled = true;
-            },
-          },
-        });
+        },
       },
     },
     observationUnhandled: {
-      entry() {
-        this.invokeObservable(observableThatThrows, {
-          next: {
-            action: () => {},
-          },
-        });
+      invoke: {
+        observable() {
+          return observableThatThrows;
+        },
+        next: {
+          action: () => {},
+        },
       },
     },
   },

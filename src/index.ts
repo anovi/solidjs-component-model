@@ -23,6 +23,7 @@ export {
   type Guard,
   type Action,
   type AnyAction,
+  type InvokeConfig,
 } from "./state-chart/state-chart-types";
 export {
   type StateChartConfigPaths,
@@ -39,7 +40,7 @@ export {
   type AnyModel,
   type AnyModelData,
   type Cleanup,
-  type Invoke,
+  type InvokeParams,
   type Status,
   type Snapshot,
   type FrameworkConfig,

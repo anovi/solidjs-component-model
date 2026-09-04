@@ -78,7 +78,7 @@ export class ModelWithoutStateChart extends ComponentModel<Data> {
   }
 
   #privatestartInvokable() {
-    this.invokeObservable(this.#someObservable, {
+    this.invokeObservable(() => this.#someObservable, {
       next: {
         action: ev => {
           this.setData({ counter: ev.value });

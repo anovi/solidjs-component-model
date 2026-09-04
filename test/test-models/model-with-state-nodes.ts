@@ -1,5 +1,5 @@
 import { Observable } from "rxjs";
-import { ComponentModel } from "../../src";
+import { ComponentModel, type InvokedDone, type InvokedNext } from "../../src";
 import { WithStateChart } from "../../src/create-chart";
 
 type MyModelData = {
@@ -68,25 +68,30 @@ export const ModelWithStateNodes = WithStateChart(ModelWithStateNodesBase, {
       },
     },
     loading: {
+      invoke: {
+        promise(signal) {
+          return fetchData(signal);
+        },
+        onDone: [
+          {
+            target: "default",
+            guard: () => true,
+            action(event: InvokedDone<string>) {
+              this.setData("data", event.result);
+            },
+          },
+          {
+            target: "default",
+          },
+        ],
+        onError: {
+          action() {
+            this.dispatch({ type: "BREAK_LOADING" });
+          },
+        },
+      },
       entry() {
         this.setData("entry", this.data.entry + 1);
-        this.invokePromise(fetchData, {
-          onDone: [
-            {
-              target: "default",
-              guard: () => true,
-              action: event => {
-                this.setData("data", event.result);
-              },
-            },
-            {
-              target: "default",
-            },
-          ],
-          onError: {
-            action: () => this.dispatch({ type: "BREAK_LOADING" }),
-          },
-        });
       },
       on: {
         OTHER: [
@@ -140,14 +145,15 @@ export const ModelWithStateNodes = WithStateChart(ModelWithStateNodesBase, {
     // },
 
     observation: {
-      entry() {
-        this.invokeObservable(someObservable, {
-          next: {
-            action: ev => {
-              this.setData({ some: String(ev.value) });
-            },
+      invoke: {
+        observable() {
+          return someObservable;
+        },
+        next: {
+          action(ev: InvokedNext<number>) {
+            this.setData({ some: String(ev.value) });
           },
-        });
+        },
       },
       on: {
         SOME: { target: "default" },
