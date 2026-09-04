@@ -81,7 +81,7 @@ interface ComponentModelConstructor {
 type AnyModelConstructor = ModelConstructor<AnyModel, Event>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyComponentModel = ComponentModel<any, any, any, any>;
+export type AnyComponentModel = ComponentModel<any, any, any, any>;
 
 type Invoked = {
   controller: AbortController;

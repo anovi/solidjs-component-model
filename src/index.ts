@@ -1,5 +1,9 @@
 // Component Model & Decorators
-export { ComponentModel, action } from "./component-model";
+export {
+  ComponentModel,
+  action,
+  type AnyComponentModel,
+} from "./component-model";
 
 // State Chart
 export { StateChart, Interpreter } from "./state-chart/state-chart";
