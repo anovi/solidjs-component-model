@@ -81,9 +81,7 @@ class ParentModelHiddenChildrenB extends ComponentModel<
     ) => ComponentModel<ParentModelData, Events>,
   >(this: TThis, snapshot: unknown): InstanceType<TThis> {
     const inst = super.fromJSON(snapshot) as InstanceType<TThis>;
-
     (inst as ParentModelHiddenChildrenB).__children = [];
-
     return inst;
   }
 

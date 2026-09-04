@@ -268,13 +268,20 @@ export abstract class ComponentModel<
   }
 
   /**
-   * Override to apply extra fields from a persisted snapshot to `this`.
-   * It's inversia form `getPersistedSnapshot` method.
+   * Override method to apply extra fields from a persisted snapshot to `this`.
+   * It should be inversia of `getPersistedSnapshot` method.
    *
    * By default this method does nothing.
+   *
+   * @example
+   * ```ts
+   * protected applyPersistedSnapshot(snapshot: any) {
+   *   this.__customProp = snapshot.customProp;
+   * }
+   * ```
    */
-  protected applyPersistedSnapshot(_snapshot: unknown): void {
-    // no-op by default
+  protected applyPersistedSnapshot(snapshot: unknown): void {
+    void snapshot;
   }
 
   on<T extends EventType<Emitted>>(
