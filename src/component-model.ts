@@ -217,6 +217,8 @@ export abstract class ComponentModel<
 
   _id = crypto.randomUUID();
 
+  logging = true;
+
   constructor(ctx: Data) {
     const [store, setData] = createStore(ctx);
     this.data = store;
@@ -619,7 +621,7 @@ export abstract class ComponentModel<
   }
 
   protected get logger(): Logger | undefined {
-    return this.__logger ?? ComponentModel.defaults.logger;
+    if (this.logging) return this.__logger ?? ComponentModel.defaults.logger;
   }
 
   protected set logger(logger: Logger | null) {
