@@ -431,7 +431,7 @@ export abstract class ComponentModel<
       return this.__warnNonActiveModel(`Can't invoke observable for a`);
     const state = this.state();
     this.__invoke(({ signal }) => {
-      const sub = observable(signal).subscribe({
+      const sub = observable.call(this, signal).subscribe({
         next: value => {
           if (handler.next) allowNextEnqueue = true;
           this.enqueue(() => {
@@ -511,7 +511,7 @@ export abstract class ComponentModel<
     const state = this.state();
     this.__invoke(async ({ signal }) => {
       try {
-        const result = await promise(signal);
+        const result = await promise.call(this, signal);
         const event = { type: InternalEventName.InvokedDone, result, state };
         const handler = this.__getOnDoneHandler(
           Array.isArray(params.onDone) ? params.onDone : [params.onDone],
