@@ -49,6 +49,9 @@ export type InvokeConfig<Model, Value = any> =
     };
 
 export type StateChartConfig<TModel, E extends Event> = {
+  /** Description of the state, for future possible visualizer.  */
+  description?: string;
+
   /** Which child state to enter initially. Is required when the state has child states. */
   initial?: string;
 
