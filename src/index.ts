@@ -5,6 +5,17 @@ export {
   type AnyComponentModel,
 } from "./component-model";
 
+// DevTools
+export {
+  createDevToolsBridge,
+  type ComponentModelDevToolsBridge,
+  type ModelInfo,
+  type ModelTreeNode,
+  type DevToolsEvent,
+  type DevToolsEventType,
+  type GlobalDevContext,
+} from "./devtools";
+
 // State Chart
 export { StateChart, Interpreter } from "./state-chart/state-chart";
 export {

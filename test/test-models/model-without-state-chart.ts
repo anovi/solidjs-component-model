@@ -32,6 +32,8 @@ type Data = {
 };
 
 export class ModelWithoutStateChart extends ComponentModel<Data> {
+  static childTypes = { ChildWithoutStateChart };
+
   constructor() {
     super({
       some: "info",

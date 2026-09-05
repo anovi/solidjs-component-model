@@ -53,6 +53,12 @@ import { hasToJSON, isClassInstance } from "./object";
 import type { ScheduledExecute } from "./events";
 import type { InvokeConfig } from "./state-chart/state-chart-types";
 
+import {
+  createDevToolsBridge,
+  type ComponentModelDevToolsBridge,
+  type GlobalDevContext,
+} from "./devtools";
+
 type SendApi<E extends { type: string }> = {
   [K in EventName<E>]: (
     payload?: Omit<Extract<E, { type: K }>, "type">
@@ -97,13 +103,29 @@ const STATELESS = () => "";
 const NOOP_STATE_SETTER = () => undefined;
 
 /** All models that are currently alive. */
-const aliveModels = new Map<string, AnyComponentModel>();
+export const aliveModels = new Map<string, AnyComponentModel>();
 
 /** Stack consist of models that are currently handling an action (a model can cause execution of an action in another model) */
 const actionsExecutionStack: Stack<AnyComponentModel> = new Stack();
 
 /** The [key] is a model's ID and the [value] is an array of its children.  */
-const modelChildrenMap = new Map<string, AnyComponentModel[]>();
+export const modelChildrenMap = new Map<string, AnyComponentModel[]>();
+
+/** DevTools bridge instance */
+let devtools: ComponentModelDevToolsBridge | null = null;
+
+if (typeof globalThis !== "undefined") {
+  const globalObj = globalThis as unknown as GlobalDevContext;
+  if (globalObj.__COMPONENT_MODEL_DEVMODE__) {
+    devtools = createDevToolsBridge(aliveModels, modelChildrenMap);
+    globalObj.__COMPONENT_MODEL_DEVTOOLS__ = devtools;
+  }
+
+  // @ts-ignore
+  globalThis.get_model_state = function (id: string) {
+    return aliveModels.get(id)?.getPersistedSnapshot();
+  };
+}
 
 /**
  * Allow to call protected method enqueue.
@@ -384,6 +406,7 @@ export abstract class ComponentModel<
       this.parent = parent;
       modelChildrenMap.set(parent._id, children);
     }
+    devtools?.__registerModel(this);
     if (this.stateChart) {
       untrack(() => {
         const target = this.state(); // can be any state if node restored from snapshot
@@ -799,6 +822,7 @@ export abstract class ComponentModel<
   }
 
   private __destroy(): void {
+    devtools?.__unregisterModel(this);
     aliveModels.delete(this._id);
     this.__queue.flush();
     if (this.__invocations)
@@ -938,7 +962,9 @@ export abstract class ComponentModel<
     this.__logGroupEnd();
 
     // Emit snapshots to subscribers if there are any.
-    this.__snapshots$?.next(this.toJSON());
+    const snapshot = this.toJSON();
+    devtools?.__notifySnapshot(this, snapshot);
+    this.__snapshots$?.next(snapshot);
   }
 
   private __startHandlingFx() {
@@ -1086,6 +1112,11 @@ export abstract class ComponentModel<
       })
     );
     this.__finishHandlingFx();
+    if (!this.stateChart && this.status === "active") {
+      const snapshot = this.toJSON();
+      devtools?.__notifySnapshot(this, snapshot);
+      this.__snapshots$?.next(snapshot);
+    }
   }
 
   private __createSendApi(): SendApi<E> {
@@ -1331,6 +1362,7 @@ export abstract class ComponentModel<
   }
 
   private __logTransitoin(from: string, to: string) {
+    devtools?.__notifyTransition(this, from, to);
     if (this.logger) this.logger.transition(from, to);
   }
 
