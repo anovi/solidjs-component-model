@@ -73,7 +73,6 @@ describe("reactivity", () => {
           assert.deepEqual(model.nonReactiveObject, { id: "item-1" });
           done();
         }
-        ``;
         return { state, object: model.nonReactiveObject };
       });
 

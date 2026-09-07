@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-assignment */
 import { describe, it, expect } from "vitest";
 
 describe.skip("Promise / async / try-catch experiments", () => {

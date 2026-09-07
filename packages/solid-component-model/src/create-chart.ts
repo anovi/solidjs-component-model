@@ -7,7 +7,6 @@ import type {
 import { ComponentModel } from "./component-model";
 import { StateChart } from "./state-chart";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ModelConstructor<T = object> = new (...args: any[]) => T;
 
 export interface StateChartMethods {

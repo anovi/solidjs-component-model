@@ -1,5 +1,5 @@
 import { generateMermaidDiagram } from "./generate-mermaid";
-import type { AnyStateChartConfig } from "../src/state-chart";
+import type { AnyStateChartConfig } from "../packages/solid-component-model";
 
 /**
  * CLI script that generates a Mermaid state diagram from a state chart config module.
@@ -14,6 +14,7 @@ import type { AnyStateChartConfig } from "../src/state-chart";
 
 import path from "path";
 
+// eslint-disable-next-line complexity
 async function main() {
   const args = process.argv.slice(2);
   const modulePath = args[0];

@@ -61,6 +61,7 @@ describe("StateChart.create", function () {
         this.value++;
       },
     };
+    void plainContext;
 
     const chart = StateChart.create<typeof plainContext>({
       initial: "idle",
@@ -137,8 +138,9 @@ describe("StateChart.create", function () {
     const ModelCtor = WithStateChart(ConcreteCounterModel, chart);
     const model = new ModelCtor();
     const interpreter = chart.createRuntime(model);
+    void interpreter;
 
-    type Paths = InterpreterPaths<typeof interpreter>;
+    type Paths = InterpreterPaths<ReturnType<(typeof chart)["createRuntime"]>>;
     expectTypeOf<Paths>().toEqualTypeOf<
       "active" | "active.step1" | "active.step2" | "idle"
     >();
@@ -157,6 +159,7 @@ describe("StateChart.create", function () {
     const ModelCtor = WithStateChart(ConcreteCounterModel, chart);
     const model = new ModelCtor();
     const interpreter = new Interpreter(model, chart);
+    void interpreter;
 
     type Paths = InterpreterPaths<typeof interpreter>;
     expectTypeOf<Paths>().toEqualTypeOf<"idle" | "running">();
@@ -183,6 +186,7 @@ describe("StateChart.create", function () {
     const ModelCtor = WithStateChart(ConcreteCounterModel, chart);
     const model = new ModelCtor();
     const interpreter = chart.createRuntime(model);
+    void interpreter;
 
     type Paths = InterpreterPaths<typeof interpreter>;
     expectTypeOf<Paths>().toEqualTypeOf<

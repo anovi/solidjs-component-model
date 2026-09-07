@@ -733,11 +733,10 @@ export abstract class ComponentModel<
     | Transition<ComponentModel<Data, E, Emitted, DoneData>, InvokedDone<T>>
     | Error
     | undefined {
-    let handler:
-      | Transition<ComponentModel<Data, E, Emitted, DoneData>, InvokedDone<T>>
-      | undefined = undefined;
     for (let i = 0; i < handlers.length; i++) {
-      handler = handlers[i];
+      const handler:
+        | Transition<ComponentModel<Data, E, Emitted, DoneData>, InvokedDone<T>>
+        | undefined = handlers[i];
       if (handler.guard) {
         // There is no event for guard inside entry/exit effects.
         try {
@@ -1051,20 +1050,19 @@ export abstract class ComponentModel<
   ) {
     for (const timeout in toSchedule) {
       if (!Object.hasOwn(toSchedule, timeout)) continue;
-      let num = 0;
       try {
-        num = Number.parseInt(timeout);
+        const num = Number.parseInt(timeout);
+        const transition = toSchedule[timeout];
+        this.schedule({
+          after: num,
+          ...transition,
+        });
       } catch (error) {
         throw new MachineMalformed(
-          `wrong "after" config in state "${state}", keys shoud be integers`
+          `wrong "after" config in state "${state}", keys shoud be integers`,
+          { cause: error, machineConfig: this.constructor }
         );
       }
-
-      const transition = toSchedule[timeout];
-      this.schedule({
-        after: num,
-        ...transition,
-      });
     }
   }
 

@@ -232,26 +232,29 @@ describe("component-model", () => {
       parent.start();
       parent.addItem();
       await sleep(0);
-      (assert.deepEqual(parent.toJSON(), {
-        _id: parent._id,
-        state: "default",
-        status: "active",
-        name: "ParentModelB",
-        data: {
-          counter: 0,
-          some: "info",
-          children: [
-            {
-              _id: parent.data.children[0]._id,
-              state: "default",
-              name: "Child",
-              status: "active",
-              data: { some: "info" },
-            },
-          ],
+      assert.deepEqual(
+        parent.toJSON(),
+        {
+          _id: parent._id,
+          state: "default",
+          status: "active",
+          name: "ParentModelB",
+          data: {
+            counter: 0,
+            some: "info",
+            children: [
+              {
+                _id: parent.data.children[0]._id,
+                state: "default",
+                name: "Child",
+                status: "active",
+                data: { some: "info" },
+              } as any,
+            ],
+          },
         },
-      } as any),
-        "shouldu correctly json child model");
+        "shouldu correctly json child model"
+      );
     });
   });
 

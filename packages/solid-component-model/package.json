@@ -1,0 +1,43 @@
+{
+  "name": "solid-component-model",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "author": "Aleksei Novichkov",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "pnpm run clean && tsc --project tsconfig.build.json --emitDeclarationOnly && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test-file": "vitest $npm_config",
+    "bench": "vitest bench",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.9.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "7.0.1",
+    "mermaid": "11.16.1",
+    "rxjs": "7.8.2",
+    "solid-js": "1.9.13",
+    "vite": "^8.1.1",
+    "vite-plugin-solid": "^2.11.12",
+    "vitepress": "1.6.4",
+    "vitest": "4.1.10",
+    "xstate": "5.32.5"
+  }
+}

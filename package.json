@@ -1,68 +1,39 @@
 {
-  "name": "solid-component-model",
+  "name": "solid-component-monorepo",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "author": "Aleksei Novichkov",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "files": [
-    "dist"
-  ],
-  "sideEffects": false,
+  "packageManager": "pnpm@10.15.0",
   "scripts": {
-    "dev": "vite build --watch",
-    "build": "rimraf dist && tsc && vite build && dts-bundle-generator --export-referenced-types false -o ./dist/index.d.ts ./src/index.ts",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest --coverage",
-    "test-file": "vitest $npm_config",
-    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
-    "lint": "eslint --fix --no-cache -c .eslintrc.json --ext .ts,.tsx ./src",
-    "size": "size-limit",
-    "bench": "vitest bench",
+    "build": "pnpm --recursive --if-present run build",
+    "test": "pnpm --recursive --if-present run test",
+    "test:watch": "pnpm --recursive --if-present run test:watch",
+    "test:coverage": "pnpm --recursive --if-present run test:coverage --color",
+    "typecheck": "pnpm --recursive --if-present run typecheck",
+    "lint": "eslint .",
+    "format": "prettier . --write",
+    "prepare": "husky",
+    "clean": "pnpm --recursive --if-present run clean",
     "docs:dev": "vitepress dev",
     "docs:build": "vitepress build",
-    "docs:preview": "vitepress preview",
-    "format": "prettier . --write",
-    "prepare": "husky"
-  },
-  "size-limit": [
-    {
-      "path": "dist/index.js"
-    }
-  ],
-  "peerDependencies": {
-    "solid-js": "^1.9.0"
+    "docs:preview": "vitepress preview"
   },
   "devDependencies": {
-    "@size-limit/file": "13.0.3",
-    "@types/node": "^24.13.2",
-    "dts-bundle-generator": "9.5.1",
-    "lint-staged": "16.4.0",
-    "mermaid": "11.16.1",
-    "prettier": "3.9.6",
-    "rimraf": "6.1.3",
-    "rxjs": "7.8.2",
-    "size-limit": "13.0.3",
-    "solid-js": "1.9.13",
-    "typescript": "~6.0.2",
-    "vite": "^8.1.1",
-    "vite-plugin-solid": "^2.11.12",
+    "@eslint/js": "10.0.1",
+    "@types/node": "^26.4.1",
+    "@typescript-eslint/eslint-plugin": "^8.69.0",
+    "@typescript-eslint/parser": "^8.69.0",
+    "@vitest/coverage-v8": "^5.0.0",
+    "eslint": "^10.10.0",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-import": "^2.32.0",
+    "globals": "17.12.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.5.0",
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.0",
+    "vite": "^8.2.2",
     "vitepress": "1.6.4",
     "vitepress-plugin-mermaid": "2.0.17",
-    "vitest": "4.1.10",
-    "xstate": "5.32.5"
+    "vitest": "^5.0.0"
   }
 }

@@ -1,28 +1,58 @@
-## Usage
+# Library monorepo
 
-```bash
-$ npm install # or pnpm install or yarn install
+This is a pnpm workspace for a TypeScript library and its companion packages.
+
+## Requirements
+
+- Node.js 22.22 or newer
+- pnpm 10.15.0 (managed through the `packageManager` field)
+
+## Packages
+
+- `solid-component-model` is the unpublished core library.
+- `solid-component-model-devtools` consumes `solid-component-model` through the workspace protocol.
+
+`workspace:*` links the packages locally, so the devtools package can import the core package before it has ever been published. The Vite alias in devtools points at the core source during local tests. During a root build, pnpm builds the core package before devtools, so devtools' declaration build resolves the core package through its published package boundary.
+
+## Commands
+
+```sh
+pnpm install
+
+pnpm format          # format supported files in the workspace
+pnpm lint            # lint the workspace
+pnpm typecheck       # type-check every package
+pnpm test            # run every package's tests once
+pnpm test:coverage   # run every package's tests with coverage
+pnpm build           # clean and build every package
+pnpm clean           # remove every package's generated dist directory
+
+pnpm --filter solid-component-model build
+pnpm --filter solid-component-model-devtools test
 ```
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+Each package cleans its own `dist/` directory before building, so direct package builds and root builds behave the same way.
 
-## Available Scripts
+## Code quality and hooks
 
-In the project directory, you can run:
+All development tooling lives at the workspace root, including TypeScript, Vite,
+Vitest, Prettier, ESLint, Husky, and lint-staged. Package manifests contain only
+runtime and workspace dependencies.
 
-### `npm run dev`
+`pnpm install` runs the `prepare` script, which enables the Husky pre-commit
+hook. The hook runs lint-staged and formats staged TypeScript, JSON, and Markdown
+files with Prettier.
 
-Runs the app in the development mode.<br>
-Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
+## Tests
 
-### `npm run build`
+Keep unit tests beside the module they cover, such as `src/greet.test.ts`. Put
+package-level or integration-style tests in `test/`, such as
+`test/public-api.test.ts`. Both locations are included in the core library's
+test and type-check commands.
 
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
+## Types
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-## Deployment
-
-Learn more about deploying your application with the [documentations](https://vite.dev/guide/static-deploy.html)
+Each package emits its public declaration entry point at `dist/index.d.ts`.
+The devtools build emits only its own declarations at `dist/index.d.ts`. Those
+declarations retain an import from `solid-component-model`, so consumers resolve core
+types from the core package rather than receiving a copied declaration tree.

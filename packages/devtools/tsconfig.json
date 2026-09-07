@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "solid-component-model": ["../library/src/index.ts"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

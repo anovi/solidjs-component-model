@@ -1,4 +1,7 @@
-import type { AnyStateChartConfig, Transition } from "../src/state-chart";
+import type {
+  AnyStateChartConfig,
+  Transition,
+} from "../allfiles/src/state-chart";
 
 /**
  * Generates a Mermaid state diagram from a StateChartConfig.
