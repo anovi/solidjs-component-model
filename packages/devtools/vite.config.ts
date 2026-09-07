@@ -7,24 +7,31 @@ const librarySource = fileURLToPath(
 
 export default defineConfig({
   resolve: {
-    // Use source locally so this package works before solid-component-model is published or built.
     alias: {
       "solid-component-model": librarySource,
     },
   },
+
   build: {
-    // Preserve declarations emitted by the preceding TypeScript build step.
     emptyOutDir: false,
-    lib: {
-      entry: "src/index.ts",
-      formats: ["es"],
-      fileName: "index",
-    },
+
     rollupOptions: {
-      // Consumers should install the core package; do not bundle it into devtools.
+      input: {
+        devtools: "src/devtools.ts",
+        panel: "src/panel",
+        content: "src/content",
+      },
+
+      output: {
+        entryFileNames: "[name].js",
+        chunkFileNames: "chunks/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
+      },
+
       external: ["solid-component-model"],
     },
   },
+
   test: {
     include: ["src/**/*.test.ts"],
   },
