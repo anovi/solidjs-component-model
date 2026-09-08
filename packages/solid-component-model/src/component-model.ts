@@ -120,11 +120,11 @@ function createDevtools(factory?: ComponentModelDevToolsServerFactory) {
   const handlers: ComponentModelDevToolsApi = {
     version: () => "1.0.0",
     getModels: () => {
-      return Array.from(modelChildrenMap.keys());
+      return Array.from(aliveModels.keys());
     },
     getAllSnapshots: () => {
       const snapshots: Record<string, unknown> = {};
-      for (const [id] of modelChildrenMap) {
+      for (const [id] of aliveModels) {
         snapshots[id] = { id };
       }
       return snapshots;
@@ -153,6 +153,8 @@ function createDevtools(factory?: ComponentModelDevToolsServerFactory) {
 
 if (typeof globalThis !== "undefined") {
   const globalObj = globalThis as unknown as GlobalDevContext;
+
+  globalObj.__CREATE_COMPONENT_MODEL_DEVTOOLS__ = createDevtools;
 
   if (globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__) {
     createDevtools(globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__);

@@ -30,7 +30,8 @@ import { createPanelApp } from "./App";
       });
     }
 
-    const app = createPanelApp({ client });
-    await app.fetchModels();
+    const container = document.getElementById("root") ?? document.body;
+
+    createPanelApp({ client, container, autoFetch: true });
   }
 })();

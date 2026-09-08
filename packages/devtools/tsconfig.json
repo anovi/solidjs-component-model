@@ -1,10 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
     "paths": {
       "solid-component-model": ["../solid-component-model/src/index.ts"],
       "@solid-component-model/rpc": ["../rpc/src/index.ts"]
     }
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts", "demo"]
 }

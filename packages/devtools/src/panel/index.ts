@@ -1,13 +1,27 @@
-import "./panel";
+export {
+  setApiClient,
+  getApiClient,
+  ApiClientContext,
+  ApiClientProvider,
+  useApiClientContext,
+  type ApiClientProviderProps,
+} from "./context";
 
-export { setApiClient, getApiClient } from "./context";
 export { useApiClient } from "./hooks/useApiClient";
+
 export {
   createDevtoolsState,
   type DevtoolsState,
+  type LogEntry,
 } from "./hooks/useDevtoolsState";
+
 export {
   DevtoolsPanel,
-  type DevtoolsPanelOptions,
+  type DevtoolsPanelProps,
 } from "./components/DevtoolsPanel";
-export { createPanelApp, type PanelAppConfig } from "./App";
+
+export {
+  createPanelApp,
+  type PanelAppConfig,
+  type PanelAppInstance,
+} from "./App";

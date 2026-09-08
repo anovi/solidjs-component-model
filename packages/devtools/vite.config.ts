@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vitest/config";
+import solidPlugin from "vite-plugin-solid";
 
 const librarySource = fileURLToPath(
   new URL("../solid-component-model/src/index.ts", import.meta.url)
@@ -9,7 +10,10 @@ const rpcSource = fileURLToPath(
 );
 
 export default defineConfig({
+  plugins: [solidPlugin()],
+
   resolve: {
+    conditions: ["browser", "development"],
     alias: {
       "@solid-component-model/rpc": rpcSource,
       "solid-component-model": librarySource,
@@ -22,10 +26,10 @@ export default defineConfig({
     rollupOptions: {
       input: {
         devtools: "src/devtools.ts",
-        panel: "src/panel",
+        panel: "src/panel/panel.ts",
         "content-isolated": "src/page-isolated-world",
         "content-main": "src/page-main-world",
-        background: "src/background.js",
+        background: "src/background.ts",
       },
 
       output: {
@@ -33,12 +37,10 @@ export default defineConfig({
         chunkFileNames: "chunks/[name]-[hash].js",
         assetFileNames: "assets/[name]-[hash][extname]",
       },
-
-      external: ["solid-component-model"],
     },
   },
 
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,tsx}"],
   },
 });

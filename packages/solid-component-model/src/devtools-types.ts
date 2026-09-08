@@ -23,6 +23,13 @@ export interface GlobalDevContext {
   ) => ApiServer<ComponentModelDevToolsApi>;
 
   /**
+   * Function to synchronously create/initialize DevTools.
+   */
+  __CREATE_COMPONENT_MODEL_DEVTOOLS__?: (
+    factory?: ComponentModelDevToolsServerFactory
+  ) => void;
+
+  /**
    * Indicates whether ComponentModel DevTools integration is enabled.
    */
   __COMPONENT_MODEL_DEVMODE__?: boolean;

@@ -1,6 +1,8 @@
 import type { ApiClient, ApiDefinition } from "@solid-component-model/rpc";
-import { getApiClient } from "../context";
+import { useApiClientContext } from "../context";
 
-export function useApiClient<TApi extends ApiDefinition>(): ApiClient<TApi> {
-  return getApiClient<TApi>();
+export function useApiClient<
+  TApi extends ApiDefinition = ApiDefinition,
+>(): ApiClient<TApi> {
+  return useApiClientContext<TApi>();
 }

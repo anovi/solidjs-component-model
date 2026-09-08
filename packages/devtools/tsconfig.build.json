@@ -3,11 +3,13 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
     "paths": {
       "solid-component-model": ["../solid-component-model/dist/index.d.ts"],
       "@solid-component-model/rpc": ["../rpc/dist/index.d.ts"]
     }
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts"]
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
 }
