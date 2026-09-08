@@ -8,13 +8,7 @@ export {
 // DevTools
 export {
   type ComponentModelDevToolsApi,
-  type ComponentModelDevToolsBridge,
   type ComponentModelDevToolsServerFactory,
-  type ComponentModelDevToolsBridgeFactory,
-  type ModelInfo,
-  type ModelTreeNode,
-  type DevToolsEvent,
-  type DevToolsEventType,
   type GlobalDevContext,
 } from "./devtools-types";
 
