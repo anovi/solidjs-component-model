@@ -12,7 +12,7 @@ import {
   RpcTimeoutError,
   type ApiClient,
   type ApiServer,
-} from "solid-component-model/rpc";
+} from "@solid-component-model/rpc";
 
 interface TestPageApi {
   getValue: () => string;

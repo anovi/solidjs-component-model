@@ -16,7 +16,7 @@
   ],
   "dependencies": {
     "solid-component-model": "workspace:*",
-    "rpc": "workspace:*"
+    "@solid-component-model/rpc": "workspace:*"
   },
   "scripts": {
     "dev": "vite build --watch",

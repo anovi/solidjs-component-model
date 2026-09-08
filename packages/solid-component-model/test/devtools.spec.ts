@@ -2,7 +2,7 @@ import { it, describe, assert } from "vitest";
 import {
   createApiClient,
   createDirectClientTransport,
-} from "solid-component-model/rpc";
+} from "@solid-component-model/rpc";
 import {
   type GlobalDevContext,
   type ComponentModelDevToolsApi,

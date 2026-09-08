@@ -7,7 +7,7 @@ import {
   type ClientTransport,
   type RpcRequestMessage,
   type RpcResponseMessage,
-} from "solid-component-model/rpc";
+} from "@solid-component-model/rpc";
 
 export interface ChromePanelTransportOptions {
   /**

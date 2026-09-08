@@ -62,7 +62,7 @@ importers:
 
   packages/devtools:
     dependencies:
-      rpc:
+      '@solid-component-model/rpc':
         specifier: workspace:*
         version: link:../rpc
       solid-component-model:
@@ -77,7 +77,7 @@ importers:
 
   packages/solid-component-model:
     dependencies:
-      rpc:
+      '@solid-component-model/rpc':
         specifier: workspace:*
         version: link:../rpc
     devDependencies:

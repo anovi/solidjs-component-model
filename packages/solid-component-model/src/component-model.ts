@@ -58,7 +58,7 @@ import {
   type ComponentModelDevToolsServerFactory,
   type GlobalDevContext,
 } from "./devtools-types";
-import { createApiServer, type ApiServer } from "solid-component-model/rpc";
+import { createApiServer, type ApiServer } from "@solid-component-model/rpc";
 
 type SendApi<E extends { type: string }> = {
   [K in EventName<E>]: (

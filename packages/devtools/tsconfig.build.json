@@ -5,7 +5,7 @@
     "outDir": "dist",
     "paths": {
       "solid-component-model": ["../solid-component-model/dist/index.d.ts"],
-      "solid-component-model/rpc": ["../rpc/dist/index.d.ts"]
+      "@solid-component-model/rpc": ["../rpc/dist/index.d.ts"]
     }
   },
   "include": ["src"],

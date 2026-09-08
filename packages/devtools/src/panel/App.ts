@@ -1,4 +1,4 @@
-import type { ApiClient } from "solid-component-model/rpc";
+import type { ApiClient } from "@solid-component-model/rpc";
 import type { ComponentModelDevToolsApi } from "solid-component-model";
 import { setApiClient } from "./context";
 import { DevtoolsPanel } from "./components/DevtoolsPanel";

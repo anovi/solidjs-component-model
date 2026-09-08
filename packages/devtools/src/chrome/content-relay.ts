@@ -3,7 +3,7 @@
 import type {
   RpcRequestMessage,
   RpcResponseMessage,
-} from "solid-component-model/rpc";
+} from "@solid-component-model/rpc";
 
 export interface ChromeContentRelayOptions {
   /**

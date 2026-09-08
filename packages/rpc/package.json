@@ -1,5 +1,5 @@
 {
-  "name": "rpc",
+  "name": "@solid-component-model/rpc",
   "version": "0.0.0",
   "private": true,
   "type": "module",

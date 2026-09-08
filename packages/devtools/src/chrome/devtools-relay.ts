@@ -1,6 +1,6 @@
 /// <reference types="chrome" />
 
-import type { RpcRequestMessage } from "solid-component-model/rpc";
+import type { RpcRequestMessage } from "@solid-component-model/rpc";
 
 export interface ChromeDevToolsRelayOptions {
   /**

@@ -1,5 +1,5 @@
 // Re-export RPC core
-export * from "solid-component-model/rpc";
+export * from "@solid-component-model/rpc";
 
 // Chrome integrations & transports
 export * from "./chrome";

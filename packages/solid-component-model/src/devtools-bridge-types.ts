@@ -17,7 +17,7 @@ export type {
   MessageTransport,
   ClientTransport,
   ServerTransport,
-} from "solid-component-model/rpc";
+} from "@solid-component-model/rpc";
 
 export {
   RpcError as BridgeError,
@@ -25,4 +25,4 @@ export {
   RpcExecutionError as BridgeExecutionError,
   RpcConnectionError as BridgeConnectionError,
   RpcNoHandlerError as BridgeNoHandlerError,
-} from "solid-component-model/rpc";
+} from "@solid-component-model/rpc";

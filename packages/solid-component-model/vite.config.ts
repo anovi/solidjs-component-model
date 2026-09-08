@@ -13,8 +13,7 @@ export default defineConfig({
   resolve: {
     conditions: ["browser", "development"],
     alias: {
-      "solid-component-model/rpc": rpcSource,
-      rpc: rpcSource,
+      "@solid-component-model/rpc": rpcSource,
     },
   },
   build: {

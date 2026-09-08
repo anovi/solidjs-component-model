@@ -5,7 +5,7 @@ import {
   type ApiHandlers,
   type ApiServer,
   type ApiServerOptions,
-} from "solid-component-model/rpc";
+} from "@solid-component-model/rpc";
 
 export interface MainWorldServerOptions<
   TApi extends ApiDefinition = ApiDefinition,

@@ -4,8 +4,7 @@
     "types": ["vite/client", "vitest/globals"],
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "paths": {
-      "rpc": ["../rpc/src/index.ts"],
-      "solid-component-model/rpc": ["../rpc/src/index.ts"]
+      "@solid-component-model/rpc": ["../rpc/src/index.ts"]
     }
   },
   "include": ["src", "test", "scripts", "vite.config.ts", "vitest.config.ts"],

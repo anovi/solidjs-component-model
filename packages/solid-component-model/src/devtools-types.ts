@@ -2,7 +2,7 @@ import type {
   ApiHandlers,
   ApiServer,
   ApiServerOptions,
-} from "solid-component-model/rpc";
+} from "@solid-component-model/rpc";
 import type { Status } from "./types";
 
 /**

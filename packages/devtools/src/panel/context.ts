@@ -1,4 +1,4 @@
-import type { ApiClient, ApiDefinition } from "solid-component-model/rpc";
+import type { ApiClient, ApiDefinition } from "@solid-component-model/rpc";
 
 let activeClient: ApiClient<ApiDefinition> | null = null;
 

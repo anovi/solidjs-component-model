@@ -11,8 +11,7 @@ const rpcSource = fileURLToPath(
 export default defineConfig({
   resolve: {
     alias: {
-      "solid-component-model/rpc": rpcSource,
-      rpc: rpcSource,
+      "@solid-component-model/rpc": rpcSource,
       "solid-component-model": librarySource,
     },
   },

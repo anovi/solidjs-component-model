@@ -5,7 +5,7 @@ import {
   createLocalTransportPair,
   type ApiClient,
   type ApiServer,
-} from "solid-component-model/rpc";
+} from "@solid-component-model/rpc";
 import type { ComponentModelDevToolsApi } from "solid-component-model";
 import { DevtoolsPanel, createPanelApp, createDevtoolsState } from "./index";
 
