@@ -1,4 +1,8 @@
-import type { AnyComponentModel } from "./component-model";
+import type {
+  ApiHandlers,
+  ApiServer,
+  ApiServerOptions,
+} from "solid-component-model/rpc";
 import type { Status } from "./types";
 
 /**
@@ -6,14 +10,22 @@ import type { Status } from "./types";
  */
 export interface GlobalDevContext {
   /**
-   * Bridge used by the DevTools panel to inspect and monitor models.
+   * Devtools ApiServer instance used by DevTools to inspect and monitor models in MAIN world.
    */
-  __COMPONENT_MODEL_DEVTOOLS__: ComponentModelDevToolsBridge;
+  __COMPONENT_MODEL_DEVTOOLS__?: ApiServer<ComponentModelDevToolsApi>;
+
+  /**
+   * Factory function for creating the DevTools ApiServer.
+   */
+  __COMPONENT_MODEL_DEVTOOLS_FACTORY__?: (
+    initialHandlers: Partial<ApiHandlers<ComponentModelDevToolsApi>>,
+    options?: ApiServerOptions
+  ) => ApiServer<ComponentModelDevToolsApi>;
 
   /**
    * Indicates whether ComponentModel DevTools integration is enabled.
    */
-  __COMPONENT_MODEL_DEVMODE__: boolean;
+  __COMPONENT_MODEL_DEVMODE__?: boolean;
 }
 
 /**
@@ -48,12 +60,12 @@ export interface ModelTreeNode extends ModelInfo {
 }
 
 /**
- * Types of events emitted by the DevTools bridge.
+ * Types of events emitted by the DevTools server.
  */
 export type DevToolsEventType = "start" | "stop" | "snapshot" | "transition";
 
 /**
- * An event recorded by the DevTools bridge.
+ * An event recorded by the DevTools server.
  */
 export interface DevToolsEvent {
   /** Monotonically increasing event ID. */
@@ -78,126 +90,38 @@ export interface DevToolsEvent {
   to?: string;
 }
 
+export type ComponentModelDevToolsServerFactory = (
+  initialHandlers: Partial<ApiHandlers<ComponentModelDevToolsApi>>,
+  options?: ApiServerOptions
+) => ApiServer<ComponentModelDevToolsApi>;
+
+export type ComponentModelDevToolsBridgeFactory =
+  ComponentModelDevToolsServerFactory;
+
 /**
- * Bridge between the inspected application and the ComponentModel DevTools.
+ * API definition exposed by the inspected application in the MAIN world to DevTools.
  *
  * Provides APIs for discovering and inspecting live ComponentModel instances,
  * subscribing to model changes, and receiving state-machine events.
  */
-export interface ComponentModelDevToolsBridge {
+export interface ComponentModelDevToolsApi {
   /**
-   * Version of the DevTools bridge API.
+   * Returns the version of the DevTools API.
    */
-  readonly version: string;
+  version?: () => string;
 
   /**
-   * Returns information about all currently alive models.
+   * Returns IDs or information about all currently alive models.
    */
-  getModels: () => ModelInfo[];
+  getModels: () => string[];
 
   /**
-   * Returns all currently alive models as a hierarchical tree.
+   * Returns snapshots of all live models.
    */
-  getModelTree: () => ModelTreeNode[];
-
-  /**
-   * Returns the current snapshot of a model.
-   *
-   * The snapshot is obtained by calling `model.toJSON()`.
-   *
-   * @param modelId ID of the model to inspect.
-   * @returns The model snapshot, or `undefined` if the model is not alive.
-   */
-  getSnapshot: (modelId: string) => unknown;
-
-  /**
-   * Returns the current snapshots of all alive models.
-   *
-   * The returned object is keyed by model ID.
-   */
-  getAllSnapshots: () => Record<string, unknown>;
-
-  /**
-   * Subscribes to snapshot changes for a model.
-   *
-   * @param modelId ID of the model to subscribe to.
-   * @param callback Called with the latest snapshot whenever it changes.
-   * @returns A function that unsubscribes the callback.
-   */
-  subscribe: (
-    modelId: string,
-    callback: (snapshot: unknown) => void
-  ) => () => void;
-
-  /**
-   * Subscribes to changes in the model tree.
-   *
-   * @param callback Called with the current list of models whenever the tree changes.
-   * @returns A function that unsubscribes the callback.
-   */
-  subscribeTree: (callback: (models: ModelInfo[]) => void) => () => void;
-
-  /**
-   * Checks whether a model is currently alive.
-   *
-   * @param modelId ID of the model to check.
-   */
-  isAlive: (modelId: string) => boolean;
-
-  /**
-   * Returns the current DevTools revision.
-   *
-   * The revision is incremented whenever the DevTools state changes.
-   */
-  getRevision: () => number;
-
-  /**
-   * Returns all events that occurred after the specified event ID.
-   *
-   * @param lastEventId Only events with an ID greater than this value are returned.
-   */
-  getEventsSince: (lastEventId: number) => DevToolsEvent[];
-
-  /**
-   * Registers a ComponentModel with the DevTools bridge.
-   *
-   * This is an internal API used by ComponentModel.
-   *
-   * @param model Model to register.
-   */
-  __registerModel: (model: AnyComponentModel) => void;
-
-  /**
-   * Unregisters a ComponentModel from the DevTools bridge.
-   *
-   * This is an internal API used by ComponentModel.
-   *
-   * @param model Model to unregister.
-   */
-  __unregisterModel: (model: AnyComponentModel) => void;
-
-  /**
-   * Reports a new snapshot for a model.
-   *
-   * This is an internal API used by ComponentModel.
-   *
-   * @param model Model whose snapshot changed.
-   * @param snapshot New model snapshot.
-   */
-  __notifySnapshot: (model: AnyComponentModel, snapshot: unknown) => void;
-
-  /**
-   * Reports a state-machine transition.
-   *
-   * This is an internal API used by ComponentModel.
-   *
-   * @param model Model that transitioned.
-   * @param from Previous state.
-   * @param to New state.
-   */
-  __notifyTransition: (
-    model: AnyComponentModel,
-    from: string,
-    to: string
-  ) => void;
+  getAllSnapshots?: () => Record<string, unknown>;
 }
+
+/**
+ * Backwards compatibility alias for ComponentModelDevToolsApi.
+ */
+export type ComponentModelDevToolsBridge = ComponentModelDevToolsApi;

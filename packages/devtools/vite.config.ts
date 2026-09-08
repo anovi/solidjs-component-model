@@ -2,12 +2,17 @@ import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vitest/config";
 
 const librarySource = fileURLToPath(
-  new URL("../library/src/index.ts", import.meta.url)
+  new URL("../solid-component-model/src/index.ts", import.meta.url)
+);
+const rpcSource = fileURLToPath(
+  new URL("../rpc/src/index.ts", import.meta.url)
 );
 
 export default defineConfig({
   resolve: {
     alias: {
+      "solid-component-model/rpc": rpcSource,
+      rpc: rpcSource,
       "solid-component-model": librarySource,
     },
   },
@@ -19,7 +24,9 @@ export default defineConfig({
       input: {
         devtools: "src/devtools.ts",
         panel: "src/panel",
-        content: "src/content",
+        "content-isolated": "src/page-isolated-world",
+        "content-main": "src/page-main-world",
+        background: "src/background.js",
       },
 
       output: {

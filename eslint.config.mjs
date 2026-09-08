@@ -5,7 +5,14 @@ import globals from "globals";
 
 export default [
   {
-    ignores: ["**/coverage/**", "**/dist/**", "**/_*", "eslint.config.mjs"],
+    ignores: [
+      "**/coverage/**",
+      "**/dist/**",
+      "**/_*",
+      "dist/**",
+      "packages/*/dist/**",
+      "eslint.config.mjs",
+    ],
   },
   js.configs.recommended,
   importPlugin.flatConfigs.recommended,
@@ -22,6 +29,11 @@ export default [
     settings: {
       "import/resolver": {
         typescript: {
+          project: [
+            "./tsconfig.base.json",
+            "./packages/*/tsconfig.json",
+            "./packages/*/tsconfig.build.json",
+          ],
           alwaysTryTypes: true,
         },
       },

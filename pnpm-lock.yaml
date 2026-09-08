@@ -62,6 +62,9 @@ importers:
 
   packages/devtools:
     dependencies:
+      rpc:
+        specifier: workspace:*
+        version: link:../rpc
       solid-component-model:
         specifier: workspace:*
         version: link:../solid-component-model
@@ -70,7 +73,13 @@ importers:
         specifier: 0.2.9
         version: 0.2.9
 
+  packages/rpc: {}
+
   packages/solid-component-model:
+    dependencies:
+      rpc:
+        specifier: workspace:*
+        version: link:../rpc
     devDependencies:
       '@testing-library/jest-dom':
         specifier: 7.0.1

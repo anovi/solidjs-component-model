@@ -7,14 +7,16 @@ export {
 
 // DevTools
 export {
-  createDevToolsBridge,
+  type ComponentModelDevToolsApi,
   type ComponentModelDevToolsBridge,
+  type ComponentModelDevToolsServerFactory,
+  type ComponentModelDevToolsBridgeFactory,
   type ModelInfo,
   type ModelTreeNode,
   type DevToolsEvent,
   type DevToolsEventType,
   type GlobalDevContext,
-} from "./devtools";
+} from "./devtools-types";
 
 // State Chart
 export { StateChart, Interpreter } from "./state-chart/state-chart";

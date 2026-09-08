@@ -1,51 +1,36 @@
 /// <reference types="chrome" />
-export {};
 
-(function () {
-  const logEl = document.getElementById("log") as HTMLPreElement | null;
-  const triggerBtn = document.getElementById(
-    "trigger"
-  ) as HTMLButtonElement | null;
-  const clearBtn = document.getElementById("clear") as HTMLButtonElement | null;
+import type { ComponentModelDevToolsApi } from "solid-component-model";
+import { createChromePanelClient } from "../chrome";
+import { createPanelApp } from "./App";
 
-  type LogLevel = "info" | "warn" | "error";
+(async function bootstrap() {
+  if (
+    typeof chrome !== "undefined" &&
+    chrome.devtools &&
+    chrome.devtools.inspectedWindow
+  ) {
+    chrome.devtools.inspectedWindow.eval(`console.log("Run panel!")`);
+    const tabId = chrome.devtools.inspectedWindow.tabId;
 
-  function append(level: LogLevel, text: string): void {
-    if (!logEl) return;
-    const line = document.createElement("div");
-    line.className = "log-" + level;
-    const ts = new Date().toLocaleTimeString();
-    line.textContent = "[" + ts + "] " + text;
-    logEl.appendChild(line);
-    logEl.scrollTop = logEl.scrollHeight;
-  }
+    const client = createChromePanelClient<ComponentModelDevToolsApi>({
+      tabId,
+    });
 
-  chrome.runtime.onMessage.addListener(
-    (message: unknown, _sender, sendResponse: (response?: unknown) => void) => {
-      const msg = message as { greeting?: string; source?: string };
-      if (msg && typeof msg.greeting === "string") {
-        append("info", "content-script: " + msg.greeting);
-      }
-      sendResponse("GOVNO");
+    if (chrome.scripting) {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ["content-isolated.js"],
+        world: "ISOLATED",
+      });
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ["content-main.js"],
+        world: "MAIN",
+      });
     }
-  );
 
-  const tabId = chrome.devtools.inspectedWindow.tabId;
-
-  void chrome.scripting.executeScript({
-    target: { tabId },
-    files: ["content.js"],
-  });
-
-  triggerBtn?.addEventListener("click", () => {
-    chrome.devtools.inspectedWindow.eval(
-      'console.log("Hello from My Custom Panel at " + new Date().toISOString())'
-    );
-  });
-
-  clearBtn?.addEventListener("click", () => {
-    if (logEl) logEl.textContent = "";
-  });
-
-  append("info", "panel ready");
+    const app = createPanelApp({ client });
+    await app.fetchModels();
+  }
 })();

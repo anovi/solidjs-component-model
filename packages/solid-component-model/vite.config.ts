@@ -1,12 +1,21 @@
+import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vitest/config";
 
 // Configure Vitest (https://vitest.dev/config/)
 import solidPlugin from "vite-plugin-solid";
 
+const rpcSource = fileURLToPath(
+  new URL("../rpc/src/index.ts", import.meta.url)
+);
+
 export default defineConfig({
   plugins: [solidPlugin()],
   resolve: {
     conditions: ["browser", "development"],
+    alias: {
+      "solid-component-model/rpc": rpcSource,
+      rpc: rpcSource,
+    },
   },
   build: {
     // `tsc --emitDeclarationOnly` runs before Vite and writes declarations here.

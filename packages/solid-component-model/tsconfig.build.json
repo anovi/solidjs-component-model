@@ -2,7 +2,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist"
+    "outDir": "dist",
+    "paths": {
+      "solid-component-model/rpc": ["../rpc/dist/index.d.ts"]
+    }
   },
   "include": ["src"],
   "exclude": ["src/**/*.test.ts"]

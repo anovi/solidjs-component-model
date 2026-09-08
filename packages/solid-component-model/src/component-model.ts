@@ -54,10 +54,11 @@ import type { ScheduledExecute } from "./events";
 import type { InvokeConfig } from "./state-chart/state-chart-types";
 
 import {
-  createDevToolsBridge,
-  type ComponentModelDevToolsBridge,
+  type ComponentModelDevToolsApi,
+  type ComponentModelDevToolsServerFactory,
   type GlobalDevContext,
-} from "./devtools";
+} from "./devtools-types";
+import { createApiServer, type ApiServer } from "solid-component-model/rpc";
 
 type SendApi<E extends { type: string }> = {
   [K in EventName<E>]: (
@@ -111,20 +112,61 @@ const actionsExecutionStack: Stack<AnyComponentModel> = new Stack();
 /** The [key] is a model's ID and the [value] is an array of its children.  */
 export const modelChildrenMap = new Map<string, AnyComponentModel[]>();
 
-/** DevTools bridge instance */
-let devtools: ComponentModelDevToolsBridge | null = null;
+/** DevTools ApiServer instance */
+let devtools: ApiServer<ComponentModelDevToolsApi> | null = null;
+
+function createDevtools(factory?: ComponentModelDevToolsServerFactory) {
+  const globalObj = globalThis as unknown as GlobalDevContext;
+  const handlers: ComponentModelDevToolsApi = {
+    version: () => "1.0.0",
+    getModels: () => {
+      return Array.from(modelChildrenMap.keys());
+    },
+    getAllSnapshots: () => {
+      const snapshots: Record<string, unknown> = {};
+      for (const [id] of modelChildrenMap) {
+        snapshots[id] = { id };
+      }
+      return snapshots;
+    },
+  };
+
+  if (factory) {
+    devtools = factory(handlers, { source: "devtools-rpc" });
+  } else {
+    devtools = createApiServer<ComponentModelDevToolsApi>(handlers, {
+      source: "devtools-rpc",
+    });
+  }
+  globalObj.__COMPONENT_MODEL_DEVTOOLS__ = devtools;
+
+  if (typeof window !== "undefined") {
+    window.postMessage(
+      {
+        source: "scm-devtools",
+        type: "COMPONENT_MODEL_DEVTOOLS_CREATED",
+      },
+      "*"
+    );
+  }
+}
 
 if (typeof globalThis !== "undefined") {
   const globalObj = globalThis as unknown as GlobalDevContext;
-  if (globalObj.__COMPONENT_MODEL_DEVMODE__) {
-    devtools = createDevToolsBridge(aliveModels, modelChildrenMap);
-    globalObj.__COMPONENT_MODEL_DEVTOOLS__ = devtools;
-  }
 
-  // @ts-ignore
-  globalThis.get_model_state = function (id: string) {
-    return aliveModels.get(id)?.getPersistedSnapshot();
-  };
+  if (globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__) {
+    createDevtools(globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__);
+  } else if (globalObj.__COMPONENT_MODEL_DEVMODE__) {
+    createDevtools();
+  } else if (typeof window !== "undefined") {
+    window.addEventListener("message", event => {
+      if (event.source === window && event.data?.source === "scm-devtools") {
+        if (event.data.type === "CREATE_DEV_TOOLS") {
+          createDevtools(globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__);
+        }
+      }
+    });
+  }
 }
 
 /**
@@ -406,7 +448,7 @@ export abstract class ComponentModel<
       this.parent = parent;
       modelChildrenMap.set(parent._id, children);
     }
-    devtools?.__registerModel(this);
+    // devtools?.__registerModel(this);
     if (this.stateChart) {
       untrack(() => {
         const target = this.state(); // can be any state if node restored from snapshot
@@ -821,7 +863,7 @@ export abstract class ComponentModel<
   }
 
   private __destroy(): void {
-    devtools?.__unregisterModel(this);
+    // devtools?.__unregisterModel(this);
     aliveModels.delete(this._id);
     this.__queue.flush();
     if (this.__invocations)
@@ -962,7 +1004,7 @@ export abstract class ComponentModel<
 
     // Emit snapshots to subscribers if there are any.
     const snapshot = this.toJSON();
-    devtools?.__notifySnapshot(this, snapshot);
+    // devtools?.__notifySnapshot(this, snapshot);
     this.__snapshots$?.next(snapshot);
   }
 
@@ -1112,7 +1154,7 @@ export abstract class ComponentModel<
     this.__finishHandlingFx();
     if (!this.stateChart && this.status === "active") {
       const snapshot = this.toJSON();
-      devtools?.__notifySnapshot(this, snapshot);
+      // devtools?.__notifySnapshot(this, snapshot);
       this.__snapshots$?.next(snapshot);
     }
   }
@@ -1360,7 +1402,7 @@ export abstract class ComponentModel<
   }
 
   private __logTransitoin(from: string, to: string) {
-    devtools?.__notifyTransition(this, from, to);
+    // devtools?.__notifyTransition(this, from, to);
     if (this.logger) this.logger.transition(from, to);
   }
 

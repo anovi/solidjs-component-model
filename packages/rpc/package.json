@@ -1,5 +1,5 @@
 {
-  "name": "solid-component-model/devtools",
+  "name": "rpc",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,10 +14,6 @@
   "files": [
     "dist"
   ],
-  "dependencies": {
-    "solid-component-model": "workspace:*",
-    "rpc": "workspace:*"
-  },
   "scripts": {
     "dev": "vite build --watch",
     "build": "pnpm run clean && tsc --project tsconfig.build.json --emitDeclarationOnly && vite build",
@@ -26,8 +22,5 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
-  },
-  "devDependencies": {
-    "@types/chrome": "0.2.9"
   }
 }
