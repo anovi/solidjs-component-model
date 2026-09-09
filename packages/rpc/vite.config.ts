@@ -2,6 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   build: {
+    sourcemap: true,
     emptyOutDir: false,
     lib: {
       entry: "src/index.ts",

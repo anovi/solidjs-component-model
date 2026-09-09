@@ -18,8 +18,8 @@
     "solid-js": "^1.9.0"
   },
   "dependencies": {
-    "solid-component-model": "workspace:*",
-    "@solid-component-model/rpc": "workspace:*"
+    "@solid-component-model/rpc": "workspace:*",
+    "solid-component-model": "workspace:*"
   },
   "scripts": {
     "dev": "vite build --watch",
@@ -34,6 +34,8 @@
   "devDependencies": {
     "@testing-library/jest-dom": "7.0.1",
     "@types/chrome": "0.2.9",
+    "@types/jsdom": "30.0.0",
+    "jsdom": "30.0.1",
     "solid-js": "1.9.13",
     "vite-plugin-solid": "^2.11.12"
   }

@@ -23,6 +23,8 @@ export default defineConfig({
   build: {
     emptyOutDir: false,
 
+    sourcemap: true,
+
     rollupOptions: {
       input: {
         devtools: "src/devtools.ts",

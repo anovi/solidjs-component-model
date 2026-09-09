@@ -17,6 +17,7 @@ export default defineConfig({
     },
   },
   build: {
+    sourcemap: true,
     // `tsc --emitDeclarationOnly` runs before Vite and writes declarations here.
     emptyOutDir: false,
     lib: {

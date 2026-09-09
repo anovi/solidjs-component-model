@@ -22,5 +22,8 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "7.0.1"
   }
 }
