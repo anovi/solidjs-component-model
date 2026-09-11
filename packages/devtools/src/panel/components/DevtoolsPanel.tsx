@@ -15,9 +15,7 @@ export interface DevtoolsPanelProps {
  */
 export const DevtoolsPanel: Component<DevtoolsPanelProps> = props => {
   const ctx = useContext(ApiClientContext)!;
-  chrome.devtools.inspectedWindow.eval(`console.log("Context!")`);
   const devtools = createDevtoolsState(ctx.client, ctx.logger);
-  chrome.devtools.inspectedWindow.eval(`console.log("After dev tools created!")`);
 
   return (
     <div class={`devtools-panel-root ${props.class ?? ""}`}>

@@ -1,6 +1,7 @@
 /// <reference types="chrome" />
 
 import {
+  ClientMessages,
   createApiClient,
   type ApiClient,
   type ClientTransport,
@@ -28,7 +29,22 @@ export interface LocalPanelTransportOptions {
 export function createLocalPanelTransport(): ClientTransport {
   const listeners = new Map<string, Set<(...args: any[]) => any>>();
 
-  return {
+  const localClientTransport: ClientTransport = {
+    connect() {
+      return new Promise(done => {
+        appChannel.addEventListener(MESSAGE_FROM_SERVER, ((
+          message: CustomEvent<ServerMessages>
+        ) => {
+          if (message.detail.type === "CONNECTED") {
+            done();
+          }
+        }) as any);
+        const msg: ClientMessages = { type: "CONNECT" };
+        appChannel.dispatchEvent(
+          new CustomEvent(MESSAGE_FROM_CLIENT, { detail: msg })
+        );
+      });
+    },
     send: message => {
       appChannel.dispatchEvent(
         new CustomEvent(MESSAGE_FROM_CLIENT, { detail: message })
@@ -65,6 +81,8 @@ export function createLocalPanelTransport(): ClientTransport {
       }
     },
   };
+
+  return localClientTransport;
 }
 
 /**

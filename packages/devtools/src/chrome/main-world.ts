@@ -9,8 +9,6 @@ import {
  * Creates a ClientTransport that communicates with the inspected tab via Chrome extension APIs.
  */
 export function createChromeMainWorldTransport(): ServerTransport {
-  // const listeners = new Map<string, Set<(message: RpcMessage) => void>>();
-
   return {
     send: message => {
       window.postMessage(message);

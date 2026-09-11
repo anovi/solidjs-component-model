@@ -48,7 +48,10 @@ interface MessageTransport<
   destroy?: () => void;
 }
 
-export type ClientTransport = MessageTransport<ClientMessages, ServerMessages>;
+export type ClientTransport = MessageTransport<
+  ClientMessages,
+  ServerMessages
+> & { connect: () => Promise<void> };
 
 export type ServerTransport = MessageTransport<ServerMessages, ClientMessages>;
 

@@ -1,6 +1,6 @@
 import { For, Show, type Component } from "solid-js";
 import type { ApiClient } from "@solid-component-model/rpc";
-import { DevtoolsPanel } from "../src/panel";
+import { DevtoolsPanel, ApiClientContext, createLogsStore } from "../src/panel";
 import type { ParentAppModel, SettingsModel } from "./models";
 import './styles.css';
 
@@ -143,7 +143,9 @@ export const App: Component<DemoAppProps> = props => {
         {/* Right column: DevTools Panel Widget (No markup owned by demo app) */}
         <section class="demo-section">
           <div class="section-title">DevTools Panel</div>
-          <DevtoolsPanel client={props.client} autoFetch={true} />
+          <ApiClientContext.Provider value={{ client: props.client, logger: createLogsStore() }}>
+            <DevtoolsPanel client={props.client} />
+          </ApiClientContext.Provider>
         </section>
       </main>
     </div>

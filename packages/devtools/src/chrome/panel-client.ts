@@ -96,8 +96,6 @@ export async function createChromePanelTransport(
       }
   }
 
-  // await injectScripts();
-
   function connect() {
     port = chrome.tabs.connect(tabId, { name: "panel-page" });
     logger.log("🔌 Connected!");
@@ -122,14 +120,14 @@ export async function createChromePanelTransport(
     });
   }
 
-  await initialize();
-
-  // function handleMessage()
   const DisconnectListeners = new Set<() => void>();
   const ConnectedListeners = new Set<() => void>();
   const MessageListeners = new Map<string, Set<(...arg: any[]) => void>>();
 
-  return {
+  const transport: ClientTransport = {
+    connect() {
+      return initialize();
+    },
     send: message => {
       port?.postMessage(message);
     },
@@ -155,6 +153,8 @@ export async function createChromePanelTransport(
       port = undefined;
     },
   };
+
+  return transport;
 }
 
 /**

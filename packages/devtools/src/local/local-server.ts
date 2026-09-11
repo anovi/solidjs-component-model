@@ -7,17 +7,21 @@ import {
 import { appChannel, MESSAGE_FROM_CLIENT, MESSAGE_FROM_SERVER } from "./target";
 
 export function createLocalServerTransport(): ServerTransport {
-  return {
+  const ConnectListeners = new Set<(...args: any[]) => any>();
+  const DisconnectListeners = new Set<(...args: any[]) => any>();
+  let connected = false;
+
+  const server: ServerTransport = {
     send: message => {
       appChannel.dispatchEvent(
         new CustomEvent(MESSAGE_FROM_SERVER, { detail: message })
       );
     },
     onConnected(cb) {
-      queueMicrotask(cb);
+      ConnectListeners.add(cb);
     },
     onDisonnected(cb) {
-      queueMicrotask(cb);
+      DisconnectListeners.add(cb);
     },
     onMessage: (type, listener) => {
       const _listener = (message: CustomEvent<ClientMessages>) => {
@@ -39,6 +43,16 @@ export function createLocalServerTransport(): ServerTransport {
       // listeners.clear();
     },
   };
+
+  server.onMessage("CONNECT", () => {
+    connected = true;
+    ConnectListeners.forEach(cb => cb());
+    server.send({ type: "CONNECTED" });
+  });
+
+  void connected;
+
+  return server;
 }
 
 /**

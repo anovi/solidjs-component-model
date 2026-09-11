@@ -5,14 +5,7 @@ export class ApiClient implements IApiClient {
   constructor(private transport: ClientTransport) {}
 
   connect(): Promise<void> {
-    return new Promise<void>(done => {
-      // const sub = this.transport.onMessage('CONNECTED', () => {
-      //   sub.unsubscribe();
-      //   done();
-      // });
-      // this.transport.send({ type: 'CONNECT' });
-      done();
-    });
+    return this.transport.connect();
   }
 
   disconnect() {

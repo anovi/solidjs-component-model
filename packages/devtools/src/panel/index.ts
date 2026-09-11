@@ -5,7 +5,7 @@ export {
   type DevtoolsState,
 } from "./hooks/useDevtoolsState";
 
-export { type LogEntry } from "./stores/logs";
+export { type LogEntry, createLogsStore } from "./stores/logs";
 
 export {
   DevtoolsPanel,
