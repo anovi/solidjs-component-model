@@ -1,22 +1,11 @@
 import { render } from "solid-js/web";
 import { createLocalPanelClient, createLocalServer } from "../src/local";
 import { App } from "./App";
-import { ParentAppModel, SettingsModel } from "./models";
 import { GlobalDevContext } from "solid-component-model";
 import { createDevTools } from "../src";
+import { parentModel, settingsModel } from "./create-models";
 
-
-
-// 1. Instantiate and start models
-const parentModel = new ParentAppModel();
-parentModel.start();
-
-const settingsModel = new SettingsModel();
-settingsModel.start();
-
-// Add initial children to demonstrate hierarchy
-parentModel.addChild("Primary Counter");
-parentModel.addChild("Secondary Counter");
+;
 
 function initialize() {
   const globalObj = globalThis as unknown as GlobalDevContext;
@@ -26,10 +15,10 @@ function initialize() {
 }
 
 function start() {
-  // 2. Initialize local transport bridge
+  // Initialize local transport bridge
   const client = createLocalPanelClient()
 
-  // 3. Mount Demo SolidJS Application into #root
+  // Mount Demo SolidJS Application into #root
   const rootElement = document.getElementById("root");
   if (rootElement) {
     render(

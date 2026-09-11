@@ -416,7 +416,7 @@ export abstract class ComponentModel<
       this.parent = parent;
       modelChildrenMap.set(parent._id, children);
     }
-    // devtools?.__registerModel(this);
+    devtools?.registerModel(this.toJSON());
     if (this.stateChart) {
       untrack(() => {
         const target = this.state(); // can be any state if node restored from snapshot
@@ -831,7 +831,7 @@ export abstract class ComponentModel<
   }
 
   private __destroy(): void {
-    // devtools?.__unregisterModel(this);
+    devtools?.unregisterModel(this._id);
     aliveModels.delete(this._id);
     this.__queue.flush();
     if (this.__invocations)
@@ -972,7 +972,7 @@ export abstract class ComponentModel<
 
     // Emit snapshots to subscribers if there are any.
     const snapshot = this.toJSON();
-    // devtools?.__notifySnapshot(this, snapshot);
+    devtools?.sendModelSnapshot(snapshot);
     this.__snapshots$?.next(snapshot);
   }
 
@@ -1122,6 +1122,7 @@ export abstract class ComponentModel<
     this.__finishHandlingFx();
     if (!this.stateChart && this.status === "active") {
       const snapshot = this.toJSON();
+      // TODO: figure out wether it needs to run here?
       // devtools?.__notifySnapshot(this, snapshot);
       this.__snapshots$?.next(snapshot);
     }
@@ -1370,7 +1371,6 @@ export abstract class ComponentModel<
   }
 
   private __logTransitoin(from: string, to: string) {
-    // devtools?.__notifyTransition(this, from, to);
     if (this.logger) this.logger.transition(from, to);
   }
 

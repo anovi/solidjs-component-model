@@ -20,7 +20,6 @@ export function createDevtoolsState(
   const [error, setError] = createSignal<string | null>(null);
   const models = createModelsStore();
   const clientRef = client;
-  // const logger = createLogsStore();
 
   clientRef.onModelAdded(snapshot => models.addModel(snapshot));
   clientRef.onModelUpdated(snapshot => models.updateModel(snapshot));

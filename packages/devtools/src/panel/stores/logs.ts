@@ -1,4 +1,4 @@
-import { createStore, Store } from "solid-js/store";
+import { createStore, reconcile, Store } from "solid-js/store";
 
 export interface LogEntry {
   id: number;
@@ -56,7 +56,7 @@ export function createLogsStore(): LogsStore {
     },
 
     clear() {
-      setStore("logs", []);
+      setStore("logs", reconcile([]));
     },
   };
 }
