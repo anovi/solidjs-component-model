@@ -1,16 +1,17 @@
 import { render } from "solid-js/web";
 import type { ApiClient } from "@solid-component-model/rpc";
-import type { ComponentModelDevToolsApi } from "solid-component-model";
 import { DevtoolsPanel } from "./components/DevtoolsPanel";
+import { LogsStore } from "./stores/logs";
+import { ApiClientContext } from "./context";
 
 export interface PanelAppConfig {
-  client: ApiClient<ComponentModelDevToolsApi>;
+  client: ApiClient;
+  logger: LogsStore;
   container?: HTMLElement;
-  autoFetch?: boolean;
 }
 
 export interface PanelAppInstance {
-  client: ApiClient<ComponentModelDevToolsApi>;
+  client: ApiClient;
   dispose: () => void;
 }
 
@@ -18,20 +19,16 @@ export interface PanelAppInstance {
  * Creates and mounts the DevTools SolidJS panel application into a DOM container.
  */
 export function createPanelApp(config: PanelAppConfig): PanelAppInstance {
-  const container =
-    config.container ??
-    (typeof document !== "undefined" ? document.body : undefined);
-
-  if (!container) {
-    throw new Error("No container element provided to createPanelApp");
-  }
+  const container = config.container ?? (typeof document !== "undefined" ? document.body : undefined);
+  if (!container) throw new Error("No container element provided to createPanelApp");
 
   const dispose = render(
     () => (
-      <DevtoolsPanel
-        client={config.client}
-        autoFetch={config.autoFetch ?? true}
-      />
+      <ApiClientContext.Provider value={{ client: config.client, logger: config.logger }}>
+        <DevtoolsPanel
+          client={config.client}
+        />
+      </ApiClientContext.Provider>
     ),
     container
   );

@@ -1,13 +1,12 @@
 import { For, Show, type Component } from "solid-js";
 import type { ApiClient } from "@solid-component-model/rpc";
-import type { ComponentModelDevToolsApi } from "solid-component-model";
 import { DevtoolsPanel } from "../src/panel";
 import type { ParentAppModel, SettingsModel } from "./models";
 import './styles.css';
 
 
 export interface DemoAppProps {
-  client: ApiClient<ComponentModelDevToolsApi>;
+  client: ApiClient;
   parentModel: InstanceType<typeof ParentAppModel>;
   settingsModel: InstanceType<typeof SettingsModel>;
 }

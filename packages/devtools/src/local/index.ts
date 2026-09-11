@@ -1,18 +1,6 @@
 export {
-  createLocalPanelTransport,
   createLocalPanelClient,
   type LocalPanelTransportOptions,
-  type LocalPanelClientOptions,
-} from "./panel-client";
+} from "./local-client";
 
-export {
-  createLocalDevToolsServer,
-  type LocalDevToolsServerOptions,
-} from "./server";
-
-export {
-  createLocalDevToolsConnection,
-  attachLocalDevTools,
-  type LocalDevToolsConnection,
-  type LocalDevToolsOptions,
-} from "./connection";
+export { createLocalServer } from "./local-server";

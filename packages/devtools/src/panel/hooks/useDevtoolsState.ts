@@ -1,78 +1,47 @@
 import { createSignal, type Accessor } from "solid-js";
 import type { ApiClient } from "@solid-component-model/rpc";
-import type { ComponentModelDevToolsApi } from "solid-component-model";
-import { useApiClient } from "./useApiClient";
+import { createModelsStore, ModelsStore } from "../stores/models";
+import { LogsStore } from "../stores/logs";
 
-export interface LogEntry {
-  id: number;
-  time: string;
-  message: string;
-  type: "info" | "warn" | "error";
-}
+type AppState = "loading" | "ok" | "error";
 
 export interface DevtoolsState {
-  models: Accessor<string[]>;
-  loading: Accessor<boolean>;
+  models: ModelsStore["models"];
+  logger: LogsStore;
+  state: Accessor<AppState>;
   error: Accessor<string | null>;
-  logs: Accessor<LogEntry[]>;
-  refresh: () => Promise<string[]>;
-  appendLog: (message: string, type?: "info" | "warn" | "error") => void;
-  clearLog: () => void;
 }
 
 export function createDevtoolsState(
-  client?: ApiClient<ComponentModelDevToolsApi>
+  client: ApiClient,
+  logger: LogsStore
 ): DevtoolsState {
-  const getClient = (): ApiClient<ComponentModelDevToolsApi> => {
-    return client ?? useApiClient<ComponentModelDevToolsApi>();
-  };
-
-  const [models, setModels] = createSignal<string[]>([]);
-  const [loading, setLoading] = createSignal<boolean>(false);
+  const [state, setState] = createSignal<AppState>("loading");
   const [error, setError] = createSignal<string | null>(null);
-  const [logs, setLogs] = createSignal<LogEntry[]>([]);
-  let logId = 0;
+  const models = createModelsStore();
+  const clientRef = client;
+  // const logger = createLogsStore();
 
-  const appendLog = (
-    message: string,
-    type: "info" | "warn" | "error" = "info"
-  ) => {
-    const time = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev, { id: ++logId, time, message, type }]);
-  };
+  clientRef.onModelAdded(snapshot => models.addModel(snapshot));
+  clientRef.onModelUpdated(snapshot => models.updateModel(snapshot));
+  clientRef.onModelRemoved(id => models.removeModel(id));
 
-  const clearLog = () => {
-    setLogs([]);
-  };
-
-  const refresh = async () => {
-    const activeClient = getClient();
-    setLoading(true);
-    setError(null);
-    appendLog("Fetching models from page...", "info");
-    try {
-      const result = await activeClient.request("getModels");
-      const list = Array.isArray(result) ? result : [];
-      setModels(list);
-      appendLog(`Received models: ${JSON.stringify(list)}`, "info");
-      return list;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setError(msg);
-      appendLog(`Error fetching models: ${msg}`, "error");
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+  clientRef
+    .connect()
+    .then(() => {
+      logger.log("Connected");
+      setState("ok");
+    })
+    .catch(err => {
+      setError(String(err));
+      setState("error");
+      logger.error("Connection failed: " + err);
+    });
 
   return {
-    models,
-    loading,
+    logger,
     error,
-    logs,
-    refresh,
-    appendLog,
-    clearLog,
+    state,
+    models: models.models,
   };
 }

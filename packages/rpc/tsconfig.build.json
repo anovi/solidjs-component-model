@@ -5,5 +5,8 @@
     "outDir": "dist"
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts"]
+  "exclude": ["src/**/*.test.ts"],
+  "paths": {
+    "solid-component-model": ["../solid-component-model/src/index.ts"]
+  }
 }

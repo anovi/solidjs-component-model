@@ -53,12 +53,10 @@ import { hasToJSON, isClassInstance } from "./object";
 import type { ScheduledExecute } from "./events";
 import type { InvokeConfig } from "./state-chart/state-chart-types";
 
-import {
-  type ComponentModelDevToolsApi,
-  type ComponentModelDevToolsServerFactory,
-  type GlobalDevContext,
-} from "./devtools-types";
-import { createApiServer, type ApiServer } from "@solid-component-model/rpc";
+import { type GlobalDevContext } from "./devtools-types";
+import { type ApiServer } from "@solid-component-model/rpc";
+
+console.log("import comp model");
 
 type SendApi<E extends { type: string }> = {
   [K in EventName<E>]: (
@@ -113,58 +111,44 @@ const actionsExecutionStack: Stack<AnyComponentModel> = new Stack();
 export const modelChildrenMap = new Map<string, AnyComponentModel[]>();
 
 /** DevTools ApiServer instance */
-let devtools: ApiServer<ComponentModelDevToolsApi> | null = null;
-
-function createDevtools(factory?: ComponentModelDevToolsServerFactory) {
-  const globalObj = globalThis as unknown as GlobalDevContext;
-  const handlers: ComponentModelDevToolsApi = {
-    version: () => "1.0.0",
-    getModels: () => {
-      return Array.from(aliveModels.keys());
-    },
-    getAllSnapshots: () => {
-      const snapshots: Record<string, unknown> = {};
-      for (const [id] of aliveModels) {
-        snapshots[id] = { id };
-      }
-      return snapshots;
-    },
-  };
-
-  if (factory) {
-    devtools = factory(handlers, { source: "devtools-rpc" });
-  } else {
-    devtools = createApiServer<ComponentModelDevToolsApi>(handlers, {
-      source: "devtools-rpc",
-    });
-  }
-  globalObj.__COMPONENT_MODEL_DEVTOOLS__ = devtools;
-
-  if (typeof window !== "undefined") {
-    window.postMessage(
-      {
-        source: "scm-devtools",
-        type: "COMPONENT_MODEL_DEVTOOLS_CREATED",
-      },
-      "*"
-    );
-  }
-}
+let devtools: ApiServer | null = null;
 
 if (typeof globalThis !== "undefined") {
   const globalObj = globalThis as unknown as GlobalDevContext;
 
-  globalObj.__CREATE_COMPONENT_MODEL_DEVTOOLS__ = createDevtools;
+  const createDevtools = globalObj.__CREATE_COMPONENT_MODEL_DEVTOOLS__;
 
-  if (globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__) {
-    createDevtools(globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__);
-  } else if (globalObj.__COMPONENT_MODEL_DEVMODE__) {
-    createDevtools();
+  console.log("createDevtools", createDevtools);
+  console.log(
+    "__COMPONENT_MODEL_DEVTOOLS_FACTORY__",
+    globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__
+  );
+
+  if (globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__ && createDevtools) {
+    console.log("1");
+    devtools = createDevtools(
+      aliveModels,
+      globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__
+    );
+    void devtools;
+    // } else if (globalObj.__COMPONENT_MODEL_DEVMODE__ && createDevtools) {
+    //   console.log('2')
+    //   devtools = createDevtools(aliveModels);
+    //   void devtools
   } else if (typeof window !== "undefined") {
+    console.log("adding listener for CREATE_DEV_TOOLS");
     window.addEventListener("message", event => {
+      // console.log('E ==>', event.data)
+      // console.log(event.source)
       if (event.source === window && event.data?.source === "scm-devtools") {
         if (event.data.type === "CREATE_DEV_TOOLS") {
-          createDevtools(globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__);
+          const createDevtools = globalObj.__CREATE_COMPONENT_MODEL_DEVTOOLS__;
+          devtools = createDevtools!(
+            aliveModels,
+            globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__!
+          );
+          console.log("devtools created");
+          void devtools;
         }
       }
     });

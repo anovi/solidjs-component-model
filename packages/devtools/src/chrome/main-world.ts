@@ -1,62 +1,63 @@
 import {
   createApiServer,
-  createWindowPostMessageTransport,
-  type ApiDefinition,
-  type ApiHandlers,
+  ServerTransport,
   type ApiServer,
-  type ApiServerOptions,
+  type ClientMessages,
 } from "@solid-component-model/rpc";
 
-export interface MainWorldServerOptions<
-  TApi extends ApiDefinition = ApiDefinition,
-> extends ApiServerOptions<TApi> {
-  targetWindow?: Window;
-  targetOrigin?: string;
+/**
+ * Creates a ClientTransport that communicates with the inspected tab via Chrome extension APIs.
+ */
+export function createChromeMainWorldTransport(): ServerTransport {
+  // const listeners = new Map<string, Set<(message: RpcMessage) => void>>();
+
+  return {
+    send: message => {
+      window.postMessage(message);
+    },
+    onConnected(cb) {
+      window.addEventListener("message", msg => {
+        if (
+          msg.data.type === "CLIENT_CONNECTED" &&
+          msg.data.source === "scm-devtools"
+        ) {
+          console.log(msg);
+          cb();
+        }
+      });
+    },
+    onDisonnected(cb) {
+      window.addEventListener("message", msg => {
+        if (
+          msg.data.type === "CLIENT_DISCONNECTED" &&
+          msg.data.type === "scm-devtools"
+        ) {
+          cb();
+        }
+      });
+    },
+    onMessage: (type, listener) => {
+      const _listener = (message: MessageEvent<ClientMessages>) => {
+        if (message.data.type === type) {
+          console.log("🟢 matched: ", message.data);
+          listener(message.data as any);
+        }
+      };
+      window.addEventListener("message", _listener);
+      return {
+        unsubscribe: () => window.removeEventListener("message", _listener),
+      };
+    },
+    destroy: () => {
+      // listeners.clear();
+    },
+  };
 }
 
 /**
  * Creates an ApiServer in the page's MAIN world wired with a window.postMessage transport.
  */
-export function createMainWorldServer<TApi extends ApiDefinition>(
-  initialHandlersOrOptions?:
-    Partial<ApiHandlers<TApi>> | MainWorldServerOptions<TApi>,
-  maybeOptions?: MainWorldServerOptions<TApi>
-): ApiServer<TApi> {
-  let handlers: Partial<ApiHandlers<TApi>> | undefined;
-  let opts: MainWorldServerOptions<TApi> = {};
-
-  if (
-    initialHandlersOrOptions &&
-    typeof initialHandlersOrOptions === "object"
-  ) {
-    if (
-      "handlers" in initialHandlersOrOptions ||
-      "transport" in initialHandlersOrOptions ||
-      "source" in initialHandlersOrOptions ||
-      "targetWindow" in initialHandlersOrOptions ||
-      "serializeError" in initialHandlersOrOptions
-    ) {
-      opts = initialHandlersOrOptions as MainWorldServerOptions<TApi>;
-      handlers = opts.handlers;
-    } else {
-      handlers = initialHandlersOrOptions as Partial<ApiHandlers<TApi>>;
-      opts = maybeOptions ?? {};
-    }
-  }
-
-  const source = opts.source ?? "devtools-rpc";
-  const transport =
-    opts.transport ??
-    createWindowPostMessageTransport({
-      source,
-      targetWindow: opts.targetWindow,
-      targetOrigin: opts.targetOrigin,
-    });
-
-  return createApiServer<TApi>({
-    ...opts,
-    source,
-    handlers,
-    transport,
-  });
+export function createMainWorldServer(): ApiServer {
+  const transport = createChromeMainWorldTransport();
+  return createApiServer(transport);
 }

@@ -5,7 +5,9 @@ export * from "@solid-component-model/rpc";
 export * from "./chrome";
 
 // Local in-memory transport & helpers
-export * from "./local";
+// export * from "./local";
 
 // Panel UI & hooks
 export * from "./panel";
+
+export { createDevTools } from "./create-dev-tools";

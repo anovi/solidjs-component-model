@@ -23,6 +23,9 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
+  "dependencies": {
+    "solid-component-model": "workspace:*"
+  },
   "devDependencies": {
     "@testing-library/jest-dom": "7.0.1"
   }

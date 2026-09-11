@@ -89,6 +89,10 @@ importers:
         version: 2.11.14(@testing-library/jest-dom@7.0.1(@testing-library/dom@10.4.1)(vitest@5.0.0))(solid-js@1.9.13)(vite@8.2.2(@types/node@26.4.1)(esbuild@0.28.2)(yaml@2.9.0))
 
   packages/rpc:
+    dependencies:
+      solid-component-model:
+        specifier: workspace:*
+        version: link:../solid-component-model
     devDependencies:
       '@testing-library/jest-dom':
         specifier: 7.0.1

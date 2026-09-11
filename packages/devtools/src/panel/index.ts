@@ -1,19 +1,11 @@
-export {
-  setApiClient,
-  getApiClient,
-  ApiClientContext,
-  ApiClientProvider,
-  useApiClientContext,
-  type ApiClientProviderProps,
-} from "./context";
-
-export { useApiClient } from "./hooks/useApiClient";
+export { ApiClientContext, type ApiClientProviderProps } from "./context";
 
 export {
   createDevtoolsState,
   type DevtoolsState,
-  type LogEntry,
 } from "./hooks/useDevtoolsState";
+
+export { type LogEntry } from "./stores/logs";
 
 export {
   DevtoolsPanel,

@@ -1,6 +1,7 @@
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vitest/config";
 import solidPlugin from "vite-plugin-solid";
+import { resolve } from "node:path";
 
 const librarySource = fileURLToPath(
   new URL("../solid-component-model/src/index.ts", import.meta.url)
@@ -28,9 +29,9 @@ export default defineConfig({
     rollupOptions: {
       input: {
         devtools: "src/devtools.ts",
-        panel: "src/panel/panel.ts",
-        "content-isolated": "src/page-isolated-world",
-        "content-main": "src/page-main-world",
+        panel: resolve(__dirname, "panel.html"),
+        "content-isolated": "src/page-isolated-world.ts",
+        "content-main": "src/page-main-world.ts",
         background: "src/background.ts",
       },
 

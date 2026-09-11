@@ -7,7 +7,6 @@ export {
 
 // DevTools
 export {
-  type ComponentModelDevToolsApi,
   type ComponentModelDevToolsServerFactory,
   type GlobalDevContext,
 } from "./devtools-types";
