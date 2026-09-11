@@ -56,8 +56,6 @@ import type { InvokeConfig } from "./state-chart/state-chart-types";
 import { type GlobalDevContext } from "./devtools-types";
 import { type ApiServer } from "@solid-component-model/rpc";
 
-console.log("import comp model");
-
 type SendApi<E extends { type: string }> = {
   [K in EventName<E>]: (
     payload?: Omit<Extract<E, { type: K }>, "type">
@@ -115,31 +113,15 @@ let devtools: ApiServer | null = null;
 
 if (typeof globalThis !== "undefined") {
   const globalObj = globalThis as unknown as GlobalDevContext;
-
   const createDevtools = globalObj.__CREATE_COMPONENT_MODEL_DEVTOOLS__;
 
-  console.log("createDevtools", createDevtools);
-  console.log(
-    "__COMPONENT_MODEL_DEVTOOLS_FACTORY__",
-    globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__
-  );
-
   if (globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__ && createDevtools) {
-    console.log("1");
     devtools = createDevtools(
       aliveModels,
       globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__
     );
-    void devtools;
-    // } else if (globalObj.__COMPONENT_MODEL_DEVMODE__ && createDevtools) {
-    //   console.log('2')
-    //   devtools = createDevtools(aliveModels);
-    //   void devtools
   } else if (typeof window !== "undefined") {
-    console.log("adding listener for CREATE_DEV_TOOLS");
     window.addEventListener("message", event => {
-      // console.log('E ==>', event.data)
-      // console.log(event.source)
       if (event.source === window && event.data?.source === "scm-devtools") {
         if (event.data.type === "CREATE_DEV_TOOLS") {
           const createDevtools = globalObj.__CREATE_COMPONENT_MODEL_DEVTOOLS__;
@@ -147,7 +129,7 @@ if (typeof globalThis !== "undefined") {
             aliveModels,
             globalObj.__COMPONENT_MODEL_DEVTOOLS_FACTORY__!
           );
-          console.log("devtools created");
+          console.log("Devtools created!");
           void devtools;
         }
       }

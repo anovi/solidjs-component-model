@@ -6,10 +6,12 @@ export class ApiServer implements IApiServer {
     this.transport.onDisonnected(() => {
       console.log("⚠️ Client disconnected");
     });
+    this.transport.onConnected(() => {
+      console.log("💻 Client connected");
+    });
   }
 
   onClientConnect(cb: () => void) {
-    console.log("💻 Client connected");
     this.transport.onConnected(cb);
   }
 
