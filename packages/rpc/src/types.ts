@@ -5,11 +5,11 @@ export type ApiClient = {
   disconnect: () => void;
   onModelAdded: (
     cb: (snapshot: Snapshot<string, AnyModelData>) => void
-  ) => void;
-  onModelRemoved: (cb: (id: string) => void) => void;
+  ) => Subscription;
+  onModelRemoved: (cb: (id: string) => void) => Subscription;
   onModelUpdated: (
     cb: (snapshot: Snapshot<string, AnyModelData>) => void
-  ) => void;
+  ) => Subscription;
 };
 
 export type ApiServer = {

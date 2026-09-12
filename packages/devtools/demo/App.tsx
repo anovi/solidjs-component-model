@@ -47,13 +47,13 @@ export const App: Component<DemoAppProps> = props => {
             <div class="parent-actions">
               <button
                 class="btn btn-primary"
-                onClick={() => parentModel.addChild()}
+                onClick={() => parentModel.dispatch({type: 'ADD_CHILD'})}
               >
                 + Add Child Model
               </button>
               <button
                 class="btn btn-secondary"
-                onClick={() => parentModel.incrementAll()}
+                onClick={() => parentModel.dispatch({ type: 'INCREMENT_ALL'})}
               >
                 Increment All Children
               </button>
@@ -81,7 +81,7 @@ export const App: Component<DemoAppProps> = props => {
                         </span>
                         <button
                           class="btn btn-sm btn-danger"
-                          onClick={() => parentModel.removeChild(child._id)}
+                          onClick={() => parentModel.dispatch({type: 'REMOVE_CHILD', id: child._id})}
                         >
                           Remove
                         </button>

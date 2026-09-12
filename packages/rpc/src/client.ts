@@ -13,19 +13,19 @@ export class ApiClient implements IApiClient {
   }
 
   onModelAdded(cb: (snapshot: Snapshot<string, AnyModelData>) => void) {
-    this.transport.onMessage("MODEL_ADDED", message => {
+    return this.transport.onMessage("MODEL_ADDED", message => {
       cb(message.snapshot);
     });
   }
 
   onModelRemoved(cb: (id: string) => void) {
-    this.transport.onMessage("MODEL_REMOVED", message => {
+    return this.transport.onMessage("MODEL_REMOVED", message => {
       cb(message.id);
     });
   }
 
   onModelUpdated(cb: (snapshot: Snapshot<string, AnyModelData>) => void) {
-    this.transport.onMessage("SNAPSHOT", message => {
+    return this.transport.onMessage("SNAPSHOT", message => {
       cb(message.snapshot);
     });
   }

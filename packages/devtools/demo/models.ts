@@ -95,7 +95,7 @@ class ParentAppModelBase extends ComponentModel<
   }
 
   @action
-  addChild(title?: string) {
+  protected addChild(title?: string) {
     const childName = title ?? `Child #${this.data.children.length + 1}`;
     const child = new ChildCounterModel(childName);
     this.setData("children", this.data.children.length, child);
@@ -105,7 +105,7 @@ class ParentAppModelBase extends ComponentModel<
   }
 
   @action
-  removeChild(id: string) {
+  protected removeChild(id: string) {
     const idx = this.data.children.findIndex(c => c._id === id);
     if (idx < 0) return;
     const child = this.data.children[idx];
@@ -117,7 +117,7 @@ class ParentAppModelBase extends ComponentModel<
   }
 
   @action
-  incrementAll() {
+  protected incrementAll() {
     for (const child of this.data.children) {
       child.increment();
     }

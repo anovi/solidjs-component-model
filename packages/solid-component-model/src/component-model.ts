@@ -1123,7 +1123,7 @@ export abstract class ComponentModel<
     if (!this.stateChart && this.status === "active") {
       const snapshot = this.toJSON();
       // TODO: figure out wether it needs to run here?
-      // devtools?.__notifySnapshot(this, snapshot);
+      devtools?.sendModelSnapshot(snapshot);
       this.__snapshots$?.next(snapshot);
     }
   }
