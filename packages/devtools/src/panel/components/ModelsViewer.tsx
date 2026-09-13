@@ -8,7 +8,6 @@ import { AnyModelData, Status } from "solid-component-model";
 import './styles.css';
 import { ApiClientContext } from "../context";
 import { ModelSnapshot } from "../stores/models";
-import { unwrap } from "solid-js/store";
 import { JsonViewer } from "./JsonView";
 
 
@@ -44,14 +43,15 @@ export const ModelsViewer: Component = () => {
     return models.findIndex((m) => m._id === selValue)
   }))
 
-  const itemState = createMemo(() => {
+  const itemState = createMemo(on(selectedItemIndex, () => {
     const index = selectedItemIndex();
     const item = models.find((_, i) => i === index);
+    console.log('itemState', item)
     return item;
-  })
+  }))
 
   return (
-    <div class="surface">
+    <div class="">
       <div class="layout">
         <div data-part="left">
           <div class="devtools-model-tree">
@@ -80,11 +80,6 @@ export const ModelsViewer: Component = () => {
                 </For>
               </TreeView.Tree>
             </TreeView.Root>
-            {/* <For each={models}>
-              {model => {
-                return <code class="devtools-model-tag">{model.name}</code>
-              }}
-            </For> */}
           </div>
         </div>
         <div data-part="main">

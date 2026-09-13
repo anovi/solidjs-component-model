@@ -2,7 +2,7 @@ import { For, Show, type Component } from "solid-js";
 import type { ApiClient } from "@solid-component-model/rpc";
 import { DevtoolsPanel, ApiClientContext, createLogsStore, createDevtoolsState } from "../src/panel";
 import type { ParentAppModel, SettingsModel } from "./models";
-import './styles.css';
+import './demo-styles.css';
 
 
 export interface DemoAppProps {
@@ -94,19 +94,19 @@ export const App: Component<DemoAppProps> = props => {
                         <div class="btn-group">
                           <button
                             class="btn btn-sm"
-                            onClick={() => child.increment()}
+                            onClick={() => child.dispatch({type: 'INCREMENT'})}
                           >
                             +1
                           </button>
                           <button
                             class="btn btn-sm"
-                            onClick={() => child.decrement()}
+                            onClick={() => child.dispatch({type: 'DECREMENT'})}
                           >
                             -1
                           </button>
                           <button
                             class="btn btn-sm"
-                            onClick={() => child.reset()}
+                            onClick={() => child.dispatch({type: 'RESET'})}
                           >
                             Reset
                           </button>
@@ -133,7 +133,7 @@ export const App: Component<DemoAppProps> = props => {
             <div class="parent-actions">
               <button
                 class="btn btn-secondary"
-                onClick={() => settingsModel.toggleTheme()}
+                onClick={() => settingsModel.dispatch({type: 'TOGGLE_THEME'})}
               >
                 Toggle Theme ({settingsModel.data.theme})
               </button>

@@ -23,19 +23,19 @@ class ChildCounterModelBase extends ComponentModel<
   }
 
   @action
-  increment() {
+  protected increment() {
     this.setData("count", this.data.count + 1);
     this.setData("status", `Incremented to ${this.data.count}`);
   }
 
   @action
-  decrement() {
+  protected decrement() {
     this.setData("count", this.data.count - 1);
     this.setData("status", `Decremented to ${this.data.count}`);
   }
 
   @action
-  reset() {
+  protected reset() {
     this.setData("count", 0);
     this.setData("status", "Reset to 0");
   }
@@ -119,7 +119,7 @@ class ParentAppModelBase extends ComponentModel<
   @action
   protected incrementAll() {
     for (const child of this.data.children) {
-      child.increment();
+      child.dispatch({ type: "INCREMENT" });
     }
     this.setData(
       "totalClicks",
@@ -171,7 +171,7 @@ class SettingsModelBase extends ComponentModel<
   }
 
   @action
-  toggleTheme() {
+  protected toggleTheme() {
     this.setData("theme", this.data.theme === "dark" ? "light" : "dark");
   }
 }

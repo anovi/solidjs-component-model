@@ -1,5 +1,5 @@
 import { AnyModelData, Status } from "solid-component-model";
-import { createStore } from "solid-js/store";
+import { createStore, reconcile } from "solid-js/store";
 
 export type ModelSnapshot = {
   _id: string;
@@ -36,11 +36,7 @@ export function createModelsStore(): ModelsStore {
     },
 
     updateModel: (model: ModelSnapshot) => {
-      setStore(
-        "models",
-        m => m._id === model._id,
-        () => model
-      );
+      setStore("models", m => m._id === model._id, reconcile(model));
     },
   };
 }

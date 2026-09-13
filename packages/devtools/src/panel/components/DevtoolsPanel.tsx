@@ -1,8 +1,8 @@
 import { For, type Component, Switch, Match, useContext, Show, createSignal } from "solid-js";
 import type { ApiClient } from "@solid-component-model/rpc";
-import './styles.css';
 import { ApiClientContext } from "../context";
 import { ModelsViewer } from "./ModelsViewer";
+import './styles.css';
 
 export interface DevtoolsPanelProps {
   client: ApiClient;

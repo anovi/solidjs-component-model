@@ -52,15 +52,15 @@
 }
 
 .devtools-json-viewer .json-key {
-  color: var(--color-text);
+  /* color: var(--ctp-mocha-yellow-oklch); */
 }
 
 .devtools-json-viewer .json-string {
-  color: rgb(88, 222, 88);
+  color: var(--ctp-mocha-green-oklch);
 }
 
 .devtools-json-viewer .json-number {
-  color: var(--color-warning);
+  color: var(--ctp-mocha-yellow-oklch);
 }
 
 .devtools-json-viewer .json-boolean {

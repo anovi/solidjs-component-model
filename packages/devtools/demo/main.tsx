@@ -5,7 +5,6 @@ import { GlobalDevContext } from "solid-component-model";
 import { createDevTools } from "../src";
 import { parentModel, settingsModel } from "./create-models";
 
-;
 
 function initialize() {
   const globalObj = globalThis as unknown as GlobalDevContext;

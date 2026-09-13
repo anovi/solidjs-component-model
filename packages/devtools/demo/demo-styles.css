@@ -61,7 +61,7 @@ body {
 
 .demo-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(200px, 400px) 1fr;
   gap: 24px;
   padding: 24px;
   flex: 1;
@@ -188,6 +188,7 @@ body {
   justify-content: space-between;
   margin-bottom: 8px;
 }
+
 
 .child-body {
   display: flex;
