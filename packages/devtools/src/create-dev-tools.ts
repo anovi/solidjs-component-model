@@ -17,7 +17,7 @@ export function createDevTools(
   devtools.onClientConnect(() => {
     for (const [id, model] of aliveModels.entries()) {
       void id;
-      devtools.registerModel(model.toJSON());
+      devtools.registerModel(model.toJSON(true));
     }
   });
 

@@ -379,9 +379,9 @@ export abstract class ComponentModel<
     });
   }
 
-  toJSON(): Snapshot<string, Data> {
+  toJSON(flat?: boolean): Snapshot<string, Data> {
     return untrack(() => {
-      return this.__jsonModel(this);
+      return this.__jsonModel(this, undefined, !flat);
     });
   }
 
@@ -971,9 +971,8 @@ export abstract class ComponentModel<
     this.__logGroupEnd();
 
     // Emit snapshots to subscribers if there are any.
-    const snapshot = this.toJSON();
-    devtools?.sendModelSnapshot(snapshot);
-    this.__snapshots$?.next(snapshot);
+    devtools?.sendModelSnapshot(this.toJSON(true));
+    this.__snapshots$?.next(this.toJSON());
   }
 
   private __startHandlingFx() {
@@ -1121,10 +1120,9 @@ export abstract class ComponentModel<
     );
     this.__finishHandlingFx();
     if (!this.stateChart && this.status === "active") {
-      const snapshot = this.toJSON();
       // TODO: figure out wether it needs to run here?
-      devtools?.sendModelSnapshot(snapshot);
-      this.__snapshots$?.next(snapshot);
+      devtools?.sendModelSnapshot(this.toJSON(true));
+      this.__snapshots$?.next(this.toJSON());
     }
   }
 
@@ -1145,15 +1143,30 @@ export abstract class ComponentModel<
 
   private __jsonModel(
     value: AnyComponentModel,
-    name: string = this.constructor.name
+    name: string = this.constructor.name,
+    fullChildSnapshots?: boolean
   ): Snapshot<string, Data> {
-    return {
+    const childrenModels = modelChildrenMap.get(this._id);
+
+    const res: Snapshot<string, Data> = {
       _id: value._id,
       state: value.state(),
       name: name,
       data: value.__jsonData(unwrap(value.data), this) as Data,
       status: value.status,
     };
+
+    if (this.parent && this.parent._id) res.parentId = this.parent._id;
+
+    if (childrenModels) {
+      if (fullChildSnapshots) {
+        res.children = childrenModels.map(c =>
+          this.__childSnapshot(c, fullChildSnapshots)
+        );
+      } else res.childrenIds = childrenModels.map(c => c._id);
+    }
+
+    return res;
   }
 
   private __getChildName(
@@ -1167,15 +1180,20 @@ export abstract class ComponentModel<
     }
   }
 
+  private __childSnapshot(value: ComponentModel, fullChildSnapshots?: boolean) {
+    // NOTE: Not sure this is a proper way, maybe to pass parent as argument?
+    const parentsConstructor = (value.parent as AnyComponentModel)
+      .constructor as ModelCtorWithChildren;
+    const childObject = parentsConstructor.childTypes;
+    const ctor = value.constructor as ModelCtorWithChildren;
+    const name = this.__getChildName(childObject, ctor);
+    if (!name) throw new Error(`Can't find a child to spawn a model`);
+    return value.__jsonModel(value, name, fullChildSnapshots);
+  }
+
   private __jsonData(value: unknown, owner: AnyComponentModel): unknown {
     if (value instanceof ComponentModel) {
-      const parentsConstructor = (value.parent as AnyComponentModel)
-        .constructor as ModelCtorWithChildren;
-      const childObject = parentsConstructor.childTypes;
-      const ctor = value.constructor as ModelCtorWithChildren;
-      const name = this.__getChildName(childObject, ctor);
-      if (!name) throw new Error(`Can't find a child to spawn a model`);
-      return value.__jsonModel(value, name);
+      return `<@${value._id.toString()}>`;
     }
 
     if (Array.isArray(value)) {

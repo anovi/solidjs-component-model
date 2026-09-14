@@ -49,7 +49,7 @@ export interface Model<
 
   dispatch: (event: E) => void;
 
-  toJSON: () => Snapshot<string, AnyModelData>;
+  toJSON: (flat?: boolean) => Snapshot<string, AnyModelData>;
 
   getPersistedSnapshot: () => unknown;
 

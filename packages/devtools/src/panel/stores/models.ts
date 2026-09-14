@@ -1,12 +1,14 @@
 import { AnyModelData, Status } from "solid-component-model";
-import { createStore, reconcile } from "solid-js/store";
+import { createStore, reconcile, unwrap } from "solid-js/store";
 
 export type ModelSnapshot = {
   _id: string;
+  parentId?: string;
   name: string;
   state: string;
   data: AnyModelData;
   status: Status;
+  childrenIds?: string[];
 };
 
 export type ModelsStore = {
@@ -16,23 +18,24 @@ export type ModelsStore = {
   updateModel: (model: ModelSnapshot) => void;
 };
 
-export function createModelsStore(): ModelsStore {
-  const [store, setStore] = createStore<{ models: ModelSnapshot[] }>({
-    models: [],
-  });
+const [store, setStore] = createStore<{ models: ModelSnapshot[] }>({
+  models: [],
+});
 
+export const models = store;
+
+export function createModelsStore(): ModelsStore {
   return {
-    models: store.models,
+    get models() {
+      return store.models;
+    },
 
     addModel: (model: ModelSnapshot) => {
       setStore("models", store.models.length, model);
     },
 
     removeModel: (modelId: string) => {
-      setStore(
-        "models",
-        store.models.filter(m => m._id !== modelId)
-      );
+      setStore("models", models => models.filter(m => m._id !== modelId));
     },
 
     updateModel: (model: ModelSnapshot) => {

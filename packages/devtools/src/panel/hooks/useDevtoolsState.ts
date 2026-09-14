@@ -41,6 +41,8 @@ export function createDevtoolsState(
     logger,
     error,
     state,
-    models: models.models,
+    get models() {
+      return models.models;
+    },
   };
 }

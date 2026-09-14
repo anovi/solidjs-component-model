@@ -20,10 +20,15 @@ export type Status = "idle" | "active" | "stopped" | "error" | "done";
 
 export type Snapshot<State extends string, Data extends AnyModelData> = {
   _id: string;
+  parentId?: string;
   name: string;
   state: State;
   data: Data;
   status: Status;
+  /** Child models snapshots. Either `children` or `childrenIds` are present at a time. */
+  children?: Snapshot<string, AnyModelData>[];
+  /** Child models IDs. Either `children` or `childrenIds` are present at a time. */
+  childrenIds?: string[];
 };
 
 /* ====================== Framework ====================== */

@@ -62,7 +62,7 @@ export function createLocalPanelTransport(): ClientTransport {
           message.type === MESSAGE_FROM_SERVER &&
           message.detail.type === type
         ) {
-          console.log("[CLIENT]: ", message.detail);
+          // console.log("[CLIENT]: ", message.detail);
           listener(message.detail as any);
         }
       };

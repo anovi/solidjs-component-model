@@ -29,7 +29,7 @@ export function createLocalServerTransport(): ServerTransport {
           message.type === MESSAGE_FROM_CLIENT &&
           message.detail.type === type
         ) {
-          console.log("[SERVER]: ", message.detail);
+          // console.log("[SERVER]: ", message.detail);
           listener(message.detail as any);
         }
       };
