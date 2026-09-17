@@ -39,8 +39,8 @@
   /* Surfaces */
   --color-surface: var(--ctp-mocha-surface0-oklch);
   --color-surface-subtle: var(--ctp-mocha-base-oklch);
-  --color-surface-hover: var(--ctp-mocha-surface1-oklch;);
-  --color-surface-deep: var(--ctp-mocha-mantle-oklch;);
+  --color-surface-hover: var(--ctp-mocha-surface1-oklch);
+  --color-surface-deep: var(--ctp-mocha-mantle-oklch);
 
   /* Borders */
   --color-border: var(--ctp-mocha-surface1-oklch);
