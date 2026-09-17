@@ -27,6 +27,11 @@
   --ctp-mocha-crust-oklch: oklch(.1828 0.0204 284.2038);
 }
 
+:root {
+  --font-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Roboto Mono", monospace;
+}
+
 
 :root {
   --color-bg: var(--ctp-mocha-mantle-oklch);
@@ -44,8 +49,8 @@
   /* Text */
   --color-text: var(--ctp-mocha-text-oklch);
   --color-text-inverse: #fff;
-  --color-text-muted: var(--ctp-mocha-subtext2-oklch);
-  --color-text-subtle: var(--ctp-mocha-subtext1-oklch);
+  --color-text-muted: var(--ctp-mocha-subtext1-oklch);
+  --color-text-subtle: var(--ctp-mocha-subtext0-oklch);
 
   /* Accent */
   --color-accent: var(--ctp-mocha-sapphire-oklch);

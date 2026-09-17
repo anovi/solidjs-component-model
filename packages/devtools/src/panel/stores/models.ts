@@ -1,8 +1,9 @@
 import { AnyModelData, Status } from "solid-component-model";
-import { createStore, reconcile, unwrap } from "solid-js/store";
+import { createStore, reconcile } from "solid-js/store";
 
 export type ModelSnapshot = {
   _id: string;
+  chartId?: string;
   parentId?: string;
   name: string;
   state: string;

@@ -188,5 +188,12 @@ export const SettingsModel = WithStateChart(SettingsModelBase, {
         },
       },
     },
+    Loading: {
+      initial: "Loading_config",
+      states: {
+        Loading_config: {},
+        Loading_data: {},
+      },
+    },
   },
 });

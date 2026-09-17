@@ -1,0 +1,44 @@
+
+.devtools-model-view {}
+
+.devtools-model-view__name {
+  color: var(--color-text);
+}
+
+.devtools-model-view__description {
+  color: var(--color-text-subtle);
+}
+
+.devtools-model-view__status {
+  display: inline-block;
+  padding: 0 0.4em;
+  color: var(--ctp-mocha-crust-oklch);
+  border-radius: 4px;
+  margin-left: 1em;
+  &.stopped {
+    background-color: gray;
+  }
+  &.idle {
+    background-color: gray;
+  }
+  &.active {
+    background-color: var(--ctp-mocha-green-oklch);
+  }
+  &.error {
+    background-color: var(--ctp-mocha-red-oklch);
+  }
+  &.done {
+    background-color: var(--ctp-mocha-mauve-oklch);
+  }
+}
+
+.state-tree {
+  font-family: var(--font-mono);
+  padding: 0;
+  margin: 0;
+}
+.state-tree__node {
+  &.active {
+    color: yellow;
+  }
+}

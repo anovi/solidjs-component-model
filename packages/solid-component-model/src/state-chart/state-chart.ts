@@ -6,12 +6,26 @@ import type {
   TransitionStep,
   ExecutionContext,
   StateChartConfig,
+  StateChartDescriptor,
 } from "./state-chart-types";
 import { generateTransitionSteps, StatePath } from "./state-path";
 import { NodeType, type AnyStateNode } from "./state-node";
 import { MachineMalformed } from "./errors";
+import { AnyModel } from "../types";
+import { GlobalDevContext } from "../devtools-types";
 
 const ROOT = "";
+
+export function chartToDebugger(
+  chart: StateChart<AnyModel, Event, AnyStateChartConfig>
+): StateChartDescriptor {
+  return {
+    _id: chart._id,
+    states: [...chart.lookup.keys().filter(key => key !== "")],
+  };
+}
+
+const globalObj = globalThis as unknown as GlobalDevContext;
 
 /**
  * State chart does not own data or effects.
@@ -26,6 +40,8 @@ export class StateChart<
   root!: AnyStateNode;
   lookup: Map<string, AnyStateNode> = new Map();
   config!: TConfig;
+
+  _id = crypto.randomUUID();
 
   static create<
     TContext = any,
@@ -43,6 +59,11 @@ export class StateChart<
     inst.root = inst.#makeNode(config as AnyStateChartConfig, null, "");
     inst.config = config;
     inst.#validateHandlers();
+    if (globalObj.__COMPONENT_MODEL_DEVTOOLS__) {
+      globalObj.__COMPONENT_MODEL_DEVTOOLS__.registerChart(
+        chartToDebugger(inst as any)
+      );
+    }
     return inst;
   }
 

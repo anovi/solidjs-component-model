@@ -3,7 +3,7 @@ import { Collapsible } from "@ark-ui/solid";
 import './json-view.css'
 
 
-type JsonValue =
+export type JsonValue =
   | null
   | boolean
   | number

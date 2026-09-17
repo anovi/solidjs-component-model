@@ -30,6 +30,7 @@ export {
   type Action,
   type AnyAction,
   type InvokeConfig,
+  type StateChartDescriptor,
 } from "./state-chart/state-chart-types";
 export {
   type StateChartConfigPaths,

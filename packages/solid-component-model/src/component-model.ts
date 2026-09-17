@@ -710,7 +710,7 @@ export abstract class ComponentModel<
 
   /* ----------------------------------------------------- */
 
-  private readonly stateChart?: Interpreter<
+  readonly stateChart?: Interpreter<
     Model<Data, E, Emitted, DoneData>,
     E | InternalEvent
   >;
@@ -1147,6 +1147,7 @@ export abstract class ComponentModel<
     fullChildSnapshots?: boolean
   ): Snapshot<string, Data> {
     const childrenModels = modelChildrenMap.get(this._id);
+    const chartId = this.stateChart?.chart._id;
 
     const res: Snapshot<string, Data> = {
       _id: value._id,
@@ -1155,6 +1156,8 @@ export abstract class ComponentModel<
       data: value.__jsonData(unwrap(value.data), this) as Data,
       status: value.status,
     };
+
+    if (chartId) res.chartId = chartId;
 
     if (this.parent && this.parent._id) res.parentId = this.parent._id;
 

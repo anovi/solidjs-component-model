@@ -1,4 +1,8 @@
-import { AnyModelData, Snapshot } from "solid-component-model";
+import {
+  AnyModelData,
+  Snapshot,
+  StateChartDescriptor,
+} from "solid-component-model";
 import type { ApiClient as IApiClient, ClientTransport } from "./types";
 
 export class ApiClient implements IApiClient {
@@ -27,6 +31,12 @@ export class ApiClient implements IApiClient {
   onModelUpdated(cb: (snapshot: Snapshot<string, AnyModelData>) => void) {
     return this.transport.onMessage("SNAPSHOT", message => {
       cb(message.snapshot);
+    });
+  }
+
+  onChartRegistered(cb: (chart: StateChartDescriptor) => void) {
+    return this.transport.onMessage("REGISTER_CHART", message => {
+      cb(message.chart);
     });
   }
 }

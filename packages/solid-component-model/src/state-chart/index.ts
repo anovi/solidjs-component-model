@@ -11,6 +11,7 @@ export {
   type Guard,
   type AnyAction,
   type Action,
+  type StateChartDescriptor,
 } from "./state-chart-types";
 export { type StateNode } from "./state-node";
 export {

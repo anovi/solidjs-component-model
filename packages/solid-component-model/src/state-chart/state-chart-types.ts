@@ -104,3 +104,8 @@ export type Guard<TModel, E extends Event> = (this: TModel, ev: E) => boolean;
 export type AnyAction = Action<unknown, Event>;
 
 export type Action<TModel, E extends Event> = (this: TModel, ev: E) => void;
+
+export type StateChartDescriptor = {
+  _id: string;
+  states: string[];
+};

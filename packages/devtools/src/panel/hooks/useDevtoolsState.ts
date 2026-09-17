@@ -2,11 +2,13 @@ import { createSignal, type Accessor } from "solid-js";
 import type { ApiClient } from "@solid-component-model/rpc";
 import { createModelsStore, ModelsStore } from "../stores/models";
 import { LogsStore } from "../stores/logs";
+import { ChartsStore, createChartsStore } from "../stores/charts";
 
 type AppState = "loading" | "ok" | "error";
 
 export interface DevtoolsState {
   models: ModelsStore["models"];
+  charts: ChartsStore["charts"];
   logger: LogsStore;
   state: Accessor<AppState>;
   error: Accessor<string | null>;
@@ -19,11 +21,14 @@ export function createDevtoolsState(
   const [state, setState] = createSignal<AppState>("loading");
   const [error, setError] = createSignal<string | null>(null);
   const models = createModelsStore();
+  const charts = createChartsStore();
   const clientRef = client;
 
   clientRef.onModelAdded(snapshot => models.addModel(snapshot));
   clientRef.onModelUpdated(snapshot => models.updateModel(snapshot));
   clientRef.onModelRemoved(id => models.removeModel(id));
+
+  clientRef.onChartRegistered(chart => charts.registerChart(chart));
 
   clientRef
     .connect()
@@ -43,6 +48,9 @@ export function createDevtoolsState(
     state,
     get models() {
       return models.models;
+    },
+    get charts() {
+      return charts.charts;
     },
   };
 }

@@ -21,6 +21,7 @@ export type Status = "idle" | "active" | "stopped" | "error" | "done";
 export type Snapshot<State extends string, Data extends AnyModelData> = {
   _id: string;
   parentId?: string;
+  chartId?: string;
   name: string;
   state: State;
   data: Data;

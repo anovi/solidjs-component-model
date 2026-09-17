@@ -1,4 +1,4 @@
-import { type Component, useContext, createSignal, createMemo, onCleanup, onMount, For, createEffect } from "solid-js";
+import { type Component, useContext, createSignal, createMemo, onCleanup, onMount, For, createEffect, Show } from "solid-js";
 import {
   TreeView,
   createTreeCollection,
@@ -8,7 +8,7 @@ import { AnyModelData } from "solid-component-model";
 import './styles.css';
 import { ApiClientContext } from "../context";
 import { ModelSnapshot } from "../stores/models";
-import { JsonViewer } from "./JsonView";
+import { ModelView } from "./ModelView";
 
 
 type TreeNode = {
@@ -124,7 +124,10 @@ export const ModelsViewer: Component = () => {
           </div>
         </div>
         <div data-part="main">
-          <JsonViewer value={selectedItem()} />
+          {/* <JsonViewer value={selectedItem() as JsonValue} /> */}
+          <Show when={selectedItem()}>
+            <ModelView model={selectedItem()!} />
+          </Show>
         </div>
       </div>
     </div>

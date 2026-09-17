@@ -1,4 +1,8 @@
-import { AnyModelData, Snapshot } from "solid-component-model";
+import {
+  AnyModelData,
+  Snapshot,
+  StateChartDescriptor,
+} from "solid-component-model";
 
 export type ApiClient = {
   connect: () => Promise<void>;
@@ -10,12 +14,14 @@ export type ApiClient = {
   onModelUpdated: (
     cb: (snapshot: Snapshot<string, AnyModelData>) => void
   ) => Subscription;
+  onChartRegistered: (cb: (chart: StateChartDescriptor) => void) => void;
 };
-
 export type ApiServer = {
   onClientConnect: (cb: () => void) => void;
   onClientDisconnect: (cb: () => void) => void;
   registerModel: (snapshot: Snapshot<string, AnyModelData>) => void;
+  // StateChart<AnyModel, Event, AnyStateChartConfig>
+  registerChart: (chart: StateChartDescriptor) => void;
   unregisterModel: (id: string) => void;
   sendModelSnapshot: (snapshot: Snapshot<string, AnyModelData>) => void;
 };
@@ -68,4 +74,5 @@ export type ServerMessages =
   | { type: "CONNECTED" }
   | { type: "SNAPSHOT"; snapshot: Snapshot<string, AnyModelData> }
   | { type: "MODEL_ADDED"; snapshot: Snapshot<string, AnyModelData> }
-  | { type: "MODEL_REMOVED"; id: string };
+  | { type: "MODEL_REMOVED"; id: string }
+  | { type: "REGISTER_CHART"; chart: StateChartDescriptor };
