@@ -1,13 +1,14 @@
 {
-  "name": "solid-component-model/devtools",
+  "name": "@solid-component-model/devtools",
   "version": "0.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./style.css": "./dist/devtools.css"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,20 +20,24 @@
   },
   "dependencies": {
     "@ark-ui/solid": "5.39.1",
-    "@solid-component-model/rpc": "workspace:*",
     "solid-component-model": "workspace:*"
   },
   "scripts": {
-    "dev": "vite build --watch",
+    "dev": "vite build --mode extension --watch",
+    "dev:library": "vite build --mode library --watch",
     "dev:webapp": "vite demo --config vite.config.ts",
-    "build": "pnpm run clean && tsc --project tsconfig.build.json --emitDeclarationOnly && vite build",
+    "build": "pnpm run clean && tsc --project tsconfig.build.json --noEmit && pnpm run build:library",
+    "build:library": "vite build --mode library",
+    "build:extension": "vite build --mode extension",
+    "build:all": "pnpm run build && pnpm run build:extension",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist dist-extension"
   },
   "devDependencies": {
+    "@solid-component-model/rpc": "workspace:*",
     "@testing-library/jest-dom": "7.0.1",
     "@types/chrome": "0.2.9",
     "@types/jsdom": "30.0.0",

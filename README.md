@@ -9,10 +9,14 @@ This is a pnpm workspace for a TypeScript library and its companion packages.
 
 ## Packages
 
-- `solid-component-model` is the unpublished core library.
-- `solid-component-model-devtools` consumes `solid-component-model` through the workspace protocol.
+- `solid-component-model` is the publishable core library.
+- `@solid-component-model/devtools` is the publishable devtools package.
+- `@solid-component-model/rpc` is a private, source-only protocol package.
 
-`workspace:*` links the packages locally, so the devtools package can import the core package before it has ever been published. The Vite alias in devtools points at the core source during local tests. During a root build, pnpm builds the core package before devtools, so devtools' declaration build resolves the core package through its published package boundary.
+`workspace:*` links the packages locally. RPC exports TypeScript source, and Vite
+aliases resolve the core library to source in devtools. Builds and development
+consume current sources without requiring sibling `dist/` directories. RPC edits
+are picked up by Vite's development server and build watcher.
 
 ## Commands
 
@@ -25,10 +29,10 @@ pnpm typecheck       # type-check every package
 pnpm test            # run every package's tests once
 pnpm test:coverage   # run every package's tests with coverage
 pnpm build           # clean and build every package
-pnpm clean           # remove every package's generated dist directory
+pnpm clean           # remove all generated package build directories
 
 pnpm --filter solid-component-model build
-pnpm --filter solid-component-model-devtools test
+pnpm --filter @solid-component-model/devtools test
 ```
 
 Each package cleans its own `dist/` directory before building, so direct package builds and root builds behave the same way.
@@ -52,7 +56,28 @@ test and type-check commands.
 
 ## Types
 
-Each package emits its public declaration entry point at `dist/index.d.ts`.
-The devtools build emits only its own declarations at `dist/index.d.ts`. Those
-declarations retain an import from `solid-component-model`, so consumers resolve core
-types from the core package rather than receiving a copied declaration tree.
+Both public packages use `unplugin-dts` in their Vite configs to emit declarations
+and generate `dist/index.d.ts` as the public entry. Private RPC declarations are
+included in each package's `dist/rpc/src` directory, and aliases are rewritten
+to local declaration paths. Published packages do not
+depend on the private package. Devtools declarations keep imports from the public
+`solid-component-model` package. RPC exports source and needs no declaration build.
+Package builds type-check workspace sources before bundling.
+
+The default devtools build produces the npm library in `dist/`. Its extension
+build writes to `dist-extension/`, including the browser extension manifest.
+Each build clears only its own output directory. Root `pnpm build` builds the
+library; use the devtools `build:all` command to produce both outputs.
+Applications using its panel UI can import
+`@solid-component-model/devtools/style.css` for the extracted styles.
+
+The existing devtools Vite config selects settings by mode:
+
+```sh
+pnpm --filter @solid-component-model/devtools build:library
+pnpm --filter @solid-component-model/devtools build:extension
+pnpm --filter @solid-component-model/devtools build:all
+pnpm --filter @solid-component-model/devtools dev:library
+pnpm --filter @solid-component-model/devtools dev          # extension watcher
+pnpm --filter @solid-component-model/devtools dev:webapp  # demo server
+```

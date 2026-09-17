@@ -4,10 +4,16 @@
 
 import { defineConfig } from "vite";
 import solidPlugin from "vite-plugin-solid";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
   plugins: [solidPlugin()],
   resolve: {
+    alias: {
+      "solid-component-model": fileURLToPath(
+        new URL("../solid-component-model/src/index.ts", import.meta.url)
+      ),
+    },
     conditions: ["browser", "development"],
   },
   test: {

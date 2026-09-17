@@ -8,6 +8,6 @@ export * from "./chrome";
 // export * from "./local";
 
 // Panel UI & hooks
-export * from "./panel";
+export * from "./panel/index";
 
 export { createDevTools } from "./create-dev-tools";

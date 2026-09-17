@@ -1,7 +1,7 @@
 {
   "name": "solid-component-model",
   "version": "0.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -18,7 +18,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "pnpm run clean && tsc --project tsconfig.build.json --emitDeclarationOnly && vite build",
+    "build": "pnpm run clean && tsc --project tsconfig.build.json --noEmit && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -29,10 +29,8 @@
   "peerDependencies": {
     "solid-js": "^1.9.0"
   },
-  "dependencies": {
-    "@solid-component-model/rpc": "workspace:*"
-  },
   "devDependencies": {
+    "@solid-component-model/rpc": "workspace:*",
     "@testing-library/jest-dom": "7.0.1",
     "mermaid": "11.16.1",
     "rxjs": "7.8.2",

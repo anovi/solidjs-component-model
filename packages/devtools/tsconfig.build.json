@@ -1,15 +1,25 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDir": "..",
     "outDir": "dist",
+    "declarationMap": false,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "paths": {
-      "solid-component-model": ["../solid-component-model/dist/index.d.ts"],
-      "@solid-component-model/rpc": ["../rpc/dist/index.d.ts"]
+      "solid-component-model": ["../solid-component-model/src/index"],
+      "@solid-component-model/rpc": ["../rpc/src/index"]
     }
   },
-  "include": ["src", "global.d.ts"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
+  "include": ["src", "../rpc/src", "global.d.ts"],
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "../*/src/**/*.test.ts",
+    "../*/src/**/*.test.tsx",
+    "../*/src/**/*.spec.ts",
+    "../*/src/**/*.spec.tsx"
+  ]
 }

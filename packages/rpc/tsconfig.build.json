@@ -1,12 +1,13 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist"
+    "rootDir": "..",
+    "outDir": "dist",
+    "declarationMap": false,
+    "paths": {
+      "solid-component-model": ["../solid-component-model/src/index.ts"]
+    }
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts"],
-  "paths": {
-    "solid-component-model": ["../solid-component-model/src/index.ts"]
-  }
+  "exclude": ["src/**/*.test.ts"]
 }

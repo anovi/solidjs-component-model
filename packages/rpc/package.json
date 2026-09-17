@@ -5,26 +5,23 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
     }
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "files": [
     "dist"
   ],
   "scripts": {
     "dev": "vite build --watch",
-    "build": "pnpm run clean && tsc --project tsconfig.build.json --emitDeclarationOnly && vite build",
+    "build": "pnpm run clean && tsc --project tsconfig.build.json --noEmit && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
-  },
-  "dependencies": {
-    "solid-component-model": "workspace:*"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "7.0.1"
