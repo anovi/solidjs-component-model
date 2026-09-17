@@ -1,14 +1,23 @@
 import {
-  type GlobalDevContext,
-  ComponentModelDevToolsServerFactory,
-  type AnyComponentModel,
   StateChart,
-  AnyModel,
-  Event,
-  AnyStateChartConfig,
+  type GlobalDevContext,
+  type ComponentModelDevToolsServerFactory,
+  type AnyComponentModel,
+  type AnyModel,
+  type Event,
+  type AnyStateChartConfig,
+  type StateChartDescriptor,
 } from "solid-component-model";
 import { ApiServer } from "@solid-component-model/rpc";
-import { chartToDebugger } from "../../solid-component-model/src/state-chart/state-chart";
+
+export function chartToDebugger(
+  chart: StateChart<AnyModel, Event, AnyStateChartConfig>
+): StateChartDescriptor {
+  return {
+    _id: chart._id,
+    states: [...chart.lookup.keys()].filter(key => key !== ""),
+  };
+}
 
 export function createDevTools(
   aliveModels: Map<string, AnyComponentModel>,
