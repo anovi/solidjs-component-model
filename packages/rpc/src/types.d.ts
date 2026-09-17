@@ -1,4 +1,4 @@
-import { AnyModelData, Snapshot } from "solid-component-model";
+import type { AnyModelData, Snapshot } from "solid-component-model";
 export type ApiClient = {
   connect: () => Promise<void>;
   disconnect: () => void;

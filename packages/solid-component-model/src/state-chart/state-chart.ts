@@ -21,7 +21,7 @@ export function chartToDebugger(
 ): StateChartDescriptor {
   return {
     _id: chart._id,
-    states: [...chart.lookup.keys().filter(key => key !== "")],
+    states: [...chart.lookup.keys()].filter(key => key !== ""),
   };
 }
 
