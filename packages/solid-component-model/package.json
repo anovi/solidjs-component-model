@@ -19,6 +19,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "pnpm run clean && tsc --project tsconfig.build.json --noEmit && vite build",
+    "dev": "vite build --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

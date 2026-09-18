@@ -238,6 +238,8 @@ export abstract class ComponentModel<
 
   state: Accessor<string>;
 
+  declare hideInDevtools: boolean;
+
   /** Error that caused stopping the machine with `error` status */
   error?: Error;
 
@@ -416,7 +418,7 @@ export abstract class ComponentModel<
       this.parent = parent;
       modelChildrenMap.set(parent._id, children);
     }
-    devtools?.registerModel(this.toJSON());
+    if (devtools && !this.hideInDevtools) devtools.registerModel(this.toJSON());
     if (this.stateChart) {
       untrack(() => {
         const target = this.state(); // can be any state if node restored from snapshot
@@ -831,7 +833,7 @@ export abstract class ComponentModel<
   }
 
   private __destroy(): void {
-    devtools?.unregisterModel(this._id);
+    if (devtools && !this.hideInDevtools) devtools.unregisterModel(this._id);
     aliveModels.delete(this._id);
     this.__queue.flush();
     if (this.__invocations)
@@ -971,7 +973,8 @@ export abstract class ComponentModel<
     this.__logGroupEnd();
 
     // Emit snapshots to subscribers if there are any.
-    devtools?.sendModelSnapshot(this.toJSON(true));
+    if (devtools && !this.hideInDevtools)
+      devtools.sendModelSnapshot(this.toJSON(true));
     this.__snapshots$?.next(this.toJSON());
   }
 
@@ -1121,7 +1124,8 @@ export abstract class ComponentModel<
     this.__finishHandlingFx();
     if (!this.stateChart && this.status === "active") {
       // TODO: figure out wether it needs to run here?
-      devtools?.sendModelSnapshot(this.toJSON(true));
+      if (devtools && !this.hideInDevtools)
+        devtools.sendModelSnapshot(this.toJSON(true));
       this.__snapshots$?.next(this.toJSON());
     }
   }
