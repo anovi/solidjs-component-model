@@ -1,4 +1,4 @@
-import { type Component, useContext, createSignal, createMemo, onCleanup, onMount, For, createEffect, Show } from "solid-js";
+import { type Component, useContext, createSignal, createMemo, onCleanup, onMount, For, Show } from "solid-js";
 import {
   TreeView,
   createTreeCollection,
@@ -51,10 +51,6 @@ function fromSnapshot(
 export const ModelsViewer: Component = () => {
   const ctx = useContext(ApiClientContext)!;
   const rootNodes = ctx.devtools.models.filter(m => m.parentId == null);
-
-  createEffect(() => {
-    void ctx.devtools.models[0]._id;
-  })
 
   const _collection = createTreeCollection<TreeNode>({
     nodeToValue: (item) => item.id,
