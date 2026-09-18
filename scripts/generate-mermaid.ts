@@ -1,7 +1,7 @@
 import type {
   AnyStateChartConfig,
   Transition,
-} from "../allfiles/src/state-chart";
+} from "../packages/solid-component-model/src/state-chart";
 
 /**
  * Generates a Mermaid state diagram from a StateChartConfig.
