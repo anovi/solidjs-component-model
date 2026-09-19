@@ -82,8 +82,6 @@ body {
 
 .devtools-panel-root {
   background-color: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
   padding: 16px;
   display: flex;
   flex-direction: column;

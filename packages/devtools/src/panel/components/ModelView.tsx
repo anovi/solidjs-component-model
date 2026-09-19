@@ -48,38 +48,78 @@ function buildStateTree(states: string[]): StateNode[] {
   return roots;
 }
 
+type StateTreeGuide = {
+  text: string;
+  active: boolean;
+};
+
 function StateTree(props: {
   nodes: StateNode[];
   currentState: string;
 }) {
+  const rows = createMemo(() => {
+    const active = (node: StateNode) =>
+      props.currentState === node.path ||
+      props.currentState.startsWith(node.path + ".");
+
+    const result: {
+      node: StateNode;
+      active: boolean;
+      guides: StateTreeGuide[];
+    }[] = [];
+
+    function visit(nodes: StateNode[], prefix: StateTreeGuide[]) {
+      const activeIndex = nodes.findIndex(active);
+
+      nodes.forEach((node, index) => {
+        const last = index === nodes.length - 1;
+        const nodeActive = active(node);
+
+        result.push({
+          node,
+          active: nodeActive,
+          guides: [
+            ...prefix,
+            { text: last ? "└" : "├", active: activeIndex >= index },
+            { text: "─ ", active: nodeActive },
+          ],
+        });
+
+        visit(node.children, [
+          ...prefix,
+          { text: last ? "   " : "│   ", active: activeIndex > index },
+        ]);
+      });
+    }
+
+    visit(props.nodes, []);
+    return result;
+  });
+
   return (
-    <ul class="state-tree">
-      <For each={props.nodes}>
-        {(node) => {
-          const active = () =>
-            props.currentState === node.path ||
-            props.currentState.startsWith(node.path + ".");
-
-          return (
-            <li>
-              <div
-                class="state-tree__node"
-                classList={{ active: active() }}
-              >
-                {node.name}
-              </div>
-
-              <Show when={node.children.length > 0}>
-                <StateTree
-                  nodes={node.children}
-                  currentState={props.currentState}
-                />
-              </Show>
-            </li>
-          );
-        }}
+    <pre class="state-tree">
+      <For each={rows()}>
+        {(row) => (
+          <>
+            <For each={row.guides}>
+              {(guide) => (
+                <span
+                  class="state-tree__guide"
+                  classList={{ active: guide.active }}
+                  aria-hidden="true"
+                >
+                  {guide.text}
+                </span>
+              )}
+            </For>
+            <span class="state-tree__node" classList={{ active: row.active }}>
+              {row.node.name}
+            </span>
+            {"\n"}
+          </>
+        )}
       </For>
-    </ul>
+    </pre>
   );
 }
 
@@ -110,13 +150,16 @@ function StateTree(props: {
 export function ModelView(props: ModelViewProps) {
   const context = useContext(ApiClientContext);
 
-  const chart = context?.devtools.charts.find(
-    (chart) => chart._id === props.model.chartId
+  const chart = createMemo(() =>
+    context?.devtools.charts.find(
+      (chart) => chart._id === props.model.chartId
+    )
   );
 
-  const stateTree = createMemo(() =>
-    chart ? buildStateTree(chart.states) : []
-  );
+  const stateTree = createMemo(() => {
+    const selectedChart = chart();
+    return selectedChart ? buildStateTree(selectedChart.states) : [];
+  });
 
   return (
     <div class="devtools-model-view">
@@ -130,27 +173,20 @@ export function ModelView(props: ModelViewProps) {
         >
           {props.model.status}
         </span>
-
         <br />
-
         <small class="devtools-model-view__description">
           {props.model._id}
         </small>
       </div>
 
-      <div>
-        State:
+      <Show when={chart()} fallback={props.model.state}>
+        <StateTree
+          nodes={stateTree()}
+          currentState={props.model.state}
+        />
+      </Show>
 
-        <Show when={chart} fallback={props.model.state}>
-          <StateTree
-            nodes={stateTree()}
-            currentState={props.model.state}
-          />
-        </Show>
-      </div>
-
-      <hr />
-
+      <h4>Data</h4>
       <JsonViewer value={props.model.data as JsonValue} />
     </div>
   );

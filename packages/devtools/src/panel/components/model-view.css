@@ -34,11 +34,17 @@
 
 .state-tree {
   font-family: var(--font-mono);
-  padding: 0;
-  margin: 0;
+  white-space: pre;
+  overflow-x: auto;
+  margin: 0.4rem 0 1rem -0.11rem;
 }
-.state-tree__node {
+.state-tree__guide {
+  color: var(--ctp-mocha-subtext0-oklch);
+}
+.state-tree__node,
+.state-tree__guide {
+  color: oklch(from var(--ctp-mocha-subtext0-oklch) l c h / 0.9 );
   &.active {
-    color: yellow;
+    color: var(--ctp-mocha-green-oklch);
   }
 }
