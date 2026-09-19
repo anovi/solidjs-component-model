@@ -1242,7 +1242,10 @@ export abstract class ComponentModel<
     const childObject = parentsConstructor.childTypes;
     const ctor = value.constructor as ModelCtorWithChildren;
     const name = this.__getChildName(childObject, ctor);
-    if (!name) throw new Error(`Can't find a child to spawn a model`);
+    if (!name)
+      throw new Error(
+        `Can't find a child "${ctor.name}" to spawn a model for "${value.parent?.constructor.name}"`
+      );
     return value.__jsonModel(value, name, true);
   }
 
