@@ -49,7 +49,6 @@ export {
   type Cleanup,
   type InvokeParams,
   type Status,
-  type Snapshot,
   type FrameworkConfig,
   type EventType,
   InternalEventName,

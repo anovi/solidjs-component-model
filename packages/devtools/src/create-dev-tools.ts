@@ -34,7 +34,7 @@ export function createDevTools(
       void id;
       const chart = model.stateChart;
       if (chart) charts.add(chart.chart);
-      devtools.registerModel(model.toJSON(true));
+      devtools.registerModel(model.getInspecitonSnapshot());
     }
     charts.forEach(chart => {
       devtools.registerChart(chartToDebugger(chart));

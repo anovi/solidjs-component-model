@@ -1,29 +1,30 @@
-import type {
-  AnyModelData,
-  Snapshot,
-  StateChartDescriptor,
-} from "solid-component-model";
+import type { AnyModelData, StateChartDescriptor } from "solid-component-model";
+import { InspectionSnapshot } from "../../solid-component-model/src/types";
 
 export type ApiClient = {
   connect: () => Promise<void>;
   disconnect: () => void;
+  onConnected: (cb: () => void) => void;
+  onDisconnected: (cb: () => void) => void;
   onModelAdded: (
-    cb: (snapshot: Snapshot<string, AnyModelData>) => void
+    cb: (snapshot: InspectionSnapshot<string, AnyModelData>) => void
   ) => Subscription;
   onModelRemoved: (cb: (id: string) => void) => Subscription;
   onModelUpdated: (
-    cb: (snapshot: Snapshot<string, AnyModelData>) => void
+    cb: (snapshot: InspectionSnapshot<string, AnyModelData>) => void
   ) => Subscription;
   onChartRegistered: (cb: (chart: StateChartDescriptor) => void) => void;
 };
 export type ApiServer = {
   onClientConnect: (cb: () => void) => void;
   onClientDisconnect: (cb: () => void) => void;
-  registerModel: (snapshot: Snapshot<string, AnyModelData>) => void;
+  registerModel: (snapshot: InspectionSnapshot<string, AnyModelData>) => void;
   // StateChart<AnyModel, Event, AnyStateChartConfig>
   registerChart: (chart: StateChartDescriptor) => void;
   unregisterModel: (id: string) => void;
-  sendModelSnapshot: (snapshot: Snapshot<string, AnyModelData>) => void;
+  sendModelSnapshot: (
+    snapshot: InspectionSnapshot<string, AnyModelData>
+  ) => void;
 };
 
 export type Subscription = { unsubscribe: () => void };
@@ -72,7 +73,7 @@ export type ClientMessages = { type: "CONNECT" };
 export type ServerMessages =
   | { type: "DISCONNECTED" }
   | { type: "CONNECTED" }
-  | { type: "SNAPSHOT"; snapshot: Snapshot<string, AnyModelData> }
-  | { type: "MODEL_ADDED"; snapshot: Snapshot<string, AnyModelData> }
+  | { type: "SNAPSHOT"; snapshot: InspectionSnapshot<string, AnyModelData> }
+  | { type: "MODEL_ADDED"; snapshot: InspectionSnapshot<string, AnyModelData> }
   | { type: "MODEL_REMOVED"; id: string }
   | { type: "REGISTER_CHART"; chart: StateChartDescriptor };

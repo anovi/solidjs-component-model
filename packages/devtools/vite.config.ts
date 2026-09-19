@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => {
 
     resolve: {
       conditions: ["browser", "development"],
-      alias: library ? {} : { "solid-component-model": librarySource },
+      alias: library ? undefined : { "solid-component-model": librarySource },
     },
 
     build: {

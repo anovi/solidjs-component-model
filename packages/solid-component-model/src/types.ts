@@ -18,18 +18,47 @@ export type InvokeParams<E> = (ctx: {
 
 export type Status = "idle" | "active" | "stopped" | "error" | "done";
 
-export type Snapshot<State extends string, Data extends AnyModelData> = {
+/** A serialized reference to a model, resolved by ID during restoration. */
+export type ModelRef = { $model: string };
+
+/** Snapshot data contains serialized values rather than live model instances. */
+export type Serialized<T> = T extends AnyModel
+  ? ModelRef
+  : T extends { toJSON: (...args: never[]) => infer Result }
+    ? Serialized<Result>
+    : T extends object
+      ? { [Key in keyof T]: Serialized<T[Key]> }
+      : T;
+
+export type ModelSnapshotFields<
+  State extends string,
+  Data extends AnyModelData,
+> = {
   _id: string;
   parentId?: string;
-  chartId?: string;
   name: string;
   state: State;
-  data: Data;
+  data: Serialized<Data>;
   status: Status;
-  /** Child models snapshots. Either `children` or `childrenIds` are present at a time. */
-  children?: Snapshot<string, AnyModelData>[];
-  /** Child models IDs. Either `children` or `childrenIds` are present at a time. */
+};
+
+/** A self-contained snapshot tree containing all persistent descendants. */
+export type PersistedSnapshot<
+  State extends string,
+  Data extends AnyModelData,
+> = ModelSnapshotFields<State, Data> & {
+  children?: PersistedSnapshot<string, AnyModelData>[];
+  childrenIds?: never;
+};
+
+/** A single model record; child records are delivered separately. */
+export type InspectionSnapshot<
+  State extends string,
+  Data extends AnyModelData,
+> = ModelSnapshotFields<State, Data> & {
+  chartId?: string;
   childrenIds?: string[];
+  children?: never;
 };
 
 /* ====================== Framework ====================== */

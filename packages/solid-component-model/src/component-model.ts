@@ -23,7 +23,6 @@ import {
   type AnyModelData,
   type EventType,
   type InvokeParams,
-  type Snapshot,
   type FrameworkConfig,
   type Status,
   InternalEventName,
@@ -33,6 +32,10 @@ import {
   type InternalEvent,
   type AnyModel,
   type Eventless,
+  type PersistedSnapshot,
+  type InspectionSnapshot,
+  type ModelRef,
+  type Serialized,
 } from "./types";
 import {
   StateChart,
@@ -339,7 +342,7 @@ export abstract class ComponentModel<
     });
   }
 
-  waitFor(matcher: (snapshot: Snapshot<string, Data>) => boolean) {
+  waitFor(matcher: (snapshot: InspectionSnapshot<string, Data>) => boolean) {
     return new Promise<void>((resolve, reject) => {
       const subscription = this.snapshots$.subscribe({
         next(value) {
@@ -357,7 +360,7 @@ export abstract class ComponentModel<
   }
 
   subscribe(
-    observer: Partial<Observer<Snapshot<string, Data>>>
+    observer: Partial<Observer<InspectionSnapshot<string, Data>>>
   ): Unsubscribable {
     return this.snapshots$.subscribe(observer);
   }
@@ -381,10 +384,8 @@ export abstract class ComponentModel<
     });
   }
 
-  toJSON(flat?: boolean): Snapshot<string, Data> {
-    return untrack(() => {
-      return this.__jsonModel(this, undefined, !flat);
-    });
+  toJSON(): PersistedSnapshot<string, Data> {
+    return this.getPersistedSnapshot();
   }
 
   /**
@@ -393,8 +394,16 @@ export abstract class ComponentModel<
    * - add fields using Object.assign method;
    * - return the result.
    */
-  getPersistedSnapshot(): unknown {
-    return this.toJSON();
+  getPersistedSnapshot(): PersistedSnapshot<string, Data> {
+    return untrack(() => {
+      return this.__jsonModel(this, undefined, true);
+    });
+  }
+
+  getInspecitonSnapshot(): InspectionSnapshot<string, Data> {
+    return untrack(() => {
+      return this.__jsonModel(this, undefined);
+    });
   }
 
   start() {
@@ -418,7 +427,10 @@ export abstract class ComponentModel<
       this.parent = parent;
       modelChildrenMap.set(parent._id, children);
     }
-    if (devtools && !this.hideInDevtools) devtools.registerModel(this.toJSON());
+    if (devtools && !this.hideInDevtools)
+      devtools.registerModel(
+        this.getInspecitonSnapshot() as InspectionSnapshot<string, AnyModelData>
+      );
     if (this.stateChart) {
       untrack(() => {
         const target = this.state(); // can be any state if node restored from snapshot
@@ -694,11 +706,11 @@ export abstract class ComponentModel<
   // Lazily created
   private __emittedEvents$: Subject<Emitted> | null = null;
 
-  private __snapshots$: Subject<Snapshot<string, Data>> | null = null;
+  private __snapshots$: Subject<InspectionSnapshot<string, Data>> | null = null;
 
-  get snapshots$(): Subject<Snapshot<string, Data>> {
+  get snapshots$(): Subject<InspectionSnapshot<string, Data>> {
     if (!this.__snapshots$)
-      this.__snapshots$ = new Subject<Snapshot<string, Data>>();
+      this.__snapshots$ = new Subject<InspectionSnapshot<string, Data>>();
     // Catch-up notificaion: error or completion, for late subscribers
     queueMicrotask(() => {
       if (this.status === "error") {
@@ -972,10 +984,16 @@ export abstract class ComponentModel<
     if (span) span.end();
     this.__logGroupEnd();
 
+    let snapshot: InspectionSnapshot<string, Data> | undefined = undefined;
+
     // Emit snapshots to subscribers if there are any.
-    if (devtools && !this.hideInDevtools)
-      devtools.sendModelSnapshot(this.toJSON(true));
-    this.__snapshots$?.next(this.toJSON());
+    if (devtools && !this.hideInDevtools) {
+      snapshot = this.getInspecitonSnapshot();
+      devtools.sendModelSnapshot(
+        snapshot as InspectionSnapshot<string, AnyModelData>
+      );
+    }
+    this.__snapshots$?.next(snapshot || this.getInspecitonSnapshot());
   }
 
   private __startHandlingFx() {
@@ -1123,10 +1141,15 @@ export abstract class ComponentModel<
     );
     this.__finishHandlingFx();
     if (!this.stateChart && this.status === "active") {
+      let snapshot: InspectionSnapshot<string, Data> | undefined = undefined;
       // TODO: figure out wether it needs to run here?
-      if (devtools && !this.hideInDevtools)
-        devtools.sendModelSnapshot(this.toJSON(true));
-      this.__snapshots$?.next(this.toJSON());
+      if (devtools && !this.hideInDevtools) {
+        snapshot = this.getInspecitonSnapshot();
+        devtools.sendModelSnapshot(
+          snapshot as InspectionSnapshot<string, AnyModelData>
+        );
+      }
+      this.__snapshots$?.next(snapshot || this.getInspecitonSnapshot());
     }
   }
 
@@ -1147,33 +1170,58 @@ export abstract class ComponentModel<
 
   private __jsonModel(
     value: AnyComponentModel,
+    name: string | undefined,
+    fullChildSnapshots: true
+  ): PersistedSnapshot<string, Data>;
+
+  private __jsonModel(
+    value: AnyComponentModel,
+    name?: string,
+    fullChildSnapshots?: never | false
+  ): InspectionSnapshot<string, Data>;
+
+  private __jsonModel(
+    value: AnyComponentModel,
     name: string = this.constructor.name,
     fullChildSnapshots?: boolean
-  ): Snapshot<string, Data> {
+  ): PersistedSnapshot<string, Data> | InspectionSnapshot<string, Data> {
     const childrenModels = modelChildrenMap.get(this._id);
-    const chartId = this.stateChart?.chart._id;
 
-    const res: Snapshot<string, Data> = {
-      _id: value._id,
-      state: value.state(),
-      name: name,
-      data: value.__jsonData(unwrap(value.data), this) as Data,
-      status: value.status,
-    };
-
-    if (chartId) res.chartId = chartId;
-
-    if (this.parent && this.parent._id) res.parentId = this.parent._id;
-
-    if (childrenModels) {
-      if (fullChildSnapshots) {
-        res.children = childrenModels.map(c =>
-          this.__childSnapshot(c, fullChildSnapshots)
+    if (fullChildSnapshots) {
+      const res: PersistedSnapshot<string, Data> = {
+        _id: value._id,
+        state: value.state(),
+        name: name,
+        data: value.__jsonData(unwrap(value.data), this) as Serialized<Data>,
+        status: value.status,
+      };
+      if (childrenModels) {
+        res.children = childrenModels.map(
+          child =>
+            this.__childSnapshot(child) as PersistedSnapshot<
+              string,
+              AnyModelData
+            >
         );
-      } else res.childrenIds = childrenModels.map(c => c._id);
+      }
+      if (this.parent && this.parent._id) res.parentId = this.parent._id;
+      return res;
+    } else {
+      const res: InspectionSnapshot<string, Data> = {
+        _id: value._id,
+        state: value.state(),
+        name: name,
+        data: value.__jsonData(unwrap(value.data), this) as Serialized<Data>,
+        status: value.status,
+      };
+      const chartId = this.stateChart?.chart._id;
+      if (chartId) res.chartId = chartId;
+      if (this.parent && this.parent._id) res.parentId = this.parent._id;
+      if (childrenModels) {
+        res.childrenIds = childrenModels.map(c => c._id);
+      }
+      return res;
     }
-
-    return res;
   }
 
   private __getChildName(
@@ -1187,7 +1235,7 @@ export abstract class ComponentModel<
     }
   }
 
-  private __childSnapshot(value: ComponentModel, fullChildSnapshots?: boolean) {
+  private __childSnapshot(value: ComponentModel) {
     // NOTE: Not sure this is a proper way, maybe to pass parent as argument?
     const parentsConstructor = (value.parent as AnyComponentModel)
       .constructor as ModelCtorWithChildren;
@@ -1195,12 +1243,12 @@ export abstract class ComponentModel<
     const ctor = value.constructor as ModelCtorWithChildren;
     const name = this.__getChildName(childObject, ctor);
     if (!name) throw new Error(`Can't find a child to spawn a model`);
-    return value.__jsonModel(value, name, fullChildSnapshots);
+    return value.__jsonModel(value, name, true);
   }
 
   private __jsonData(value: unknown, owner: AnyComponentModel): unknown {
     if (value instanceof ComponentModel) {
-      return `<@${value._id.toString()}>`;
+      return { $model: value._id.toString() } satisfies ModelRef;
     }
 
     if (Array.isArray(value)) {
@@ -1259,7 +1307,7 @@ export abstract class ComponentModel<
   }
 
   private static __fromSnapshot(
-    snapshot: Snapshot<string, AnyModelData>,
+    snapshot: PersistedSnapshot<string, AnyModelData>,
     ownerCtor?: ModelCtorWithChildren
   ): AnyComponentModel {
     if (this === ComponentModel)
@@ -1291,9 +1339,25 @@ export abstract class ComponentModel<
 
     inst.__restored = true;
 
+    let children: AnyComponentModel[] | undefined;
+
+    if (snapshot.children) {
+      children = snapshot.children
+        .map(childSnapshot => {
+          if (this.isModelSnapshot(childSnapshot)) {
+            return (this as typeof ComponentModel).__fromSnapshot(
+              childSnapshot,
+              ctor
+            );
+          }
+        })
+        .filter(child => child != null);
+    }
+
     const data = this.dataFromJSON(
       snapshot.data,
-      ctor as unknown as ModelCtorWithChildren
+      ctor as unknown as ModelCtorWithChildren,
+      children
     );
 
     actionsExecutionStack.push(inst);
@@ -1313,14 +1377,25 @@ export abstract class ComponentModel<
 
   private static dataFromJSON(
     value: unknown,
-    ownerCtor: ModelCtorWithChildren | undefined
+    ownerCtor: ModelCtorWithChildren | undefined,
+    restoredChildren?: AnyComponentModel[]
   ): unknown {
     if (this.isModelSnapshot(value)) {
       return (this as typeof ComponentModel).__fromSnapshot(value, ownerCtor);
     }
 
+    if (this.isModelRef(value)) {
+      const matchedModel = restoredChildren?.find(
+        restored => restored._id === value.$model
+      );
+      if (matchedModel) return matchedModel;
+      throw Error(
+        `Unable to match ref:${value.$model} in data to restored models for "${ownerCtor?.name}".`
+      );
+    }
+
     if (Array.isArray(value)) {
-      return value.map(v => this.dataFromJSON(v, ownerCtor));
+      return value.map(v => this.dataFromJSON(v, ownerCtor, restoredChildren));
     }
 
     if (isClassInstance(value)) {
@@ -1331,7 +1406,7 @@ export abstract class ComponentModel<
       const result: Record<string, unknown> = {};
 
       for (const [k, v] of Object.entries(value)) {
-        result[k] = this.dataFromJSON(v, ownerCtor);
+        result[k] = this.dataFromJSON(v, ownerCtor, restoredChildren);
       }
 
       return result;
@@ -1342,7 +1417,7 @@ export abstract class ComponentModel<
 
   private static isModelSnapshot(
     value: unknown
-  ): value is Snapshot<string, AnyModelData> {
+  ): value is PersistedSnapshot<string, AnyModelData> {
     if (!value || typeof value !== "object" || value === null) return false;
 
     if (!("data" in value)) return false;
@@ -1354,6 +1429,12 @@ export abstract class ComponentModel<
     if (!("state" in value) || typeof value.state !== "string") return false;
 
     return true;
+  }
+
+  private static isModelRef(value: unknown): value is ModelRef {
+    if (value && typeof value === "object")
+      if ("$model" in value && typeof value.$model === "string") return true;
+    return false;
   }
 
   private static getChildCtor(

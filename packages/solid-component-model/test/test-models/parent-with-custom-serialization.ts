@@ -35,8 +35,8 @@ class ParentModel extends ComponentModel<ParentModelData, Events> {
     });
   }
 
-  getPersistedSnapshot() {
-    const json = this.toJSON();
+  override getPersistedSnapshot() {
+    const json = super.getPersistedSnapshot();
     Object.assign(json, { customProp: this.customProp });
     return json;
   }

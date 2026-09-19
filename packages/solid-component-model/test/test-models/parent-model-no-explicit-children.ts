@@ -1,5 +1,6 @@
-import { ComponentModel, type Snapshot } from "../../src";
+import { ComponentModel } from "../../src";
 import { WithStateChart } from "../../src/create-chart";
+import { PersistedSnapshot } from "../../src/types";
 import { ChildModel } from "./child-model";
 
 type ParentModelData = {
@@ -68,8 +69,8 @@ class ParentModelHiddenChildrenB extends ComponentModel<
     ];
   }
 
-  override toJSON(): Snapshot<string, ParentModelData> {
-    const sn = super.toJSON();
+  override getPersistedSnapshot(): PersistedSnapshot<string, ParentModelData> {
+    const sn = super.getPersistedSnapshot();
     (sn as any).__children = this.__children.map(ch => ch.toJSON());
     return sn;
   }

@@ -1,7 +1,13 @@
 import type { Store } from "solid-js/store";
 import { type Unsubscribable, type Observer } from "./observable";
 
-import type { AnyModelData, EventType, Snapshot, Status } from "./types";
+import type {
+  AnyModelData,
+  EventType,
+  PersistedSnapshot,
+  InspectionSnapshot,
+  Status,
+} from "./types";
 import type { Event } from "./state-chart";
 
 export interface Model<
@@ -34,7 +40,7 @@ export interface Model<
    * @returns A promise that resolves when `matcher` returns `true`.
    */
   waitFor: (
-    matcher: (snapshot: Snapshot<string, Data>) => boolean
+    matcher: (snapshot: InspectionSnapshot<string, Data>) => boolean
   ) => Promise<void>;
 
   /**
@@ -44,14 +50,16 @@ export interface Model<
    * @returns An object that can be used to unsubscribe from the subscription.
    */
   subscribe: (
-    observerOrNext: Partial<Observer<Snapshot<string, Data>>>
+    observerOrNext: Partial<Observer<InspectionSnapshot<string, Data>>>
   ) => Unsubscribable;
 
   dispatch: (event: E) => void;
 
-  toJSON: (flat?: boolean) => Snapshot<string, AnyModelData>;
+  toJSON: (flat?: boolean) => PersistedSnapshot<string, Data>;
 
   getPersistedSnapshot: () => unknown;
+
+  getInspecitonSnapshot: () => unknown;
 
   start: () => void;
 

@@ -232,6 +232,7 @@ describe("component-model", () => {
       parent.start();
       parent.addItem();
       await sleep(0);
+      const childID = parent.data.children[0]._id;
       assert.deepEqual(
         parent.toJSON(),
         {
@@ -244,14 +245,20 @@ describe("component-model", () => {
             some: "info",
             children: [
               {
-                _id: parent.data.children[0]._id,
-                state: "default",
-                name: "Child",
-                status: "active",
-                data: { some: "info" },
-              } as any,
+                $model: childID,
+              },
             ],
           },
+          children: [
+            {
+              _id: parent.data.children[0]._id,
+              state: "default",
+              parentId: parent._id,
+              name: "Child",
+              status: "active",
+              data: { some: "info" },
+            } as any,
+          ],
         },
         "shouldu correctly json child model"
       );
