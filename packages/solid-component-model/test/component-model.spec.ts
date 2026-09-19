@@ -24,6 +24,7 @@ import {
 import {
   WithStateChart,
   ComponentModel,
+  action,
   TerminalLogger,
   MachineMalformed,
   StateChart,
@@ -177,6 +178,77 @@ describe("component-model", () => {
   });
 
   describe("model with children", () => {
+    it("does not attach a model started inside another model's action", async () => {
+      class IndependentModel extends ComponentModel {
+        cleanedUp = false;
+
+        protected onCleanup() {
+          this.cleanedUp = true;
+        }
+      }
+      class Parent extends ComponentModel {
+        @action
+        startModel(model: IndependentModel) {
+          model.start();
+        }
+
+        @action
+        stopModel(model: IndependentModel) {
+          model.stop();
+        }
+      }
+      const parent = new Parent({});
+      const other = new IndependentModel({});
+      parent.start();
+      parent.startModel(other);
+      await sleep(0);
+
+      expect(other.status).toBe("active");
+      expect(other.getInspecitonSnapshot().parentId).toBeUndefined();
+      expect(parent.getInspecitonSnapshot().childrenIds).toBeUndefined();
+      parent.stop();
+      expect(other.status).toBe("active");
+      other.stop();
+
+      const nextParent = new Parent({});
+      const nextOther = new IndependentModel({});
+      nextParent.start();
+      nextParent.startModel(nextOther);
+      nextParent.stopModel(nextOther);
+      await sleep(0);
+      expect(nextOther.cleanedUp).toBe(true);
+      nextParent.stop();
+    });
+
+    it("spawns with constructor arguments and detaches independently stopped children", async () => {
+      class Child extends ComponentModel<{ label: string; count: number }> {
+        constructor(label: string, count = 1) {
+          super({ label, count });
+        }
+      }
+      class Parent extends ComponentModel {
+        child?: Child;
+
+        @action
+        addChild() {
+          this.child = this.spawn(Child, "child", 3);
+        }
+      }
+      const parent = new Parent({});
+      parent.start();
+      parent.addChild();
+      await sleep(0);
+      const child = parent.child!;
+      expect(child).toBeInstanceOf(Child);
+      expect(child.data).toEqual({ label: "child", count: 3 });
+      expect(child.status).toBe("active");
+      expect(child.getInspecitonSnapshot().parentId).toBe(parent._id);
+      expect(parent.getInspecitonSnapshot().childrenIds).toEqual([child._id]);
+      child.stop();
+      expect(parent.getInspecitonSnapshot().childrenIds).toEqual([]);
+      parent.stop();
+    });
+
     it("adds children", async () => {
       const parent = new ParentModel();
       parent.start();
@@ -197,7 +269,7 @@ describe("component-model", () => {
       assert.equal(parent.data.some, "from child");
     });
 
-    it("it binds models started in an action to the owner of that action as their parent", async () => {
+    it("attaches spawned models to their parent and stops them together", async () => {
       const parent = new ParentModel();
       parent.start();
       parent.addItem();

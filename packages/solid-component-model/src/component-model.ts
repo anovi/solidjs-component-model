@@ -410,23 +410,17 @@ export abstract class ComponentModel<
     if (this.status !== "idle")
       return this.__warnNonActiveModel(`Can't start a`);
 
-    this.__startHandlingFx();
-    // TODO: Should parent, or its children start first?
+    // Restored children are already explicitly attached to this model.
     untrack(() => {
-      this.__findAndStartChildren(this.data);
+      const children = modelChildrenMap.get(this._id);
+      if (children)
+        for (const child of children) {
+          if (child.status === "idle") child.start();
+        }
     });
-    this.__finishHandlingFx();
 
     this.status = "active";
     aliveModels.set(this._id, this);
-    if (!actionsExecutionStack.isEmpty()) {
-      // Set this as a child to a model in which action execution context this model starts
-      const parent = actionsExecutionStack.peek()!;
-      const children = modelChildrenMap.get(parent._id) || [];
-      children.push(this);
-      this.parent = parent;
-      modelChildrenMap.set(parent._id, children);
-    }
     if (devtools && !this.hideInDevtools)
       devtools.registerModel(
         this.getInspecitonSnapshot() as InspectionSnapshot<string, AnyModelData>
@@ -453,8 +447,25 @@ export abstract class ComponentModel<
 
   /* ====================== Sub-classes API ====================== */
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  declare protected parent?: any;
+  declare protected parent?: AnyComponentModel;
+
+  /** Instantiate, attach, and start a child from an action. */
+  protected spawn<Args extends unknown[], Child extends AnyComponentModel>(
+    ChildConstructor: new (...args: Args) => Child,
+    ...args: Args
+  ): Child {
+    const child = new ChildConstructor(...args);
+    this.__attachChild(child);
+    child.start();
+    return child;
+  }
+
+  private __attachChild(child: AnyComponentModel): void {
+    const children = modelChildrenMap.get(this._id) ?? [];
+    children.push(child);
+    child.parent = this;
+    modelChildrenMap.set(this._id, children);
+  }
 
   @protectedMethod
   protected invokeObservable<Next>(
@@ -856,18 +867,15 @@ export abstract class ComponentModel<
     this.__stopScheduled("");
     const spawned = modelChildrenMap.get(this._id);
     if (spawned) {
-      for (let i = 0; i < spawned.length; i++) {
-        spawned[i].stop();
+      for (const child of [...spawned]) {
+        child.stop();
       }
       modelChildrenMap.delete(this._id);
     }
-    if (actionsExecutionStack.size > 0) {
-      // Set this as a child to a model in which action execution context this model starts
-      const parentID = actionsExecutionStack.peek()!._id;
-      const children = modelChildrenMap.get(parentID);
-      if (!children) return;
-      const idx = children.findIndex(m => m === this);
-      if (idx > -1) children.splice(idx, 1);
+    if (this.parent) {
+      const children = modelChildrenMap.get(this.parent._id);
+      const idx = children?.indexOf(this) ?? -1;
+      if (idx > -1) children!.splice(idx, 1);
     }
     if (this.onCleanup) this.onCleanup();
   }
@@ -1370,6 +1378,7 @@ export abstract class ComponentModel<
       inst._id =
         snapshot._id as `${string}-${string}-${string}-${string}-${string}`;
       inst.status = "idle";
+      if (children) for (const child of children) inst.__attachChild(child);
     } catch (error) {
       actionsExecutionStack.pop();
       throw error;
@@ -1447,26 +1456,6 @@ export abstract class ComponentModel<
     const children = constructor.childTypes;
     if (Object.hasOwn(children, name))
       return children[name] as ModelCtorWithChildren;
-  }
-
-  private __findAndStartChildren(value: unknown): unknown {
-    if (value instanceof ComponentModel) {
-      console.log("child is in", value.status, "status");
-      if (value.status === "idle") value.start();
-      return;
-    }
-
-    if (Array.isArray(value)) {
-      return value.map(this.__findAndStartChildren.bind(this));
-    }
-
-    if (value && typeof value === "object") {
-      const result: Record<string, unknown> = {};
-
-      for (const [k, v] of Object.entries(value)) {
-        result[k] = this.__findAndStartChildren(v);
-      }
-    }
   }
 
   /* ------------------------------ Logging ------------------------------ */

@@ -64,9 +64,8 @@ export class ModelWithoutStateChart extends ComponentModel<Data> {
 
   @action
   addChild() {
-    const child = new ChildWithoutStateChart();
+    const child = this.spawn(ChildWithoutStateChart);
     this.setData("children", this.data.children.length, child);
-    child.start();
   }
 
   @action

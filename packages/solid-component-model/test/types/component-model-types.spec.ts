@@ -112,3 +112,26 @@ describe("WithStateChart", function () {
     expectTypeOf(parent).toMatchTypeOf<AnyModel>();
   });
 });
+
+class SpawnTypes extends ComponentModel {
+  checkSpawnTypes() {
+    class Child extends ComponentModel {
+      constructor(label: string, count?: number) {
+        super({ label, count });
+      }
+    }
+    const child = this.spawn(Child, "child", 2);
+    expectTypeOf(child).toEqualTypeOf<Child>();
+    this.spawn(Child, "child");
+    this.spawn(Model);
+    // @ts-expect-error Required constructor argument is missing
+    this.spawn(Child);
+    // @ts-expect-error Constructor argument has the wrong type
+    this.spawn(Child, 2);
+    // @ts-expect-error Too many constructor arguments
+    this.spawn(Child, "child", 2, true);
+    // @ts-expect-error Child must be a component model
+    this.spawn(Date);
+  }
+}
+void SpawnTypes;

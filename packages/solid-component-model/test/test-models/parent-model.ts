@@ -31,9 +31,8 @@ const config = {
   on: {
     ADD: {
       action() {
-        const child = new ChildModel();
+        const child = this.spawn(ChildModel);
         this.setData("children", this.data.children.length, child);
-        child.start();
       },
     },
     REMOVE: {

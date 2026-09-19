@@ -40,16 +40,14 @@ class TopChild extends ComponentModel<ParentModelData, Events> {
 export const TopChildModel = WithStateChart(TopChild, {
   entry() {
     console.log("🔴 entry");
-    const child = new BottomChildModel();
+    const child = this.spawn(BottomChildModel);
     this.setData("children", this.data.children.length, child);
-    child.start();
   },
   on: {
     ADD: {
       action() {
-        const child = new BottomChildModel();
+        const child = this.spawn(BottomChildModel);
         this.setData("children", this.data.children.length, child);
-        child.start();
       },
     },
     REMOVE: {
@@ -93,9 +91,8 @@ export const ParenTripleMachine = WithStateChart(ParenTriple, {
   on: {
     ADD: {
       action() {
-        const child = new TopChildModel();
+        const child = this.spawn(TopChildModel);
         this.setData("children", this.data.children.length, child);
-        child.start();
       },
     },
     REMOVE: {

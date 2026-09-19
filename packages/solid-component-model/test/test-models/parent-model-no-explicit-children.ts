@@ -54,8 +54,8 @@ class ParentModelHiddenChildrenB extends ComponentModel<
   }
 
   protected addChild() {
-    const child = new ChildModel();
-    child.start();
+    const child = this.spawn(ChildModel);
+
     this.__children.push(child);
   }
 
