@@ -582,6 +582,7 @@ describe("component-model", () => {
     it("emits snapshots for subscribers", async () => {
       return new Promise<void>(done => {
         const model = new ModelWithStateNodes();
+        const chartId = model.stateChart?.chart._id;
         model.start();
         model.subscribe({
           next: snapshot => {
@@ -589,6 +590,7 @@ describe("component-model", () => {
             assert.deepEqual(snapshot, {
               _id,
               name: "ModelWithStateNodesBase",
+              chartId,
               state: "loading",
               data: {
                 some: "new val",
