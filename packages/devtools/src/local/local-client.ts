@@ -51,10 +51,26 @@ export function createLocalPanelTransport(): ClientTransport {
       );
     },
     onConnected(cb) {
-      queueMicrotask(cb);
+      const listener = (event: Event) => {
+        if (
+          (event as CustomEvent<ServerMessages>).detail.type === "CONNECTED"
+        ) {
+          console.log("[devtools client] connected");
+          cb();
+        }
+      };
+      appChannel.addEventListener(MESSAGE_FROM_SERVER, listener);
     },
     onDisonnected(cb) {
-      queueMicrotask(cb);
+      const listener = (event: Event) => {
+        if (
+          (event as CustomEvent<ServerMessages>).detail.type === "DISCONNECTED"
+        ) {
+          console.log("[devtools client] disconnected");
+          cb();
+        }
+      };
+      appChannel.addEventListener(MESSAGE_FROM_SERVER, listener);
     },
     onMessage: (type, listener) => {
       const _listener = (message: CustomEvent<ServerMessages>) => {
@@ -62,7 +78,6 @@ export function createLocalPanelTransport(): ClientTransport {
           message.type === MESSAGE_FROM_SERVER &&
           message.detail.type === type
         ) {
-          // console.log("[CLIENT]: ", message.detail);
           listener(message.detail as any);
         }
       };

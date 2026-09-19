@@ -51,19 +51,21 @@ export async function createChromePanelTransport(
   logger: ChromeLogger
 ): Promise<ClientTransport> {
   let port: chrome.runtime.Port | undefined;
+  let destroyed = false;
   let attemts = 0;
   let state: State = State.IDLE;
   const tabId = chrome.devtools.inspectedWindow.tabId;
 
-  chrome.devtools.network.onNavigated.addListener(url => {
+  const onNavigated = (url: string) => {
     logger.log("The page was reloaded or navigated to: " + url);
-    // Trigger any UI updates or re-initialization logic for your devtool panel here
-  });
+  };
+  chrome.devtools.network.onNavigated.addListener(onNavigated);
 
   async function initialize() {
     attemts = 0;
+    if (destroyed) return;
     await injectScripts();
-    while (state !== State.OK)
+    while (!destroyed && state !== State.OK)
       switch (state) {
         case State.IDLE:
           state = State.CONNECTING;
@@ -74,12 +76,14 @@ export async function createChromePanelTransport(
             connect();
             state = State.OK;
           } catch (error) {
+            console.error("[transport] connection attempt failed", error);
             logger.log("Error: " + error);
             state = State.FAILED;
           }
           break;
         case State.FAILED:
           if (attemts > 30) {
+            console.error("[transport] retry limit reached");
             logger.log("Unable to connect!");
             throw "Unable to connect!";
           }
@@ -100,17 +104,27 @@ export async function createChromePanelTransport(
     port = chrome.tabs.connect(tabId, { name: "panel-page" });
     logger.log("🔌 Connected!");
     subscribeToPort();
+    console.log("[devtools client] connected");
+    ConnectedListeners.forEach(cb => cb());
     return port;
   }
 
   function subscribeToPort() {
-    port!.onDisconnect.addListener(() => {
+    const currentPort = port!;
+    currentPort.onDisconnect.addListener(() => {
+      if (destroyed || port !== currentPort) return;
       port = undefined;
       state = State.DISCONNECTED;
       logger.log("page connection disconnected");
-      initialize();
+      console.log("[devtools client] disconnected");
+      DisconnectListeners.forEach(cb => cb());
+      void initialize().catch(error => {
+        console.error("[transport] reconnect failed", error);
+        logger.error(String(error));
+      });
     });
-    port!.onMessage.addListener((message: Event) => {
+    currentPort.onMessage.addListener((message: Event) => {
+      if (destroyed || port !== currentPort) return;
       const listeners = MessageListeners.get(message.type);
       if (listeners) {
         listeners.forEach(cb => {
@@ -132,7 +146,7 @@ export async function createChromePanelTransport(
       port?.postMessage(message);
     },
     onConnected(cb) {
-      queueMicrotask(cb);
+      if (state === State.OK) cb();
       ConnectedListeners.add(cb);
     },
     onDisonnected(cb) {
@@ -149,8 +163,14 @@ export async function createChromePanelTransport(
       };
     },
     destroy: () => {
+      logger.log("[transport] Destroying");
+      destroyed = true;
+      chrome.devtools.network.onNavigated.removeListener(onNavigated);
       port?.disconnect();
       port = undefined;
+      DisconnectListeners.clear();
+      ConnectedListeners.clear();
+      MessageListeners.clear();
     },
   };
 

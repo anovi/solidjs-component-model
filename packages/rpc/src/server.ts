@@ -1,17 +1,14 @@
-import type {
-  AnyModelData,
-  Snapshot,
-  StateChartDescriptor,
-} from "solid-component-model";
+import type { AnyModelData, StateChartDescriptor } from "solid-component-model";
 import type { ApiServer as IApiServer, ServerTransport } from "./types";
+import { InspectionSnapshot } from "../../solid-component-model/src/types";
 
 export class ApiServer implements IApiServer {
   constructor(private transport: ServerTransport) {
     this.transport.onDisonnected(() => {
-      console.log("⚠️ Client disconnected");
+      console.log("[rpc server] client disconnected");
     });
     this.transport.onConnected(() => {
-      console.log("💻 Client connected");
+      console.log("[rpc server] client connected");
     });
   }
 
@@ -23,7 +20,7 @@ export class ApiServer implements IApiServer {
     this.transport.onDisonnected(cb);
   }
 
-  registerModel(snapshot: Snapshot<string, AnyModelData>) {
+  registerModel(snapshot: InspectionSnapshot<string, AnyModelData>) {
     this.transport.send({ type: "MODEL_ADDED", snapshot });
   }
 
@@ -35,7 +32,7 @@ export class ApiServer implements IApiServer {
     this.transport.send({ type: "MODEL_REMOVED", id });
   }
 
-  sendModelSnapshot(snapshot: Snapshot<string, AnyModelData>) {
+  sendModelSnapshot(snapshot: InspectionSnapshot<string, AnyModelData>) {
     this.transport.send({ type: "SNAPSHOT", snapshot });
   }
 }

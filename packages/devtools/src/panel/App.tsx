@@ -20,15 +20,22 @@ export interface PanelAppInstance {
  * Creates and mounts the DevTools SolidJS panel application into a DOM container.
  */
 export function createPanelApp(config: PanelAppConfig): PanelAppInstance {
-  const container = config.container ?? (typeof document !== "undefined" ? document.body : undefined);
-  if (!container) throw new Error("No container element provided to createPanelApp");
+  const container =
+    config.container ??
+    (typeof document !== "undefined" ? document.body : undefined);
+  if (!container)
+    throw new Error("No container element provided to createPanelApp");
 
   const dispose = render(
     () => (
-      <ApiClientContext.Provider value={{ client: config.client, logger: config.logger, devtools: createDevtoolsState(config.client, config.logger) }}>
-        <DevtoolsPanel
-          client={config.client}
-        />
+      <ApiClientContext.Provider
+        value={{
+          client: config.client,
+          logger: config.logger,
+          devtools: createDevtoolsState(config.client, config.logger),
+        }}
+      >
+        <DevtoolsPanel client={config.client} />
       </ApiClientContext.Provider>
     ),
     container
@@ -36,6 +43,8 @@ export function createPanelApp(config: PanelAppConfig): PanelAppInstance {
 
   return {
     client: config.client,
-    dispose,
+    dispose: () => {
+      dispose();
+    },
   };
 }

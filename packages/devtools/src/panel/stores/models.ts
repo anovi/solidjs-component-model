@@ -13,6 +13,7 @@ export type ModelSnapshot = {
 };
 
 export type ModelsStore = {
+  reset: () => void;
   models: ModelSnapshot[];
   addModel: (model: ModelSnapshot) => void;
   removeModel: (modelId: string) => void;
@@ -27,6 +28,9 @@ export const models = store;
 
 export function createModelsStore(): ModelsStore {
   return {
+    reset: () => {
+      setStore("models", []);
+    },
     get models() {
       return store.models;
     },

@@ -1,7 +1,4 @@
-console.log("Run content ISOLATED");
-
 chrome.runtime.onConnect.addListener(port => {
-  // console.log('onConnect', port);
   if (port.name === "panel-page") {
     // Relay messages: Devtools --> Window
     port.onMessage.addListener((event: MessageEvent) => {
@@ -16,7 +13,7 @@ chrome.runtime.onConnect.addListener(port => {
     window.addEventListener("message", relay);
 
     port.onDisconnect.addListener(() => {
-      console.log("📍Client gone");
+      console.log("[devtools client] disconnected");
       window.removeEventListener("message", relay);
       window.postMessage(
         { type: "CLIENT_DISCONNECTED", source: "scm-devtools" },

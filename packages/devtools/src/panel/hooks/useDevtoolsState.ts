@@ -24,6 +24,20 @@ export function createDevtoolsState(
   const charts = createChartsStore();
   const clientRef = client;
 
+  function reset() {
+    setState("loading");
+    setError(null);
+    models.reset();
+    charts.reset();
+    logger.clear();
+  }
+
+  reset();
+  clientRef.onDisconnected(reset);
+  clientRef.onConnected(() => {
+    setState("ok");
+  });
+
   clientRef.onModelAdded(snapshot => models.addModel(snapshot));
   clientRef.onModelUpdated(snapshot => models.updateModel(snapshot));
   clientRef.onModelRemoved(id => models.removeModel(id));

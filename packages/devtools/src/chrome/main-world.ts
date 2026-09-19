@@ -19,7 +19,6 @@ export function createChromeMainWorldTransport(): ServerTransport {
           msg.data.type === "CLIENT_CONNECTED" &&
           msg.data.source === "scm-devtools"
         ) {
-          console.log(msg);
           cb();
         }
       });
@@ -37,7 +36,6 @@ export function createChromeMainWorldTransport(): ServerTransport {
     onMessage: (type, listener) => {
       const _listener = (message: MessageEvent<ClientMessages>) => {
         if (message.data.type === type) {
-          console.log("🟢 matched: ", message.data);
           listener(message.data as any);
         }
       };
