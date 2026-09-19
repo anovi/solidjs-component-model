@@ -6,7 +6,9 @@
     "paths": {
       "solid-component-model": ["../solid-component-model/src/index.ts"],
       "@solid-component-model/rpc": ["../rpc/src/index.ts"]
-    }
+    },
+    "declaration": false,
+    "declarationMap": false
   },
   "include": ["src", "vite.config.ts", "demo"]
 }

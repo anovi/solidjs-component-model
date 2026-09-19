@@ -8,5 +8,5 @@ export const settingsModel = new SettingsModel();
 settingsModel.start();
 
 // Add initial children to demonstrate hierarchy
-parentModel.addChild("Primary Counter");
-parentModel.addChild("Secondary Counter");
+parentModel.dispatch({ type: "ADD_CHILD", title: "Primary Counter" });
+parentModel.dispatch({ type: "ADD_CHILD", title: "Secondary Counter" });

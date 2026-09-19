@@ -3,6 +3,7 @@
   "compilerOptions": {
     "rootDir": "..",
     "outDir": "dist",
+    "declaration": true,
     "declarationMap": false,
     "paths": {
       "@solid-component-model/rpc": ["../rpc/src/index"],

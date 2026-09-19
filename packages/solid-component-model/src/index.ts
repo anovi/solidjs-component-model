@@ -44,6 +44,7 @@ export { useModel, useEvents, type EventHandlers } from "./solidjs";
 
 // Types & Model Events
 export {
+  InternalEventName,
   type AnyModel,
   type AnyModelData,
   type Cleanup,
@@ -51,7 +52,6 @@ export {
   type Status,
   type FrameworkConfig,
   type EventType,
-  InternalEventName,
   type Start,
   type Eventless,
   type InvokedDone,
@@ -59,6 +59,8 @@ export {
   type InvokedNext,
   type ScheduledExecute,
   type InternalEvent,
+  type InspectionSnapshot,
+  type PersistedSnapshot,
 } from "./types";
 export type { Model } from "./interfaces";
 
