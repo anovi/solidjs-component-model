@@ -97,9 +97,8 @@ class ParentAppModelBase extends ComponentModel<
   @action
   protected addChild(title?: string) {
     const childName = title ?? `Child #${this.data.children.length + 1}`;
-    const child = new ChildCounterModel(childName);
+    const child = this.spawn(ChildCounterModel, childName);
     this.setData("children", this.data.children.length, child);
-    child.start();
     this.setData("totalClicks", this.data.totalClicks + 1);
     return child;
   }
