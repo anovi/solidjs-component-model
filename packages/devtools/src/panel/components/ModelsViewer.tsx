@@ -101,7 +101,7 @@ const TreeNode = (props: TreeView.NodeProviderProps<TreeNode>) => {
   return (
     <TreeView.NodeProvider node={props.node} indexPath={props.indexPath}>
       <TreeView.NodeContext>
-        {nodeState => {
+        {() => {
           return (
             <Show
               when={props.node.children?.length}
@@ -114,9 +114,7 @@ const TreeNode = (props: TreeView.NodeProviderProps<TreeNode>) => {
               <TreeView.Branch>
                 <TreeView.Item>
                   <TreeView.BranchControl>
-                    <TreeView.BranchIndicator>
-                      {nodeState().expanded ? "▼" : "▶  "}
-                    </TreeView.BranchIndicator>
+                    <TreeView.BranchIndicator aria-hidden="true" />
                   </TreeView.BranchControl>
                   <TreeView.ItemText>{props.node.name}</TreeView.ItemText>
                 </TreeView.Item>
