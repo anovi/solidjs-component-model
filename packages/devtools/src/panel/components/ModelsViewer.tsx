@@ -1,5 +1,6 @@
 import {
   type Component,
+  type JSX,
   useContext,
   createSignal,
   createMemo,
@@ -12,6 +13,7 @@ import "./styles.css";
 import { ApiClientContext } from "../context";
 import { ModelSnapshot } from "../stores/models";
 import { ModelView } from "./ModelView";
+import { PanelHeader } from "./PanelHeader";
 
 type TreeNode = {
   id: string;
@@ -32,7 +34,7 @@ function fromSnapshot(sn: ModelSnapshot, models: ModelSnapshot[]): TreeNode {
   };
 }
 
-export const ModelsViewer: Component = () => {
+export const ModelsViewer: Component<{ divider?: JSX.Element }> = props => {
   const ctx = useContext(ApiClientContext)!;
   // Ark collections are immutable. Rebuild from the reactive store rather than
   // maintaining a second tree through RPC events (which can arrive out of order).
@@ -60,30 +62,32 @@ export const ModelsViewer: Component = () => {
   });
 
   return (
-    <div class="">
-      <div class="layout">
-        <div data-part="left">
-          <div class="devtools-model-tree">
-            <TreeView.Root
-              collection={collection()}
-              selectionMode="single"
-              selectedValue={selected()}
-              onSelectionChange={details => {
-                setSelected(details.selectedValue);
-              }}
-            >
-              <TreeView.Tree>
-                <For each={collection().rootNode.children}>
-                  {(node, index) => (
-                    <TreeNode node={node} indexPath={[index()]} />
-                  )}
-                </For>
-              </TreeView.Tree>
-            </TreeView.Root>
-          </div>
+    <div class="layout">
+      <div data-part="left">
+        {/* <PanelHeader title="Models" /> */}
+        <div class="devtools-area-content devtools-model-tree">
+          <TreeView.Root
+            collection={collection()}
+            selectionMode="single"
+            selectedValue={selected()}
+            onSelectionChange={details => {
+              setSelected(details.selectedValue);
+            }}
+          >
+            <TreeView.Tree>
+              <For each={collection().rootNode.children}>
+                {(node, index) => (
+                  <TreeNode node={node} indexPath={[index()]} />
+                )}
+              </For>
+            </TreeView.Tree>
+          </TreeView.Root>
         </div>
-        <div data-part="main">
-          {/* <JsonViewer value={selectedItem() as JsonValue} /> */}
+      </div>
+      {props.divider}
+      <div data-part="main">
+        <PanelHeader title="Model details" />
+        <div class="devtools-area-content">
           <Show when={selectedItem()}>
             <ModelView model={selectedItem()!} />
           </Show>

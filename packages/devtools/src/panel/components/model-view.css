@@ -1,5 +1,20 @@
 
-.devtools-model-view {}
+.devtools-model-view {
+  container-type: inline-size;
+  padding: 12px;
+}
+.devtools-model-view__grid {
+  --horizontal-width-cap: 40em;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  @container (width > 40em) {
+    & {
+      gap: 2em;
+      flex-direction: row;
+    }
+  }
+}
 
 .devtools-model-view__name {
   color: var(--color-text);
@@ -31,6 +46,16 @@
     background-color: var(--ctp-mocha-mauve-oklch);
   }
 }
+
+.devtools-model-view__head {
+  @container (width > 40em) {
+    & {
+      width: 20em;
+    }
+  }
+}
+
+/* .devtools-model-view__details {} */
 
 .state-tree {
   font-family: var(--font-mono);

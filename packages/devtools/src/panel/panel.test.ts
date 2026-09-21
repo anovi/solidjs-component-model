@@ -84,6 +84,7 @@ describe("DevTools Panel SolidJS Layer", () => {
   }
 
   beforeEach(() => {
+    localStorage.clear();
     connection = createTestConnection();
     ({ client, server } = connection);
     logger = createLogsStore();
@@ -96,6 +97,78 @@ describe("DevTools Panel SolidJS Layer", () => {
     container = undefined;
     createModelsStore().reset();
     createChartsStore().reset();
+  });
+
+  it("persists bounded sidebar widths and restores them on initialization", () => {
+    const state = createState();
+    expect(state.layout().sidebarWidth).toBe(200);
+    state.setSidebarWidth(1);
+    expect(state.layout().sidebarWidth).toBe(160);
+    state.setSidebarWidth(1000);
+    expect(state.layout().sidebarWidth).toBe(600);
+    state.setSidebarWidth(320);
+    connection.disconnect();
+    expect(state.layout().sidebarWidth).toBe(320);
+    dispose?.();
+    expect(createState().layout().sidebarWidth).toBe(320);
+  });
+
+  it("handles corrupt or unavailable layout storage", () => {
+    localStorage.setItem(
+      "solid-component-model.devtools.layout",
+      "invalid json"
+    );
+    const state = createState();
+    expect(state.layout().sidebarWidth).toBe(200);
+    const write = vi
+      .spyOn(Storage.prototype, "setItem")
+      .mockImplementation(() => {
+        throw new Error("Storage unavailable");
+      });
+    try {
+      state.setSidebarWidth(350);
+      expect(state.layout().sidebarWidth).toBe(350);
+      state.setSidebarWidth(NaN);
+      expect(state.layout().sidebarWidth).toBe(350);
+    } finally {
+      write.mockRestore();
+    }
+  });
+
+  it("resizes with the mouse and keyboard and cleans up an active drag", async () => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    const app = createPanelApp({ client, logger, container });
+    dispose = app.dispose;
+    await vi.waitFor(() =>
+      expect(container?.querySelector('[role="separator"]')).toBeTruthy()
+    );
+    const divider = container.querySelector<HTMLElement>('[role="separator"]')!;
+    divider.dispatchEvent(
+      new MouseEvent("mousedown", { bubbles: true, button: 0, clientX: 200 })
+    );
+    window.dispatchEvent(
+      new MouseEvent("mousemove", { buttons: 1, clientX: 350 })
+    );
+    expect(divider.getAttribute("aria-valuenow")).toBe("350");
+    expect(document.body.style.cursor).toBe("col-resize");
+    window.dispatchEvent(new MouseEvent("mouseup"));
+    expect(document.body.style.cursor).toBe("");
+    window.dispatchEvent(
+      new MouseEvent("mousemove", { buttons: 1, clientX: 500 })
+    );
+    expect(divider.getAttribute("aria-valuenow")).toBe("350");
+    divider.dispatchEvent(
+      new KeyboardEvent("keydown", { bubbles: true, key: "End" })
+    );
+    expect(divider.getAttribute("aria-valuenow")).toBe("600");
+    divider.dispatchEvent(
+      new MouseEvent("mousedown", { bubbles: true, button: 0 })
+    );
+    app.dispose();
+    dispose = undefined;
+    expect(document.body.style.cursor).toBe("");
+    expect(document.body.style.userSelect).toBe("");
   });
 
   it("connects and records the connection in the logger", async () => {

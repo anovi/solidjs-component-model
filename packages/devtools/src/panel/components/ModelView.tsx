@@ -163,31 +163,34 @@ export function ModelView(props: ModelViewProps) {
 
   return (
     <div class="devtools-model-view">
-      <div>
-        {props.model.name}
-        <span
-          class={
-            "devtools-model-view__status " +
-            props.model.status
-          }
-        >
-          {props.model.status}
-        </span>
-        <br />
-        <small class="devtools-model-view__description">
-          {props.model._id}
-        </small>
+      <div class="devtools-model-view__grid">
+        <div class="devtools-model-view__head">
+          {props.model.name}
+          <span
+            class={
+              "devtools-model-view__status " +
+              props.model.status
+            }
+          >
+            {props.model.status}
+          </span>
+          <br />
+          <small class="devtools-model-view__description">
+            {props.model._id}
+          </small>
+          <Show when={chart()} fallback={props.model.state}>
+            <StateTree
+              nodes={stateTree()}
+              currentState={props.model.state}
+            />
+          </Show>
+        </div>
+
+        <div class="devtools-model-view__details">
+          {/* <h4>Data</h4> */}
+          <JsonViewer value={props.model.data as JsonValue} />
+        </div>
       </div>
-
-      <Show when={chart()} fallback={props.model.state}>
-        <StateTree
-          nodes={stateTree()}
-          currentState={props.model.state}
-        />
-      </Show>
-
-      <h4>Data</h4>
-      <JsonViewer value={props.model.data as JsonValue} />
     </div>
   );
 }
