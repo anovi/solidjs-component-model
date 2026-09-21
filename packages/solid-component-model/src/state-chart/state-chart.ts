@@ -12,7 +12,6 @@ import { generateTransitionSteps, StatePath } from "./state-path";
 import { NodeType, type AnyStateNode } from "./state-node";
 import { MachineMalformed } from "./errors";
 import { AnyModel } from "../types";
-import { GlobalDevContext } from "../devtools-types";
 
 const ROOT = "";
 
@@ -24,8 +23,6 @@ export function chartToDebugger(
     states: [...chart.lookup.keys()].filter(key => key !== ""),
   };
 }
-
-const globalObj = globalThis as unknown as GlobalDevContext;
 
 /**
  * State chart does not own data or effects.
@@ -59,11 +56,6 @@ export class StateChart<
     inst.root = inst.#makeNode(config as AnyStateChartConfig, null, "");
     inst.config = config;
     inst.#validateHandlers();
-    if (globalObj.__COMPONENT_MODEL_DEVTOOLS__) {
-      globalObj.__COMPONENT_MODEL_DEVTOOLS__.registerChart(
-        chartToDebugger(inst as any)
-      );
-    }
     return inst;
   }
 

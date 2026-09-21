@@ -58,6 +58,7 @@ import type { InvokeConfig } from "./state-chart/state-chart-types";
 
 import { type GlobalDevContext } from "./devtools-types";
 import { type ApiServer } from "@solid-component-model/rpc";
+import { chartToDebugger } from "./state-chart/state-chart";
 
 type SendApi<E extends { type: string }> = {
   [K in EventName<E>]: (
@@ -110,6 +111,9 @@ const actionsExecutionStack: Stack<AnyComponentModel> = new Stack();
 
 /** The [key] is a model's ID and the [value] is an array of its children.  */
 export const modelChildrenMap = new Map<string, AnyComponentModel[]>();
+
+/** The list of StateChart IDs that were sent to devtools. */
+const sentStateCharts = new Set<string>();
 
 /** DevTools ApiServer instance */
 let devtools: ApiServer | null = null;
@@ -409,6 +413,15 @@ export abstract class ComponentModel<
   start() {
     if (this.status !== "idle")
       return this.__warnNonActiveModel(`Can't start a`);
+
+    if (
+      devtools &&
+      this.stateChart &&
+      !sentStateCharts.has(this.stateChart?.chart._id)
+    ) {
+      devtools.registerChart(chartToDebugger(this.stateChart.chart));
+      sentStateCharts.add(this.stateChart.chart._id);
+    }
 
     // Restored children are already explicitly attached to this model.
     untrack(() => {

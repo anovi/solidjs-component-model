@@ -178,7 +178,7 @@ export function ModelView(props: ModelViewProps) {
           <small class="devtools-model-view__description">
             {props.model._id}
           </small>
-          <Show when={chart()} fallback={props.model.state}>
+          <Show when={chart()} fallback={<div>props.model.state</div>}>
             <StateTree
               nodes={stateTree()}
               currentState={props.model.state}
