@@ -185,15 +185,15 @@ class SettingsModelBase extends ComponentModel<
 
 export const SettingsModel = WithStateChart(SettingsModelBase, {
   initial: "Active",
+  on: {
+    TOGGLE_THEME: {
+      action() {
+        this.toggleTheme();
+      },
+    },
+  },
   states: {
     Active: {
-      on: {
-        TOGGLE_THEME: {
-          action() {
-            this.toggleTheme();
-          },
-        },
-      },
       always: {
         target: "Loading",
       },
