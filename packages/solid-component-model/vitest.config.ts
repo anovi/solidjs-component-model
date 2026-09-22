@@ -17,6 +17,16 @@ export default defineConfig({
       "test/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",
     ],
 
+    coverage: {
+      exclude: [
+        "test/**/*",
+        "**/test/**",
+        "src/**/*.test.{ts,tsx,js,js}",
+        "src/**/*.spec.{ts,tsx,js,mjs}",
+        "src/**/*.d.ts",
+      ],
+    },
+
     benchmark: {
       include: ["test/**/*.bench.ts"],
     },
