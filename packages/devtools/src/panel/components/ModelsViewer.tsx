@@ -55,11 +55,8 @@ export const ModelsViewer: Component<{ divider?: JSX.Element }> = props => {
 
   const [selected, setSelected] = createSignal<string[]>([]);
 
-  const selectedItem = createMemo(() => {
-    const id = selected()[0];
-    const res = ctx.devtools.models.find(model => model._id === id);
-    return res;
-  });
+  // Retain the reconciled store object even after it leaves the active list.
+  const [selectedItem, setSelectedItem] = createSignal<ModelSnapshot>();
 
   return (
     <div class="layout">
@@ -72,6 +69,10 @@ export const ModelsViewer: Component<{ divider?: JSX.Element }> = props => {
             selectedValue={selected()}
             onSelectionChange={details => {
               setSelected(details.selectedValue);
+              const model = ctx.devtools.models.find(
+                model => model._id === details.selectedValue[0]
+              );
+              if (model) setSelectedItem(model);
             }}
           >
             <TreeView.Tree>

@@ -65,7 +65,7 @@ export class StateChart<
     let node: AnyStateChartConfig | undefined = this.charts.get(pathString);
     if (!node)
       throw new MachineMalformed(`wrong transition target "${pathString}"`, {
-        machineConfig: null,
+        machineConfig: this.charts.get(ROOT)!,
       });
     let toAssign = pathString;
     while (node && node.initial) {
@@ -74,7 +74,7 @@ export class StateChart<
       if (!node)
         throw new MachineMalformed(
           `wrong initial target "${name}" in "${toAssign}"`,
-          { machineConfig: null }
+          { machineConfig: this.charts.get(ROOT)! }
         );
       toAssign += "." + name;
     }
@@ -114,7 +114,7 @@ export class StateChart<
           if (handler.target && !this.charts.get(handler.target))
             throw new MachineMalformed(
               `target "${handler.target}" points to unexisting state.`,
-              { machineConfig: null }
+              { machineConfig: this.charts.get(ROOT)! }
             );
         });
       }
@@ -284,7 +284,7 @@ export class Interpreter<
             } catch (error: unknown) {
               return new MachineMalformed(
                 `error in guard in state "${curPath}"`,
-                { cause: error, machineConfig: this.constructor }
+                { cause: error, machineConfig: this.compiled.charts.get(ROOT)! }
               );
             }
           } else return handler;

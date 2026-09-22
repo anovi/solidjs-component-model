@@ -1,9 +1,15 @@
+import { AnyModel } from "../types";
+import { StateChartConfig } from "./state-chart-types";
+
 export class MachineMalformed extends Error {
   public readonly name = "Machine Malformed";
 
   constructor(
     message: string,
-    options?: { cause?: unknown; machineConfig: unknown }
+    options?: {
+      cause?: unknown;
+      machineConfig: StateChartConfig<AnyModel, Event>;
+    }
   ) {
     super(message, options);
     Object.setPrototypeOf(this, new.target.prototype);

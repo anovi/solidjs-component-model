@@ -64,7 +64,7 @@
 }
 
 .devtools-json-viewer .json-boolean {
-  color: var(--color-accent-text);
+  color: var(--ctp-mocha-red-oklch);
 }
 
 .devtools-json-viewer .json-null {

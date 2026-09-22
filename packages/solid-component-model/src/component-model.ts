@@ -530,8 +530,8 @@ export abstract class ComponentModel<
           } else {
             this.__machineMalformedInRuntime(
               new MachineMalformed(
-                `unhandled error in observable in "${state}"`,
-                { cause: error, machineConfig: this.constructor }
+                `unhandled error in observable in "${state}" of "${this.constructor.name}" machine.`,
+                { cause: error, machineConfig: this.stateChart!.chart.config }
               ),
               true
             );
@@ -592,10 +592,13 @@ export abstract class ComponentModel<
         if (!handler || handler instanceof MachineMalformed) {
           return this.__machineMalformedInRuntime(
             handler ||
-              new MachineMalformed(`error in state "${state}"`, {
-                cause: "No onDone handler found",
-                machineConfig: this.constructor,
-              })
+              new MachineMalformed(
+                `No onDone handler found in state "${state}" of "${this.constructor.name}" machine`,
+                {
+                  cause: handler,
+                  machineConfig: this.stateChart!.chart.config,
+                }
+              )
           );
         } else if (handler instanceof Error)
           return this.__toErrorWithReason(handler);
@@ -624,8 +627,8 @@ export abstract class ComponentModel<
             );
         } else {
           const malformedErr = new MachineMalformed(
-            `unhandled promise rejection in "${state}"`,
-            { cause: error, machineConfig: this.constructor }
+            `unhandled promise rejection in "${state}" of "${this.constructor.name}" machine.`,
+            { cause: error, machineConfig: this.stateChart!.chart.config }
           );
           this.__machineMalformedInRuntime(malformedErr);
         }
@@ -797,8 +800,8 @@ export abstract class ComponentModel<
             return handler;
         } catch (error: unknown) {
           return new MachineMalformed(
-            `error in guard in state "${foundPath}"`,
-            { cause: error, machineConfig: this.constructor }
+            `error in guard in state "${foundPath}" of "${this.constructor.name}" machine.`,
+            { cause: error, machineConfig: this.stateChart!.chart.config }
           );
         }
       } else return handler;
@@ -851,8 +854,8 @@ export abstract class ComponentModel<
 
   private __toErrorWithReason(err: Error) {
     this.status = "error";
-    this.__destroy();
     this.error = err;
+    this.__destroy();
     this.__logError("err", err);
     console.error(err);
     this.__snapshots$?.error(err);
@@ -869,7 +872,24 @@ export abstract class ComponentModel<
   }
 
   private __destroy(): void {
-    if (devtools && !this.hideInDevtools) devtools.unregisterModel(this._id);
+    if (devtools && !this.hideInDevtools) {
+      // Inspection failures must not prevent lifecycle cleanup.
+      try {
+        devtools.sendModelSnapshot(
+          this.getInspecitonSnapshot() as InspectionSnapshot<
+            string,
+            AnyModelData
+          >
+        );
+      } catch (err) {
+        console.error(err);
+      }
+      try {
+        devtools.unregisterModel(this._id);
+      } catch (err) {
+        console.error(err);
+      }
+    }
     aliveModels.delete(this._id);
     this.__queue.flush();
     if (this.__invocations)
@@ -1110,8 +1130,8 @@ export abstract class ComponentModel<
         });
       } catch (error) {
         throw new MachineMalformed(
-          `wrong "after" config in state "${state}", keys shoud be integers`,
-          { cause: error, machineConfig: this.constructor }
+          `wrong "after" config in state "${state}" of "${this.constructor.name}" machine. Keys must be integers!`,
+          { cause: error, machineConfig: this.stateChart!.chart.config }
         );
       }
     }
@@ -1131,7 +1151,10 @@ export abstract class ComponentModel<
         error: invoke.error,
         complete: invoke.complete,
       });
-    } else throw new MachineMalformed("wrong `invoke` config — unknown type.");
+    } else
+      throw new MachineMalformed(
+        `wrong \`invoke\` config of "${this.constructor.name}" machine. Unknown type.`
+      );
   }
 
   private __processQueue(state: string, type: "entry" | "exit" | "event") {

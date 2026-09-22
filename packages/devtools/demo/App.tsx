@@ -85,6 +85,7 @@ export const App: Component<DemoAppProps> = props => {
                         >
                           Remove
                         </button>
+                        <button onClick={()=> child.dispatch({type: 'MAKE_ERROR'})}>Err</button>
                       </div>
                       <div class="child-body">
                         <span class="count-value">

@@ -53,10 +53,25 @@ export class StateChart<
     config: StateChartConfig<TContext, E> & TConfig
   ): StateChart<TContext, E, TConfig> {
     const inst = new StateChart<TContext, E, TConfig>();
-    inst.root = inst.#makeNode(config as AnyStateChartConfig, null, "");
     inst.config = config;
+    inst.root = inst.#makeNode(config as AnyStateChartConfig, null, "");
+
     inst.#validateHandlers();
     return inst;
+  }
+
+  getConfigTitle() {
+    const config = this.config as StateChartConfig<AnyModel, Event>;
+    if (config.description) return config.description;
+    if (config.states) {
+      const names: string[] = [];
+      for (const key in config.states) {
+        if (!Object.hasOwn(config.states, key)) continue;
+        names.push(key);
+      }
+      return names.join(" | ");
+    }
+    return "UNTITLED";
   }
 
   getNodeByPath(path: string): AnyStateNode | undefined {
@@ -69,9 +84,12 @@ export class StateChart<
   ): Transition<TModel, any>[] | undefined {
     const node = this.getNodeByPath(path);
     if (!node)
-      throw new MachineMalformed(`unable to find sate "${path.toString()}"`, {
-        machineConfig: null,
-      });
+      throw new MachineMalformed(
+        `unable to find sate "${path.toString()}" in config: "${this.getConfigTitle()}"`,
+        {
+          machineConfig: this.config as StateChartConfig<AnyModel, Event>,
+        }
+      );
     if (event) {
       if (node.on) return node.on[event.type];
     }
@@ -83,8 +101,8 @@ export class StateChart<
     let node: AnyStateNode | undefined = this.getNodeByPath(path);
     if (!node)
       throw new MachineMalformed(
-        `wrong transition target "${path.toString()}"`,
-        { machineConfig: null }
+        `wrong transition target "${path.toString()}" in config: "${this.getConfigTitle()}"`,
+        { machineConfig: this.config as StateChartConfig<AnyModel, Event> }
       );
     let toAssign = path;
     while (node.initial) {
@@ -108,7 +126,7 @@ export class StateChart<
   ): void {
     if (config[prop])
       throw new MachineMalformed(
-        `State ${path} of type "${config.type}" can't have "${prop}" property.`
+        `State "${path}" of type "${config.type}" can't have "${prop}" property. Config: "${this.getConfigTitle()}"`
       );
   }
 
@@ -119,7 +137,7 @@ export class StateChart<
       handlers.every(handler => {
         if (handler.target && !this.getNodeByPath(handler.target))
           throw new MachineMalformed(
-            `target "${handler.target}" is points to unexisting state.`
+            `target "${handler.target}" points to unexisting state. Config: "${this.getConfigTitle()}".`
           );
         return true;
       })
@@ -189,9 +207,12 @@ export class StateChart<
 
     if (config.states) {
       if (!config.initial) {
-        throw new MachineMalformed("missing initial state", {
-          machineConfig: config,
-        });
+        throw new MachineMalformed(
+          `missing \`initial\` in a Config: "${this.getConfigTitle()}"`,
+          {
+            machineConfig: config,
+          }
+        );
       }
       const children = (node.children = Object.create(null));
       for (const name in config.states) {
@@ -210,11 +231,13 @@ export class StateChart<
     if (config.initial) {
       if (!node.children)
         throw new MachineMalformed(
-          "State with initial should have child states."
+          `State with "initial" prop should have child states. Config: "${this.getConfigTitle()}"`
         );
       const initial = node.children[config.initial];
       if (!initial)
-        throw new MachineMalformed("Initial in state is not found.");
+        throw new MachineMalformed(
+          `Initial state "${config.initial}" does not exist in config "${this.getConfigTitle()}".`
+        );
       node.initial = initial;
     }
 
@@ -251,9 +274,12 @@ export class Interpreter<
     if (reenter && fromStateString === toStateString) {
       const node = this.chart.getNodeByPath(fromStateString);
       if (!node)
-        throw new MachineMalformed(`unable to find sate "${fromStateString}"`, {
-          machineConfig: null,
-        });
+        throw new MachineMalformed(
+          `unable to find sate "${fromStateString}" for "${this.context.constructor.name}" context.`,
+          {
+            machineConfig: this.chart.config,
+          }
+        );
       yield { exit: true, path: fromStateString, effect: node.exit };
       yield { exit: false, path: fromStateString, effect: node.entry };
       return;
@@ -276,9 +302,12 @@ export class Interpreter<
     for (const step of generateTransitionSteps(diff)) {
       const node = this.chart.lookup.get(step.path);
       if (!node)
-        throw new MachineMalformed(`unable to find sate "${step.path}"`, {
-          machineConfig: null,
-        });
+        throw new MachineMalformed(
+          `unable to find state "${step.path}" for "${this.context.constructor.name}" context.`,
+          {
+            machineConfig: this.chart.config,
+          }
+        );
       step.effect = step.exit ? node.exit : node.entry;
       if (node.invoke && !step.exit) {
         step.invoke = node.invoke;
@@ -315,8 +344,8 @@ export class Interpreter<
                 return handler;
             } catch (error: unknown) {
               return new MachineMalformed(
-                `error in guard in state "${curPath}"`,
-                { cause: error, machineConfig: this.constructor }
+                `error in guard in state "${curPath}" for "${this.context.constructor.name}" context.`,
+                { cause: error, machineConfig: this.chart.config }
               );
             }
           } else return handler;

@@ -8,7 +8,10 @@ export type ChildCounterData = {
 };
 
 export type ChildCounterEvents =
-  { type: "INCREMENT" } | { type: "DECREMENT" } | { type: "RESET" };
+  | { type: "INCREMENT" }
+  | { type: "DECREMENT" }
+  | { type: "RESET" }
+  | { type: "MAKE_ERROR" };
 
 class ChildCounterModelBase extends ComponentModel<
   ChildCounterData,
@@ -59,6 +62,11 @@ export const ChildCounterModel = WithStateChart(ChildCounterModelBase, {
         RESET: {
           action() {
             this.reset();
+          },
+        },
+        MAKE_ERROR: {
+          guard() {
+            throw Error("Bad guard!");
           },
         },
       },
