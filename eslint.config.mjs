@@ -12,6 +12,7 @@ export default [
       "dist/**",
       "packages/*/dist/**",
       "eslint.config.mjs",
+      ".vitepress/**"
     ],
   },
   js.configs.recommended,
