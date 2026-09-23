@@ -19,12 +19,13 @@
   "sideEffects": false,
   "scripts": {
     "build": "pnpm run clean && tsc --project tsconfig.build.json --noEmit && vite build",
+    "build:prod": "pnpm run clean && tsc --project tsconfig.build.json --noEmit && vite build --config vite.config.prod.ts",
     "dev": "vite build --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test-file": "vitest $npm_config",
-    "bench": "vitest bench",
+    "bench": "pnpm run build:prod && vitest bench",
     "clean": "rm -rf dist"
   },
   "peerDependencies": {

@@ -8,10 +8,11 @@ import solidPlugin from "vite-plugin-solid";
 export default defineConfig({
   plugins: [solidPlugin()],
   resolve: {
-    conditions: ["browser", "development"],
+    conditions: ["browser", "production"],
   },
   test: {
     globals: true,
+
     include: [
       "src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",
       "test/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",
