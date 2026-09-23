@@ -34,6 +34,7 @@
   "devDependencies": {
     "@solid-component-model/rpc": "workspace:*",
     "@testing-library/jest-dom": "7.0.1",
+    "@xstate/solid": "2.0.0",
     "rxjs": "7.8.2",
     "solid-js": "1.9.13",
     "vite-plugin-solid": "^2.11.12",

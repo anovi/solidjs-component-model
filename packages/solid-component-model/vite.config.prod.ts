@@ -34,7 +34,7 @@ export default defineConfig({
     },
 
     rollupOptions: {
-      external: ["solid-js", "solid-js/store", "rxjs"],
+      external: id => /^(solid-js|rxjs)(\/.*)?$/.test(id),
     },
   },
 

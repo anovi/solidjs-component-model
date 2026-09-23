@@ -1,5 +1,6 @@
 import { assign, createActor, setup } from "xstate";
 import { createComputed, createRoot } from "solid-js";
+import { fromActorRef } from "@xstate/solid";
 import { ComponentModel, WithStateChart } from "../dist/index.js";
 
 import type { BenchCompareOptions } from "vitest";
@@ -240,34 +241,49 @@ for (const scenario of [
 test("Solid reactive consumer — 1,000 alternating-state/changing-value dispatches", async ({
   bench,
 }) => {
-  const plain = new ModelWithStates();
-  plain.start();
+  const xstate = createActor(machine).start();
   const observed = new ModelWithStates();
   observed.start();
-  let observedValue = "";
+  let observedValueXstate = "";
+  let observedValueModel = "";
   let notifications = 0;
   const dispose = createRoot(dispose => {
     createComputed(() => {
-      observedValue = `${observed.state()}:${observed.data.data}`;
+      observedValueModel = `${observed.state()}:${observed.data.data}`;
+      notifications++;
+    });
+    return dispose;
+  });
+  const disposeXstate = createRoot(dispose => {
+    const state = fromActorRef(xstate);
+    createComputed(() => {
+      const snapshot = state();
+      observedValueXstate = `${snapshot.value}:${snapshot.context.data}`;
       notifications++;
     });
     return dispose;
   });
   try {
     await bench.compare(
-      bench("model without consumer", () => {
-        for (const event of togglingEvents) plain.dispatch(event);
+      bench("xstate", () => {
+        for (const event of togglingEvents) xstate.send(event);
       }),
-      bench("model with one Solid computation", () => {
+      bench("model", () => {
         for (const event of togglingEvents) observed.dispatch(event);
       }),
       benchmarkOptions
     );
     expect(notifications).toBeGreaterThan(EVENTS);
-    expect(observedValue).toBe(`${plain.state()}:${plain.data.data}`);
+    expect(observedValueModel).toBe(
+      `${observed.state()}:${observed.data.data}`
+    );
+    expect(observedValueXstate).toBe(
+      `${xstate.getSnapshot().value}:${xstate.getSnapshot().context.data}`
+    );
   } finally {
     dispose();
-    plain.stop();
+    disposeXstate();
+    xstate.stop();
     observed.stop();
   }
 });

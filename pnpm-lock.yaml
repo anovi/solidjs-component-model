@@ -108,6 +108,9 @@ importers:
       '@testing-library/jest-dom':
         specifier: 7.0.1
         version: 7.0.1(@testing-library/dom@10.4.1)(vitest@5.0.0)
+      '@xstate/solid':
+        specifier: 2.0.0
+        version: 2.0.0(solid-js@1.9.13)(xstate@5.32.5)
       rxjs:
         specifier: 7.8.2
         version: 7.8.2
@@ -1641,6 +1644,15 @@ packages:
 
   '@vueuse/shared@12.8.2':
     resolution: {integrity: sha512-dznP38YzxZoNloI0qpEfpkms8knDtaoQ6Y/sfS0L7Yki4zh40LFHEhur0odJC6xTHG5dxWVPiUWBXn+wCG2s5w==}
+
+  '@xstate/solid@2.0.0':
+    resolution: {integrity: sha512-ycGMMJWPtfnc+CGhUxxe664wTVr4M2NXEJx4EsShbcT5G0d2bP378AtAsVvVhSjr6W5+7Br6htDivND1I6DOfQ==}
+    peerDependencies:
+      solid-js: ^1.6.0
+      xstate: ^5.20.0
+    peerDependenciesMeta:
+      xstate:
+        optional: true
 
   '@zag-js/accordion@1.43.3':
     resolution: {integrity: sha512-J6rGbMPXhYDa2dLgp66DPpwC3OcNAJH71kuGakz7SfCvQWiR9lIyB26G/QdSjJjf0rVARM8rN90e5PxZjYdWjA==}
@@ -5445,6 +5457,12 @@ snapshots:
       vue: 3.5.42(typescript@6.0.3)
     transitivePeerDependencies:
       - typescript
+
+  '@xstate/solid@2.0.0(solid-js@1.9.13)(xstate@5.32.5)':
+    dependencies:
+      solid-js: 1.9.13
+    optionalDependencies:
+      xstate: 5.32.5
 
   '@zag-js/accordion@1.43.3':
     dependencies:
