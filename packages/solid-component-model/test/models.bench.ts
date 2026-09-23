@@ -1,36 +1,27 @@
-import { bench } from "vitest";
+import { test } from "vitest";
 import { assign, createActor, setup } from "xstate";
 import { ComponentModel, WithStateChart } from "../src";
 
 const TIMES = 1000;
 
-describe("Parsing YAML document", async () => {
-  bench(
-    "xstate",
-    () => {
+test("Parsing YAML document", async ({ bench }) => {
+  await bench.compare(
+    bench("xstate", () => {
       const actor = createActor(machine);
       actor.start();
       for (let index = 0; index < TIMES; index++) {
         actor.send({ type: "SOME", data: "1" });
       }
       actor.stop();
-    },
-    {
-      iterations: 50,
-      throws: true,
-    }
-  );
-
-  bench(
-    "model",
-    () => {
+    }),
+    bench("model", () => {
       const actor = new ModelWithStates();
       actor.start();
       for (let index = 0; index < TIMES; index++) {
         actor.dispatch({ type: "SOME", data: "1" });
       }
       actor.stop();
-    },
+    }),
     {
       iterations: 50,
       throws: true,

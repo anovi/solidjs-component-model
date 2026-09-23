@@ -1,4 +1,4 @@
-import { bench } from "vitest";
+import { test } from "vitest";
 import { StateChart as BaselineStateChart } from "../src/state-chart-baseline";
 import { StateChart as NewStateChart } from "../src/state-chart";
 
@@ -37,23 +37,14 @@ const Model = {
   doThing: () => undefined,
 };
 
-describe("StateChart.create", () => {
-  bench(
-    "baseline",
-    () => {
+test("StateChart.create", async ({ bench }) => {
+  await bench.compare(
+    bench("baseline", () => {
       BaselineStateChart.create(config);
-    },
-    {
-      iterations: 10000,
-      throws: true,
-    }
-  );
-
-  bench(
-    "new",
-    () => {
+    }),
+    bench("new", () => {
       NewStateChart.create(config);
-    },
+    }),
     {
       iterations: 10000,
       throws: true,
@@ -61,16 +52,15 @@ describe("StateChart.create", () => {
   );
 });
 
-describe("Interpreter.transition", () => {
+test("Interpreter.transition", async ({ bench }) => {
   const baselineChart = BaselineStateChart.create(config);
   const baselineRuntime = baselineChart.createRuntime(Model);
 
   const newChart = NewStateChart.create(config);
   const newRuntime = newChart.createRuntime(Model);
 
-  bench(
-    "baseline",
-    () => {
+  await bench.compare(
+    bench("baseline", () => {
       for (const _ of baselineRuntime.transition("", "default")) {
         void _;
       }
@@ -96,16 +86,8 @@ describe("Interpreter.transition", () => {
       )) {
         void _;
       }
-    },
-    {
-      iterations: 10000,
-      throws: true,
-    }
-  );
-
-  bench(
-    "new",
-    () => {
+    }),
+    bench("new", () => {
       for (const _ of newRuntime.transition("", "default")) {
         void _;
       }
@@ -125,7 +107,7 @@ describe("Interpreter.transition", () => {
       )) {
         void _;
       }
-    },
+    }),
     {
       iterations: 10000,
       throws: true,
@@ -133,39 +115,30 @@ describe("Interpreter.transition", () => {
   );
 });
 
-describe("Interpreter.getMostSpecificHandler", () => {
+test("Interpreter.getMostSpecificHandler", async ({ bench }) => {
   const baselineChart = BaselineStateChart.create(config);
   const baselineRuntime = baselineChart.createRuntime(Model);
 
   const newChart = NewStateChart.create(config);
   const newRuntime = newChart.createRuntime(Model);
 
-  bench(
-    "baseline",
-    () => {
+  await bench.compare(
+    bench("baseline", () => {
       baselineRuntime.getMostSpecificHandler("default", { type: "SOME" });
       baselineRuntime.getMostSpecificHandler("some", { type: "ALWAYS" });
       baselineRuntime.getMostSpecificHandler("with_always");
       baselineRuntime.getMostSpecificHandler("with_children.child1", {
         type: "SOME",
       });
-    },
-    {
-      iterations: 50000,
-      throws: true,
-    }
-  );
-
-  bench(
-    "new",
-    () => {
+    }),
+    bench("new", () => {
       newRuntime.getMostSpecificHandler("default", { type: "SOME" });
       newRuntime.getMostSpecificHandler("some", { type: "ALWAYS" });
       newRuntime.getMostSpecificHandler("with_always");
       newRuntime.getMostSpecificHandler("with_children.child1", {
         type: "SOME",
       });
-    },
+    }),
     {
       iterations: 50000,
       throws: true,
