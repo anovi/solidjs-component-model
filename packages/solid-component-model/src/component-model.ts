@@ -1004,6 +1004,13 @@ export abstract class ComponentModel<
 
     const state = this.state();
 
+    // When restored machine starts:
+    // 1. mark machine active
+    // 2. restore/start appropriate invokes
+    // 3. run eventless microsteps until stable
+    // That is why I turn off flag here, right befor always event lookup.
+    this.__restored = false;
+
     // Check `always` event if the state has changed from handling previous `always` event.
     const isTheSameAlwaysEffect =
       event.type === InternalEventName.Eventless &&
