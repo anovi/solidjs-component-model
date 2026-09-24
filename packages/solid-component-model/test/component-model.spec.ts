@@ -42,6 +42,11 @@ import {
 import { WithDomainPathMachine } from "./test-models/model-with-domain-object";
 import { DomainPath } from "./test-models/domain-object";
 import { CounterMachine } from "./test-models/model-counter";
+import {
+  RecursiveSnapshotRoot,
+  SnapshotOverrideChild,
+  SnapshotOverrideParent,
+} from "./test-models/model-with-child-snapshot-overrides";
 void TerminalLogger;
 
 ComponentModel.configure({
@@ -1295,6 +1300,86 @@ describe("component-model", () => {
       assert.ok(newParent instanceof CustomizedParentModelMachine);
       assert.equal(newParent.status, "active");
       assert.equal(newParent.customProp, "new value");
+    });
+
+    it("restores a child snapshot customized through its public override", async () => {
+      const parent = new SnapshotOverrideParent();
+      parent.start();
+      parent.addChild();
+      await sleep(0);
+
+      const child = parent.data.child!;
+      const childId = child._id;
+      const childState = child.state();
+      const snapshot = parent.getPersistedSnapshot();
+      const childSnapshot = snapshot.children![0];
+
+      assert.equal(childSnapshot.name, "RegisteredChildAlias");
+      assert.notStrictEqual(childSnapshot, child.lastReturnedSnapshot);
+      assert.equal(
+        child.lastReturnedSnapshot!.name,
+        "SnapshotOverrideChildModel"
+      );
+      assert.equal(childSnapshot.data.value, "persisted value");
+      assert.notProperty(childSnapshot.data, "transient");
+      assert.equal(child.data.value, "live value");
+      assert.equal(child.data.transient, "live only");
+      parent.stop();
+
+      const roundTrippedSnapshot = JSON.parse(JSON.stringify(snapshot));
+      const restored =
+        SnapshotOverrideParent.fromPersistedSnapshot(roundTrippedSnapshot);
+      restored.start();
+
+      const restoredChild = restored.data.child!;
+      expect(restoredChild).toBeInstanceOf(SnapshotOverrideChild);
+      assert.equal(restoredChild.data.value, "persisted value");
+      assert.notProperty(restoredChild.data, "transient");
+      assert.equal(restoredChild._id, childId);
+      assert.equal(restoredChild.state(), childState);
+      assert.strictEqual(restored.data.child, restoredChild);
+      restored.stop();
+    });
+
+    it("composes snapshot overrides across nested children", async () => {
+      const root = new RecursiveSnapshotRoot();
+      root.start();
+      root.addChild();
+      await sleep(0);
+      root.data.child!.addGrandchild();
+      await sleep(0);
+
+      const snapshot = root.getPersistedSnapshot();
+      const childSnapshot = snapshot.children![0];
+      const grandchildSnapshot = childSnapshot.children![0];
+
+      assert.equal(childSnapshot.name, "ChildAlias");
+      assert.equal(childSnapshot.data.value, "child persisted");
+      assert.equal(grandchildSnapshot.name, "GrandchildAlias");
+      assert.equal(grandchildSnapshot.data.value, "grandchild persisted");
+      assert.equal(root.data.child!.data.value, "child live");
+      assert.equal(
+        root.data.child!.data.grandchild!.data.value,
+        "grandchild live"
+      );
+      root.stop();
+    });
+
+    it("keeps inspection snapshots independent from persistence overrides", async () => {
+      const parent = new SnapshotOverrideParent();
+      parent.start();
+      parent.addChild();
+      await sleep(0);
+
+      const child = parent.data.child!;
+      const childInspection = child.getInspecitonSnapshot();
+      const parentInspection = parent.getInspecitonSnapshot();
+
+      assert.equal(child.overrideCalls, 0);
+      assert.equal(childInspection.data.value, "live value");
+      assert.equal(childInspection.data.transient, "live only");
+      assert.deepEqual(parentInspection.childrenIds, [child._id]);
+      parent.stop();
     });
 
     // TODO: cover this case

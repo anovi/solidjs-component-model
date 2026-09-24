@@ -1290,7 +1290,7 @@ export abstract class ComponentModel<
       throw new Error(
         `Can't find a child "${ctor.name}" to spawn a model for "${value.parent?.constructor.name}"`
       );
-    return value.__jsonModel(value, name, true);
+    return { ...value.getPersistedSnapshot(), name };
   }
 
   private __jsonData(value: unknown, owner: AnyComponentModel): unknown {
