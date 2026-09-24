@@ -209,8 +209,8 @@ describe("component-model", () => {
       await sleep(0);
 
       expect(other.status).toBe("active");
-      expect(other.getInspecitonSnapshot().parentId).toBeUndefined();
-      expect(parent.getInspecitonSnapshot().childrenIds).toBeUndefined();
+      expect(other.getInspectionSnapshot().parentId).toBeUndefined();
+      expect(parent.getInspectionSnapshot().childrenIds).toBeUndefined();
       parent.stop();
       expect(other.status).toBe("active");
       other.stop();
@@ -247,10 +247,10 @@ describe("component-model", () => {
       expect(child).toBeInstanceOf(Child);
       expect(child.data).toEqual({ label: "child", count: 3 });
       expect(child.status).toBe("active");
-      expect(child.getInspecitonSnapshot().parentId).toBe(parent._id);
-      expect(parent.getInspecitonSnapshot().childrenIds).toEqual([child._id]);
+      expect(child.getInspectionSnapshot().parentId).toBe(parent._id);
+      expect(parent.getInspectionSnapshot().childrenIds).toEqual([child._id]);
       child.stop();
-      expect(parent.getInspecitonSnapshot().childrenIds).toEqual([]);
+      expect(parent.getInspectionSnapshot().childrenIds).toEqual([]);
       parent.stop();
     });
 
@@ -1372,8 +1372,8 @@ describe("component-model", () => {
       await sleep(0);
 
       const child = parent.data.child!;
-      const childInspection = child.getInspecitonSnapshot();
-      const parentInspection = parent.getInspecitonSnapshot();
+      const childInspection = child.getInspectionSnapshot();
+      const parentInspection = parent.getInspectionSnapshot();
 
       assert.equal(child.overrideCalls, 0);
       assert.equal(childInspection.data.value, "live value");

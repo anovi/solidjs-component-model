@@ -59,7 +59,7 @@ export interface Model<
 
   getPersistedSnapshot: () => unknown;
 
-  getInspecitonSnapshot: () => unknown;
+  getInspectionSnapshot: () => unknown;
 
   start: () => void;
 

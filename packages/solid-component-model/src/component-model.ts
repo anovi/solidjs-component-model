@@ -404,7 +404,7 @@ export abstract class ComponentModel<
     });
   }
 
-  getInspecitonSnapshot(): InspectionSnapshot<string, Data> {
+  getInspectionSnapshot(): InspectionSnapshot<string, Data> {
     return untrack(() => {
       return this.__jsonModel(this, undefined);
     });
@@ -436,7 +436,7 @@ export abstract class ComponentModel<
     aliveModels.set(this._id, this);
     if (devtools && !this.hideInDevtools)
       devtools.registerModel(
-        this.getInspecitonSnapshot() as InspectionSnapshot<string, AnyModelData>
+        this.getInspectionSnapshot() as InspectionSnapshot<string, AnyModelData>
       );
     if (this.stateChart) {
       untrack(() => {
@@ -876,7 +876,7 @@ export abstract class ComponentModel<
       // Inspection failures must not prevent lifecycle cleanup.
       try {
         devtools.sendModelSnapshot(
-          this.getInspecitonSnapshot() as InspectionSnapshot<
+          this.getInspectionSnapshot() as InspectionSnapshot<
             string,
             AnyModelData
           >
@@ -1029,12 +1029,12 @@ export abstract class ComponentModel<
 
     // Emit snapshots to subscribers if there are any.
     if (devtools && !this.hideInDevtools) {
-      snapshot = this.getInspecitonSnapshot();
+      snapshot = this.getInspectionSnapshot();
       devtools.sendModelSnapshot(
         snapshot as InspectionSnapshot<string, AnyModelData>
       );
     }
-    this.__snapshots$?.next(snapshot || this.getInspecitonSnapshot());
+    this.__snapshots$?.next(snapshot || this.getInspectionSnapshot());
   }
 
   private __startHandlingFx() {
@@ -1188,12 +1188,12 @@ export abstract class ComponentModel<
       let snapshot: InspectionSnapshot<string, Data> | undefined = undefined;
       // TODO: figure out wether it needs to run here?
       if (devtools && !this.hideInDevtools) {
-        snapshot = this.getInspecitonSnapshot();
+        snapshot = this.getInspectionSnapshot();
         devtools.sendModelSnapshot(
           snapshot as InspectionSnapshot<string, AnyModelData>
         );
       }
-      this.__snapshots$?.next(snapshot || this.getInspecitonSnapshot());
+      this.__snapshots$?.next(snapshot || this.getInspectionSnapshot());
     }
   }
 
